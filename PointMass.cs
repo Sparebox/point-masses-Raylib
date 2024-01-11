@@ -10,8 +10,8 @@ public class PointMass
     public Vector2 Acc { get; set; }
     public Vector2 Vel
     {
-        get { return Vector2.Subtract(Pos, PrevPos); }
-        set { PrevPos = Vector2.Subtract(Pos, value); }
+        get { return Pos - PrevPos; }
+        set { PrevPos = Pos - value; }
     }
     public float Mass { get; }
     public float Radius { get; init; }

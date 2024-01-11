@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Collision;
 using Physics;
 using static Raylib_cs.Raylib;
 
@@ -22,6 +23,7 @@ public class Loop
         SetTargetFPS(165);
 
         PointMass mass = new(WinW / 2f, WinH / 2f, 10f);
+        LineCollider line = new(0f, 300f, 800f, 450f);
         GravityEnabled = true;
 
         while (!WindowShouldClose())
@@ -32,10 +34,12 @@ public class Loop
                 mass.Update();
                 _accumulator -= TimeStep;
             }
-
+            Vector2 closestPoint = line.ClosestPointOnLine(mass.Pos);
             BeginDrawing();
             ClearBackground(Raylib_cs.Color.BLACK);
             mass.Draw();
+            line.Draw();
+            DrawLine((int) closestPoint.X, (int) closestPoint.Y, (int) mass.Pos.X, (int) mass.Pos.Y, Raylib_cs.Color.MAGENTA);
             EndDrawing();
         }
 
