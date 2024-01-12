@@ -80,6 +80,7 @@ public class PointMass
     {
         Vector2 dirA = new(normal.Y, normal.X);
         Vector2 dirB = new(-normal.Y, normal.X);
+        // Find direction opposite to velocity
         Vector2 dir = Vector2.Dot(Vel, dirA) < 0f ? dirA : dirB;
         Vector2 frictionF = dir * FrictionCoeff * Mass * Math.Abs(Vector2.Dot(Acc, normal));
         ApplyForce(frictionF);

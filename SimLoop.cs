@@ -23,7 +23,9 @@ public class Loop
         InitWindow(WinW, WinH, "");
         SetTargetFPS(165);
 
-        PointMass mass = new(1500f, 730f, 10f);
+        PointMass a = new(WinW / 2f - 50f, WinH / 2f, 5f);
+        PointMass b = new(WinW / 2f + 50f, WinH / 2f + 50f, 5f);
+        SpringConstraint c = new(a, b, 100f);
         _lineColliders = new() {
             new(0f, 0f, WinW, 0f),
             new(0f, 0f, 0f, WinH),
@@ -38,16 +40,20 @@ public class Loop
             _accumulator += GetFrameTime();
             while (_accumulator >= TimeStep)
             {
-                mass.Update(_lineColliders);
+                a.Update(_lineColliders);
+                b.Update(_lineColliders);
+                c.Update();
                 _accumulator -= TimeStep;
             }
             HandleInput();
             BeginDrawing();
             ClearBackground(Raylib_cs.Color.BLACK);
-            mass.Draw();
-            foreach (var c in _lineColliders)
+            a.Draw();
+            b.Draw();
+            c.Draw();
+            foreach (var l in _lineColliders)
             {
-                c.Draw();
+                l.Draw();
             }
             EndDrawing();
         }
