@@ -7,7 +7,7 @@ namespace Sim;
 
 public class Loop 
 {   
-    public const float TimeStep = 1f / 60f;
+    public const float TimeStep = 1f / 1000f;
     public const int WinW = 1600;
     public const int WinH = 900;
     public const float PixelsPerMeter = 1f / 0.01f;
@@ -22,17 +22,15 @@ public class Loop
     {
         InitWindow(WinW, WinH, "");
         SetTargetFPS(165);
-
-        PointMass a = new(WinW / 2f - 50f, WinH / 2f, 5f);
-        PointMass b = new(WinW / 2f + 50f, WinH / 2f + 50f, 5f);
-        SpringConstraint c = new(a, b, 100f);
         _lineColliders = new() {
             new(0f, 0f, WinW, 0f),
             new(0f, 0f, 0f, WinH),
             new(WinW, 0f, WinW, WinH),
-            new(0f, 900f, 1600f, 780f) 
+            new(0f, WinH, WinW, WinH),
+            //new(0f, 900f, 1600f, 800f) 
         };
-        GravityEnabled = true;
+        MassShape s = MassShape.Circle(WinW / 2f, WinH / 2f, 100f, 30f, 30, _lineColliders);
+        GravityEnabled = false;
 
         while (!WindowShouldClose())
         {
@@ -40,24 +38,19 @@ public class Loop
             _accumulator += GetFrameTime();
             while (_accumulator >= TimeStep)
             {
-                a.Update(_lineColliders);
-                b.Update(_lineColliders);
-                c.Update();
+                s.Update();
                 _accumulator -= TimeStep;
             }
             HandleInput();
             BeginDrawing();
             ClearBackground(Raylib_cs.Color.BLACK);
-            a.Draw();
-            b.Draw();
-            c.Draw();
+            s.Draw();
             foreach (var l in _lineColliders)
             {
                 l.Draw();
             }
             EndDrawing();
         }
-
         CloseWindow();
     }
 

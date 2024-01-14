@@ -6,10 +6,12 @@ namespace Physics;
 
 public class PointMass
 {
+    private static int _idCounter;
+
     public const float RestitutionCoeff = 0.95f;
     public const float FrictionCoeff = 0.1f;
-    public const float BounceThreshold = 1e-4f;
 
+    public readonly int _id;
     public Vector2 Pos { get; set; }
     public Vector2 PrevPos { get; set; }
     public Vector2 Acc { get; set; }
@@ -28,6 +30,7 @@ public class PointMass
         Acc = Vector2.Zero;
         Mass = mass;
         Radius = mass * 5f;
+        _id = _idCounter++;
     }
 
     public void Update(in List<LineCollider> lineColliders)
@@ -57,7 +60,7 @@ public class PointMass
     {
         foreach (LineCollider c in lineColliders)
         {
-            Vector2 closestPoint = c.ClosestPointOnLine(Pos);
+            Vector2 closestPoint = Tools.Geometry.ClosestPointOnLine(c.StartPos, c.EndPos, Pos);
             Vector2 closestToPoint = Pos - closestPoint;
             float distToCollider = closestToPoint.Length();
             if (distToCollider <= Radius)
@@ -66,10 +69,6 @@ public class PointMass
                 Vector2 closestToPointNorm = Vector2.Normalize(closestToPoint);
                 Vector2 reflectedVel = Vel - closestToPointNorm * 2f * Vector2.Dot(Vel, closestToPointNorm);
                 Pos += (Radius - distToCollider) * closestToPointNorm;
-                if (Vel.Length() < BounceThreshold)
-                {
-                    continue;
-                }
                 Vel = RestitutionCoeff * reflectedVel;
                 ApplyKineticFriction(closestToPointNorm);
             }

@@ -20,8 +20,9 @@ public class SpringConstraint : Constraint
     {
         Vector2 AtoB = B.Pos - A.Pos;
         float length = AtoB.Length();
+        AtoB /= length;
         float diff = length - RestLength;
-        Vector2 force = SpringConstant * diff * Vector2.Normalize(AtoB);
+        Vector2 force = SpringConstant * diff * AtoB;
         A.ApplyForce(force);
         B.ApplyForce(-force);
     }
