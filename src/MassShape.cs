@@ -41,6 +41,14 @@ public class MassShape
         }
     }
 
+    public void ApplyForce(in Vector2 force)
+    {
+        foreach (PointMass p in _points)
+        {
+            p.ApplyForce(force);
+        }
+    }
+
     public static MassShape Circle(float x, float y, float radius, float mass, int res, in List<LineCollider> lineColliders)
     {
         float angle = (float) Math.PI / 2f;
@@ -58,7 +66,7 @@ public class MassShape
         }
         for (int i = 0; i < res; i++)
         {
-            constraints.Add(new RigidConstraint(s._points[i], s._points[(i + 1) % res]));
+            constraints.Add(new SpringConstraint(s._points[i], s._points[(i + 1) % res], 1e4f, 2e5f));
         }
         // Create internal springs for structural integrity
         // HashSet<int> visitedPoints = new();
@@ -89,7 +97,10 @@ public class MassShape
             Vector2 normal = new(P1ToP2.Y, -P1ToP2.X);
             normal /= faceLength;
             Vector2 force = faceLength * gasAmount / CalculateVolume() / 2f * normal;
-            DrawLine((int) (p1.Pos.X + 0.5f * P1ToP2.X), (int) (p1.Pos.Y + 0.5f * P1ToP2.Y), (int) (p1.Pos.X + 0.5f * P1ToP2.X + force.X / 100f), (int) (p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y / 100f), Raylib_cs.Color.WHITE);
+            if (Sim.Loop.DrawForces)
+            {
+                DrawLine((int) (p1.Pos.X + 0.5f * P1ToP2.X), (int) (p1.Pos.Y + 0.5f * P1ToP2.Y), (int) (p1.Pos.X + 0.5f * P1ToP2.X + force.X / 100f), (int) (p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y / 100f), Raylib_cs.Color.WHITE);
+            }
             p1.ApplyForce(force);
             p2.ApplyForce(force);
         }
@@ -99,13 +110,7 @@ public class MassShape
     private float CalculateVolume()
     {
         float area = 0f;
-        Vector2 centerOfMass = new();
-        foreach (var p in _points)
-        {
-            centerOfMass += p.Pos;
-        }
-        centerOfMass /= _points.Length;
-        DrawCircle((int) centerOfMass.X, (int) centerOfMass.Y, 20, Raylib_cs.Color.RED);
+        Vector2 centerOfMass = CalculateCenterOfMass();
         for (int i = 0; i < _points.Length; i++)
         {
             PointMass p1 = _points[i];
@@ -116,5 +121,16 @@ public class MassShape
             area += 0.5f * baseLength * height;
         }
         return area;
+    }
+
+    private Vector2 CalculateCenterOfMass()
+    {
+        Vector2 centerOfMass = new();
+        foreach (var p in _points)
+        {
+            centerOfMass += p.Pos;
+        }
+        centerOfMass /= _points.Length;
+        return centerOfMass;
     }
 }

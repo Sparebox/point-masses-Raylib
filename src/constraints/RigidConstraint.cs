@@ -7,7 +7,7 @@ public class RigidConstraint : Constraint
 {
     public readonly float Length;
 
-    public RigidConstraint(PointMass a, PointMass b)
+    public RigidConstraint(in PointMass a, in PointMass b)
     {
         A = a;
         B = b;
