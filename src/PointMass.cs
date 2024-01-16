@@ -10,7 +10,8 @@ public class PointMass
     private static int _idCounter;
 
     public const float RestitutionCoeff = 0.9f;
-    public const float FrictionCoeff = 0.001f;
+    public const float KineticFrictionCoeff = 0.01f;
+    public const float StaticFrictionCoeff = 1f;
 
     public readonly int _id;
     public Vector2 Pos { get; set; }
@@ -34,7 +35,7 @@ public class PointMass
         _id = _idCounter++;
     }
 
-    public void Update(in List<LineCollider> lineColliders)
+    public void Update(in List<LineCollider> lineColliders, float timeStep)
     {
         if (Sim.Loop.GravityEnabled)
         {
@@ -43,7 +44,7 @@ public class PointMass
         SolveCollisions(lineColliders);
         Vector2 vel = Vel;
         PrevPos = Pos;
-        Pos += vel + Acc * Sim.Loop.TimeStep * Sim.Loop.TimeStep;
+        Pos += vel + Acc * timeStep * timeStep;
         Acc = Vector2.Zero;
     }
 
@@ -72,12 +73,12 @@ public class PointMass
                 // Correct penetration
                 Pos += (Radius - distToCollider) * closestToPointNorm;
                 Vel = RestitutionCoeff * reflectedVel;
-                ApplyKineticFriction(closestToPointNorm);
+                ApplyFriction(closestToPointNorm);
             }
         }
     }
 
-    private void ApplyKineticFriction(in Vector2 normal)
+    private void ApplyFriction(in Vector2 normal)
     {
         // Find direction perpendicular to the normal and opposite to the velocity
         Vector2 dir = Vel - Vector2.Dot(Vel, normal) * normal;
@@ -85,8 +86,19 @@ public class PointMass
         {
             return;
         }
+        Vector2 frictionF;
+        float frictionCoeff;
+        if (dir.LengthSquared() < 0.005f * 0.005f)
+        {
+            // Static friction
+            frictionCoeff = StaticFrictionCoeff;
+        } else
+        {
+            // Kinetic friction
+            frictionCoeff = KineticFrictionCoeff;
+        }
         dir = -Vector2.Normalize(dir);
-        Vector2 frictionF = dir * FrictionCoeff * Mass * Math.Abs(Vector2.Dot(Acc, normal));
+        frictionF = dir * frictionCoeff * Mass * Math.Abs(Vector2.Dot(Acc, normal));
         if (Sim.Loop.DrawForces)
         {
             DrawLine((int) Pos.X, (int) Pos.Y, (int) (Pos.X + frictionF.X), (int) (Pos.Y + frictionF.Y), Color.RED);

@@ -7,6 +7,8 @@ namespace Physics;
 
 public class MassShape
 {
+    private const float SpringDamping = 3e5f;
+
     public Constraint[] _constraints;
     public PointMass[] _points;
 
@@ -17,7 +19,7 @@ public class MassShape
         _lineColliders = lineColliders;
     }
 
-    public void Update()
+    public void Update(float timeStep)
     {
         foreach (Constraint c in _constraints)
         {
@@ -25,9 +27,9 @@ public class MassShape
         }
         foreach (PointMass p in _points)
         {
-            p.Update(_lineColliders);
+            p.Update(_lineColliders, timeStep);
         }
-        Inflate(1e7f);
+        Inflate(5e6f);
     }
 
     public void Draw()
@@ -50,7 +52,7 @@ public class MassShape
         }
     }
 
-    public static MassShape Circle(float x, float y, float radius, float mass, int res, in List<LineCollider> lineColliders)
+    public static MassShape Ball(float x, float y, float radius, float mass, int res, float stiffness, in List<LineCollider> lineColliders)
     {
         float angle = (float) Math.PI / 2f;
         MassShape s = new(lineColliders)
@@ -67,7 +69,7 @@ public class MassShape
         }
         for (int i = 0; i < res; i++)
         {
-            constraints.Add(new SpringConstraint(s._points[i], s._points[(i + 1) % res], 1e4f, 2e5f));
+            constraints.Add(new SpringConstraint(s._points[i], s._points[(i + 1) % res], stiffness, SpringDamping));
         }
         s._constraints = constraints.ToArray();
         return s;
