@@ -14,6 +14,7 @@ public class PointMass
     public const float StaticFrictionCoeff = 1f;
 
     public readonly int _id;
+    public readonly bool _pinned;
     public Vector2 Pos { get; set; }
     public Vector2 PrevPos { get; set; }
     public Vector2 Acc { get; set; }
@@ -25,7 +26,7 @@ public class PointMass
     public float Mass { get; }
     public float Radius { get; init; }
 
-    public PointMass(float x, float y, float mass)
+    public PointMass(float x, float y, float mass, bool pinned)
     {
         Pos = new(x, y);
         PrevPos = Pos;
@@ -33,10 +34,15 @@ public class PointMass
         Mass = mass;
         Radius = mass * 5f;
         _id = _idCounter++;
+        _pinned = pinned;
     }
 
     public void Update(in List<LineCollider> lineColliders, float timeStep)
     {
+        if (_pinned)
+        {
+            return;
+        }
         if (Sim.Loop.GravityEnabled)
         {
             Acc += Sim.Loop.Gravity;

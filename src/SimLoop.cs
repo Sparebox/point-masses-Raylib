@@ -35,7 +35,8 @@ public class Loop
             new(0f, WinH, WinW, WinH),
             new(0f, 900f, 1600f, 200f) 
         };
-        _s = MassShape.Ball(WinW / 2f, WinH / 2f - 100f, 50f, 10f, 25, 1e3f, _lineColliders);
+        //_s = MassShape.Ball(WinW / 2f, WinH / 2f - 100f, 50f, 10f, 25, 1e3f, _lineColliders);
+        _s = MassShape.Chain(200f, 40f, 200f, 400f, 10f, 5, (true, false), _lineColliders);
         GravityEnabled = false;
 
         while (!WindowShouldClose())

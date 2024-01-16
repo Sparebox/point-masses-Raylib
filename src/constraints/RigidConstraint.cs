@@ -22,8 +22,13 @@ public class RigidConstraint : Constraint
         float diff = Length - dist;
         float percentage = diff / dist / 2f;
         Vector2 offset = percentage * dist * Vector2.Normalize(AtoB);
-        A.Pos -= offset;
-        B.Pos += offset;
+        if (!A._pinned) {
+            A.Pos -= offset;
+        }
+        if (!B._pinned)
+        {
+            B.Pos += offset;
+        }
     }
 
     public override void Draw()

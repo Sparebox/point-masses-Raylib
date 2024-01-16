@@ -30,8 +30,14 @@ public class SpringConstraint : Constraint
         // damping
         force += DampingCoeff * Vector2.Dot(AtoB, BrelVel);
         Vector2 forceVec = force * AtoB;
-        A.ApplyForce(forceVec);
-        B.ApplyForce(-forceVec);
+        if (!A._pinned)
+        {
+            A.ApplyForce(forceVec);
+        }
+        if (!B._pinned)
+        {
+            B.ApplyForce(-forceVec);
+        }
     }
 
     public override void Draw()
