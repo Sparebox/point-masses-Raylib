@@ -1,4 +1,5 @@
 using System.Numerics;
+using Raylib_cs;
 using static Raylib_cs.Raylib;
 
 namespace Physics;
@@ -27,6 +28,6 @@ public class RigidConstraint : Constraint
 
     public override void Draw()
     {
-        DrawLine((int) A.Pos.X, (int) A.Pos.Y, (int) B.Pos.X, (int) B.Pos.Y, Raylib_cs.Color.WHITE);
+        DrawLine((int) A.Pos.X, (int) A.Pos.Y, (int) B.Pos.X, (int) B.Pos.Y, Color.WHITE);
     }
 }

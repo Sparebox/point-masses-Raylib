@@ -1,5 +1,6 @@
 using System.Numerics;
 using Collision;
+using Raylib_cs;
 using static Raylib_cs.Raylib;
 
 namespace Physics;
@@ -9,7 +10,7 @@ public class PointMass
     private static int _idCounter;
 
     public const float RestitutionCoeff = 0.9f;
-    public const float FrictionCoeff = 0.1f;
+    public const float FrictionCoeff = 0.001f;
 
     public readonly int _id;
     public Vector2 Pos { get; set; }
@@ -48,7 +49,7 @@ public class PointMass
 
     public void Draw()
     {
-        DrawCircleLines((int) Pos.X, (int) Pos.Y, Radius, Raylib_cs.Color.WHITE);
+        DrawCircleLines((int) Pos.X, (int) Pos.Y, Radius, Color.WHITE);
     }
 
     public void ApplyForce(in Vector2 f)
@@ -67,7 +68,8 @@ public class PointMass
             {
                 // Collision
                 Vector2 closestToPointNorm = Vector2.Normalize(closestToPoint);
-                Vector2 reflectedVel = Vel - closestToPointNorm * 2f * Vector2.Dot(Vel, closestToPointNorm);
+                Vector2 reflectedVel = Tools.Geometry.ReflectVec(Vel, closestToPointNorm);
+                // Correct penetration
                 Pos += (Radius - distToCollider) * closestToPointNorm;
                 Vel = RestitutionCoeff * reflectedVel;
                 ApplyKineticFriction(closestToPointNorm);
@@ -77,11 +79,18 @@ public class PointMass
 
     private void ApplyKineticFriction(in Vector2 normal)
     {
-        Vector2 dirA = new(normal.Y, normal.X);
-        Vector2 dirB = new(-normal.Y, normal.X);
-        // Find direction opposite to velocity
-        Vector2 dir = Vector2.Dot(Vel, dirA) < 0f ? dirA : dirB;
+        // Find direction perpendicular to the normal and opposite to the velocity
+        Vector2 dir = Vel - Vector2.Dot(Vel, normal) * normal;
+        if (dir.LengthSquared() == 0f)
+        {
+            return;
+        }
+        dir = -Vector2.Normalize(dir);
         Vector2 frictionF = dir * FrictionCoeff * Mass * Math.Abs(Vector2.Dot(Acc, normal));
+        if (Sim.Loop.DrawForces)
+        {
+            DrawLine((int) Pos.X, (int) Pos.Y, (int) (Pos.X + frictionF.X), (int) (Pos.Y + frictionF.Y), Color.RED);
+        }
         ApplyForce(frictionF);
     }
 }

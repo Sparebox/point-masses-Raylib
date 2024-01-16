@@ -1,4 +1,5 @@
 using System.Numerics;
+using Raylib_cs;
 using static Raylib_cs.Raylib;
 
 namespace Collision;
@@ -16,6 +17,6 @@ public class LineCollider
 
     public void Draw()
     {
-        DrawLine((int) StartPos.X, (int) StartPos.Y, (int) EndPos.X, (int) EndPos.Y, Raylib_cs.Color.WHITE);
+        DrawLine((int) StartPos.X, (int) StartPos.Y, (int) EndPos.X, (int) EndPos.Y, Color.WHITE);
     }
 }

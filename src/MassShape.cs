@@ -1,5 +1,6 @@
 using System.Numerics;
 using Collision;
+using Raylib_cs;
 using static Raylib_cs.Raylib;
 
 namespace Physics;
@@ -68,20 +69,6 @@ public class MassShape
         {
             constraints.Add(new SpringConstraint(s._points[i], s._points[(i + 1) % res], 1e4f, 2e5f));
         }
-        // Create internal springs for structural integrity
-        // HashSet<int> visitedPoints = new();
-        // for (int i = 0; i < 2; i++) {
-        //     int index = i;
-        //     while (true) {
-        //         if (visitedPoints.Contains(index)) {
-        //             break;
-        //         }
-        //         constraints.Add(new SpringConstraint(s._points[index], s._points[(index + 2) % res], 1e4f));
-        //         visitedPoints.Add(s._points[index]._id);
-        //         index += 2;
-        //         index %= res;
-        //     }
-        // }
         s._constraints = constraints.ToArray();
         return s;
     }
@@ -99,7 +86,13 @@ public class MassShape
             Vector2 force = faceLength * gasAmount / CalculateVolume() / 2f * normal;
             if (Sim.Loop.DrawForces)
             {
-                DrawLine((int) (p1.Pos.X + 0.5f * P1ToP2.X), (int) (p1.Pos.Y + 0.5f * P1ToP2.Y), (int) (p1.Pos.X + 0.5f * P1ToP2.X + force.X / 100f), (int) (p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y / 100f), Raylib_cs.Color.WHITE);
+                DrawLine(
+                    (int) (p1.Pos.X + 0.5f * P1ToP2.X), 
+                    (int) (p1.Pos.Y + 0.5f * P1ToP2.Y), 
+                    (int) (p1.Pos.X + 0.5f * P1ToP2.X + force.X / 100f), 
+                    (int) (p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y / 100f), 
+                    Color.WHITE
+                );
             }
             p1.ApplyForce(force);
             p2.ApplyForce(force);
@@ -123,7 +116,7 @@ public class MassShape
         return area;
     }
 
-    private Vector2 CalculateCenterOfMass()
+    public Vector2 CalculateCenterOfMass()
     {
         Vector2 centerOfMass = new();
         foreach (var p in _points)

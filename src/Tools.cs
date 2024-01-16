@@ -20,4 +20,9 @@ public static class Geometry
         }
         return lineStart + distOnLine * startToEndNorm;
     }
+
+    public static Vector2 ReflectVec(in Vector2 vec, in Vector2 normal)
+    {
+        return vec - 2f * Vector2.Dot(vec, normal) * normal;
+    }
 }
