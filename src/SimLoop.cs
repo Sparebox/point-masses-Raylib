@@ -33,10 +33,11 @@ public class Loop
             new(0f, 0f, 0f, WinH),
             new(WinW, 0f, WinW, WinH),
             new(0f, WinH, WinW, WinH),
-            new(0f, 900f, 1600f, 200f) 
+            //new(0f, 900f, 1600f, 200f) 
         };
         //_s = MassShape.Ball(WinW / 2f, WinH / 2f - 100f, 50f, 10f, 25, 1e3f, _lineColliders);
-        _s = MassShape.Chain(200f, 40f, 200f, 400f, 10f, 5, (true, false), _lineColliders);
+        //_s = MassShape.Chain(200f, 40f, 200f, 400f, 10f, 5, (true, false), _lineColliders);
+        _s = MassShape.Cloth(x: 300f, y: 100f, width: 800f, height: 800f, mass: 0.5f, res: 30, stiffness: 5e3f, _lineColliders);
         GravityEnabled = false;
 
         while (!WindowShouldClose())
@@ -89,5 +90,6 @@ public class Loop
         DrawText(string.Format("Substeps: {0}", Substeps), 10, 30, 20, Color.YELLOW);
         DrawText(string.Format("Step: {0}", TimeStep), 10, 50, 20, Color.YELLOW);
         DrawText(string.Format("Substep: {0}", SubStep), 10, 70, 20, Color.YELLOW);
+        DrawText(string.Format("Gravity: {0}", GravityEnabled), 10, 90, 20, Color.YELLOW);
     }
 }

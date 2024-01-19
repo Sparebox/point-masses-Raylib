@@ -149,6 +149,7 @@ public class MassShape
         float len = Vector2.Distance(start, end);
         float spacing = len / (res - 1);
         Vector2 dir = (end - start) / len;
+        // Points
         for (int i = 0; i < res; i++)
         {
             bool pinned;
@@ -167,9 +168,49 @@ public class MassShape
             }
             c._points[i] = new(start.X + i * spacing * dir.X, start.Y + i * spacing * dir.Y, mass / res, pinned);
         }
+        // Constraints
         for (int i = 0; i < res - 1; i++)
         {
             c._constraints[i] = new RigidConstraint(c._points[i], c._points[i + 1]);
+        }
+        return c;
+    }
+
+    public static MassShape Cloth(float x, float y, float width, float height, float mass, int res, float stiffness, in List<LineCollider> lineColliders)
+    {
+        int numberOfConstraints = 2 * res * res - 2 * res;
+        float pixelsPerConstraintW = width / res;
+        float pixelsPerConstraintH = height / res;
+        MassShape c = new(lineColliders)
+        {
+            _inflated = false,
+            _points = new PointMass[res * res],
+            _constraints = new Constraint[numberOfConstraints]
+        };
+        // Points
+        for (int col = 0; col < res; col++)
+        {
+            for (int row = 0; row < res; row++)
+            {
+                bool pinned = row == 0;
+                c._points[col * res + row] = new(x + col * pixelsPerConstraintW, y + row * pixelsPerConstraintH, mass, pinned);
+            }
+        }
+        // Constraints
+        int constraintIndex = 0;
+        for (int col = 0; col < res; col++)
+        {
+            for (int row = 0; row < res; row++)
+            {
+                if (col != res - 1)
+                {
+                    c._constraints[constraintIndex++] = new SpringConstraint(c._points[col * res + row], c._points[(col + 1) * res + row], stiffness, SpringDamping);
+                }
+                if (row != res - 1)
+                {
+                    c._constraints[constraintIndex++] = new SpringConstraint(c._points[col * res + row], c._points[col * res + row + 1], stiffness, SpringDamping);
+                }
+            }
         }
         return c;
     }
