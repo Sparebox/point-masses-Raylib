@@ -1,23 +1,24 @@
 using System.Numerics;
 using Collision;
 using Raylib_cs;
+using Sim;
 using static Raylib_cs.Raylib;
 
 namespace Physics;
 
 public class MassShape
 {
-    private const float SpringDamping = 3e5f;
+    private const float SpringDamping = 5e4f;
 
     public Constraint[] _constraints;
     public PointMass[] _points;
 
-    private readonly List<LineCollider> _lineColliders;
+    private readonly Context _context;
     private bool _inflated;
 
-    public MassShape(in List<LineCollider> lineColliders) 
+    public MassShape(in Context context) 
     {
-        _lineColliders = lineColliders;
+        _context = context;
     }
 
     public void Update(float timeStep)
@@ -28,7 +29,7 @@ public class MassShape
         }
         foreach (PointMass p in _points)
         {
-            p.Update(_lineColliders, timeStep);
+            p.Update(timeStep);
         }
         if (_inflated)
         {
@@ -67,7 +68,7 @@ public class MassShape
             Vector2 normal = new(P1ToP2.Y, -P1ToP2.X);
             normal /= faceLength;
             Vector2 force = faceLength * gasAmount / CalculateVolume() / 2f * normal;
-            if (Sim.Loop.DrawForces)
+            if (_context.DrawForces)
             {
                 DrawLine(
                     (int) (p1.Pos.X + 0.5f * P1ToP2.X), 
@@ -92,7 +93,7 @@ public class MassShape
             PointMass p1 = _points[i];
             PointMass p2 = _points[(i + 1) % _points.Length];
             float baseLength = Vector2.Distance(p1.Pos, p2.Pos); 
-            Vector2 closestPoint = Tools.Geometry.ClosestPointOnLine(p1.Pos, p2.Pos, centerOfMass);
+            Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(p1.Pos, p2.Pos, centerOfMass);
             float height = Vector2.Distance(closestPoint, centerOfMass);
             area += 0.5f * baseLength * height;
         }
@@ -112,10 +113,10 @@ public class MassShape
 
     // Shape constructors
 
-    public static MassShape Ball(float x, float y, float radius, float mass, int res, float stiffness, in List<LineCollider> lineColliders)
+    public static MassShape Ball(float x, float y, float radius, float mass, int res, float stiffness, in Context context)
     {
         float angle = (float) Math.PI / 2f;
-        MassShape s = new(lineColliders)
+        MassShape s = new(context)
         {
             _inflated = true,
             _points = new PointMass[res],
@@ -125,7 +126,7 @@ public class MassShape
         {
             float x0 = radius * (float) Math.Cos(angle);
             float y0 = radius * (float) Math.Sin(angle);
-            s._points[i] = new(x0 + x, y0 + y, mass / res, false);
+            s._points[i] = new(x0 + x, y0 + y, mass / res, false, context);
             angle += 2f * (float) Math.PI / res;
         }
         for (int i = 0; i < res; i++)
@@ -136,9 +137,9 @@ public class MassShape
         return s;
     }
 
-    public static MassShape Chain(float x0, float y0, float x1, float y1, float mass, int res, (bool, bool) pins, in List<LineCollider> lineColliders)
+    public static MassShape Chain(float x0, float y0, float x1, float y1, float mass, int res, (bool, bool) pins, in Context context)
     {
-        MassShape c = new(lineColliders)
+        MassShape c = new(context)
         {
             _inflated = false,
             _points = new PointMass[res],
@@ -166,7 +167,7 @@ public class MassShape
             {
                 pinned = false;
             }
-            c._points[i] = new(start.X + i * spacing * dir.X, start.Y + i * spacing * dir.Y, mass / res, pinned);
+            c._points[i] = new(start.X + i * spacing * dir.X, start.Y + i * spacing * dir.Y, mass / res, pinned, context);
         }
         // Constraints
         for (int i = 0; i < res - 1; i++)
@@ -176,12 +177,12 @@ public class MassShape
         return c;
     }
 
-    public static MassShape Cloth(float x, float y, float width, float height, float mass, int res, float stiffness, in List<LineCollider> lineColliders)
+    public static MassShape Cloth(float x, float y, float width, float height, float mass, int res, float stiffness, in Context context)
     {
         int numberOfConstraints = 2 * res * res - 2 * res;
         float pixelsPerConstraintW = width / res;
         float pixelsPerConstraintH = height / res;
-        MassShape c = new(lineColliders)
+        MassShape c = new(context)
         {
             _inflated = false,
             _points = new PointMass[res * res],
@@ -193,7 +194,7 @@ public class MassShape
             for (int row = 0; row < res; row++)
             {
                 bool pinned = row == 0;
-                c._points[col * res + row] = new(x + col * pixelsPerConstraintW, y + row * pixelsPerConstraintH, mass, pinned);
+                c._points[col * res + row] = new(x + col * pixelsPerConstraintW, y + row * pixelsPerConstraintH, mass, pinned, context);
             }
         }
         // Constraints

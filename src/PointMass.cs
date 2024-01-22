@@ -1,6 +1,7 @@
 using System.Numerics;
 using Collision;
 using Raylib_cs;
+using Sim;
 using static Raylib_cs.Raylib;
 
 namespace Physics;
@@ -25,8 +26,10 @@ public class PointMass
     }
     public float Mass { get; }
     public float Radius { get; init; }
+    
+    private readonly Context _context;
 
-    public PointMass(float x, float y, float mass, bool pinned)
+    public PointMass(float x, float y, float mass, bool pinned, in Context context)
     {
         Pos = new(x, y);
         PrevPos = Pos;
@@ -35,19 +38,20 @@ public class PointMass
         Radius = mass * 5f;
         _id = _idCounter++;
         _pinned = pinned;
+        _context = context;
     }
 
-    public void Update(in List<LineCollider> lineColliders, float timeStep)
+    public void Update(float timeStep)
     {
         if (_pinned)
         {
             return;
         }
-        if (Sim.Loop.GravityEnabled)
+        if (_context.GravityEnabled)
         {
-            Acc += Sim.Loop.Gravity;
+            Acc += _context.Gravity;
         }
-        SolveCollisions(lineColliders);
+        SolveCollisions();
         Vector2 vel = Vel;
         PrevPos = Pos;
         Pos += vel + Acc * timeStep * timeStep;
@@ -64,18 +68,18 @@ public class PointMass
         Acc += f / Mass;
     }
 
-    public void SolveCollisions(in List<LineCollider> lineColliders)
+    public void SolveCollisions()
     {
-        foreach (LineCollider c in lineColliders)
+        foreach (LineCollider c in _context.LineColliders)
         {
-            Vector2 closestPoint = Tools.Geometry.ClosestPointOnLine(c.StartPos, c.EndPos, Pos);
+            Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(c.StartPos, c.EndPos, Pos);
             Vector2 closestToPoint = Pos - closestPoint;
             float distToCollider = closestToPoint.Length();
             if (distToCollider <= Radius)
             {
                 // Collision
                 Vector2 closestToPointNorm = Vector2.Normalize(closestToPoint);
-                Vector2 reflectedVel = Tools.Geometry.ReflectVec(Vel, closestToPointNorm);
+                Vector2 reflectedVel = Utils.Geometry.ReflectVec(Vel, closestToPointNorm);
                 // Correct penetration
                 Pos += (Radius - distToCollider) * closestToPointNorm;
                 Vel = RestitutionCoeff * reflectedVel;
@@ -105,7 +109,7 @@ public class PointMass
         }
         dir = -Vector2.Normalize(dir);
         frictionF = dir * frictionCoeff * Mass * Math.Abs(Vector2.Dot(Acc, normal));
-        if (Sim.Loop.DrawForces)
+        if (_context.DrawForces)
         {
             DrawLine((int) Pos.X, (int) Pos.Y, (int) (Pos.X + frictionF.X), (int) (Pos.Y + frictionF.Y), Color.RED);
         }
