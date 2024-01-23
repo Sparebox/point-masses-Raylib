@@ -54,11 +54,15 @@ public class MassShape
             BoundingBox AABB = GetAABB();
             DrawRectangleLines((int) AABB.Min.X, (int) AABB.Min.Y, (int) (AABB.Max.X - AABB.Min.X), (int) (AABB.Max.Y - AABB.Min.Y), Color.RED);
         }
-        if (_context.DrawForces && _pressureVis._lines != null)
+        if (_context.DrawForces)
         {
-            foreach (Line line in _pressureVis._lines)
+            if (_inflated && _pressureVis._lines != null)
             {
-                DrawLine((int) line._start.X, (int) line._start.Y, (int) line._end.X, (int) line._end.Y, Color.MAGENTA);
+                // Draw pressure forces acting on normals
+                foreach (Line line in _pressureVis._lines)
+                {
+                    DrawLine((int) line._start.X, (int) line._start.Y, (int) line._end.X, (int) line._end.Y, Color.MAGENTA);
+                }
             }
         }
     }
@@ -93,16 +97,9 @@ public class MassShape
                 Line line = new();
                 line._start.X = p1.Pos.X + 0.5f * P1ToP2.X;
                 line._start.Y = p1.Pos.Y + 0.5f * P1ToP2.Y;
-                line._end.X = p1.Pos.X + 0.5f * P1ToP2.X + force.X / 100f;
-                line._end.Y = p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y / 100f;
+                line._end.X = p1.Pos.X + 0.5f * P1ToP2.X + force.X * PressureVis.VisForceMult;
+                line._end.Y = p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y * PressureVis.VisForceMult;
                 _pressureVis._lines[i] = line;
-                // DrawLine(
-                //     (int) (p1.Pos.X + 0.5f * P1ToP2.X), 
-                //     (int) (p1.Pos.Y + 0.5f * P1ToP2.Y), 
-                //     (int) (p1.Pos.X + 0.5f * P1ToP2.X + force.X / 100f), 
-                //     (int) (p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y / 100f), 
-                //     Color.WHITE
-                // );
             }
             p1.ApplyForce(force);
             p2.ApplyForce(force);
@@ -171,6 +168,7 @@ public class MassShape
 
     private struct PressureVis
     {
+        public const float VisForceMult = 5e-2f;
         public Line[] _lines;
     }
 

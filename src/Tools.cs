@@ -57,13 +57,17 @@ namespace Utils
             List<MassShape> foundShapes = new();
             foreach (MassShape s in context.MassShapes)
             {
-                Vector2 com = s.CenterOfMass();
-                float distSq = Vector2.DistanceSquared(center, com);
-                if (distSq < radius * radius)
+                BoundingBox boundingBox = s.GetAABB();
+                Rectangle AABB = new() {
+                    X = boundingBox.Min.X,
+                    Y = boundingBox.Min.Y,
+                    Width = boundingBox.Max.X - boundingBox.Min.X,
+                    Height = boundingBox.Max.Y - boundingBox.Min.Y
+                };
+                if (CheckCollisionCircleRec(center, radius, AABB))
                 {
                     foundShapes.Add(s);
                 }
-                
             }
             return foundShapes;
         }
@@ -94,7 +98,7 @@ namespace Tools
 
         public static void Draw()
         {
-            DrawCircleLines(GetMouseX(), GetMouseY(), Radius, Color.WHITE);
+            DrawCircleLines(GetMouseX(), GetMouseY(), Radius, Color.YELLOW);
         }
 
         public static void ChangeRadius(float change)
