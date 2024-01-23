@@ -33,7 +33,7 @@ namespace Utils
 
     public static class Entities
     {
-        public static List<PointMass> QueryAreaForPoints(float centerX, float centerY, float radius, in Context context)
+        public static List<PointMass> QueryAreaForPoints(float centerX, float centerY, float radius, Context context)
         {
             Vector2 center = new(centerX, centerY);
             List<PointMass> foundPoints = new();
@@ -51,13 +51,13 @@ namespace Utils
             return foundPoints;
         }
 
-        public static List<MassShape> QueryAreaForShapes(float centerX, float centerY, float radius, in Context context)
+        public static List<MassShape> QueryAreaForShapes(float centerX, float centerY, float radius, Context context)
         {
             Vector2 center = new(centerX, centerY);
             List<MassShape> foundShapes = new();
             foreach (MassShape s in context.MassShapes)
             {
-                Vector2 com = s.CalculateCenterOfMass();
+                Vector2 com = s.CenterOfMass();
                 float distSq = Vector2.DistanceSquared(center, com);
                 if (distSq < radius * radius)
                 {
@@ -72,22 +72,32 @@ namespace Utils
 
 namespace Tools
 {
+    public enum ToolType
+    {
+        Pull,
+        Delete,
+    }
+
     public abstract class Tool
     {
         public const float BaseRadiusChange = 10f;
         public const float RadiusChangeMult = 5f;
 
-        public float Radius { get; set; }
+        public static int ToolIndex { get; set; }
+        public static float Radius { get; set; }
+
+        public string Type { get { return GetType().ToString().Split(".")[1]; } }
+
         protected Context _context;
 
         abstract public void Update();
 
-        public void Draw()
+        public static void Draw()
         {
             DrawCircleLines(GetMouseX(), GetMouseY(), Radius, Color.WHITE);
         }
 
-        public void ChangeRadius(float change)
+        public static void ChangeRadius(float change)
         {
             if (IsKeyDown(KeyboardKey.KEY_LEFT_SHIFT))
             {
@@ -99,13 +109,41 @@ namespace Tools
                 Radius = 0f;
             }
         }
+
+        public int GetToolIndex()
+        {
+            ToolType[] toolTypes = (ToolType[]) Enum.GetValues(typeof(ToolType));
+            for (int i = 0; i < toolTypes.Length; i++)
+            {
+                if (Type == toolTypes[i].ToString())
+                {
+                    return i;
+                }
+            }
+            return 0;
+        }
     }
 
     public class Delete : Tool
     {   
+        public Delete(Context context)
+        {
+            _context = context;
+        }
+
         public override void Update()
         {
-            
+            Vector2 mousePos = GetMousePosition();
+            var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
+            if (shapes.Any())
+            {
+                var shape = shapes.First();
+                shape._constraints.RemoveAll(c => {
+                    return Vector2.DistanceSquared(mousePos, c.A.Pos) < Radius * Radius ||
+                    Vector2.DistanceSquared(mousePos, c.B.Pos) < Radius * Radius;
+                });
+                shape._points.RemoveAll(p => Vector2.DistanceSquared(mousePos, p.Pos) < Radius * Radius);
+            }
         }
     }
 
@@ -125,7 +163,7 @@ namespace Tools
             if (shapes.Any())
             {
                 MassShape s = shapes.First();
-                Vector2 com = s.CalculateCenterOfMass();
+                Vector2 com = s.CenterOfMass();
                 Vector2 force = PullForceCoeff * (mousePos - com);
                 s.ApplyForce(force);
                 DrawLine((int) com.X, (int) com.Y, (int) mousePos.X, (int) mousePos.Y, Color.RED);

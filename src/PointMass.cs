@@ -29,7 +29,7 @@ public class PointMass
     
     private readonly Context _context;
 
-    public PointMass(float x, float y, float mass, bool pinned, in Context context)
+    public PointMass(float x, float y, float mass, bool pinned, Context context)
     {
         Pos = new(x, y);
         PrevPos = Pos;

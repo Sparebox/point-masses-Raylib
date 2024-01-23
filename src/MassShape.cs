@@ -10,13 +10,13 @@ public class MassShape
 {
     private const float SpringDamping = 5e4f;
 
-    public Constraint[] _constraints;
-    public PointMass[] _points;
+    public List<Constraint> _constraints;
+    public List<PointMass> _points;
 
     private readonly Context _context;
     private bool _inflated;
 
-    public MassShape(in Context context) 
+    public MassShape(Context context) 
     {
         _context = context;
     }
@@ -59,10 +59,10 @@ public class MassShape
 
     private void Inflate(float gasAmount)
     {
-        for (int i = 0; i < _points.Length; i++)
+        for (int i = 0; i < _points.Count; i++)
         {
             PointMass p1 = _points[i];
-            PointMass p2 = _points[(i + 1) % _points.Length];
+            PointMass p2 = _points[(i + 1) % _points.Count];
             Vector2 P1ToP2 = p2.Pos - p1.Pos;
             float faceLength = P1ToP2.Length();
             Vector2 normal = new(P1ToP2.Y, -P1ToP2.X);
@@ -87,11 +87,11 @@ public class MassShape
     private float CalculateVolume()
     {
         float area = 0f;
-        Vector2 centerOfMass = CalculateCenterOfMass();
-        for (int i = 0; i < _points.Length; i++)
+        Vector2 centerOfMass = CenterOfMass();
+        for (int i = 0; i < _points.Count; i++)
         {
             PointMass p1 = _points[i];
-            PointMass p2 = _points[(i + 1) % _points.Length];
+            PointMass p2 = _points[(i + 1) % _points.Count];
             float baseLength = Vector2.Distance(p1.Pos, p2.Pos); 
             Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(p1.Pos, p2.Pos, centerOfMass);
             float height = Vector2.Distance(closestPoint, centerOfMass);
@@ -100,50 +100,51 @@ public class MassShape
         return area;
     }
 
-    public Vector2 CalculateCenterOfMass()
+    public Vector2 CenterOfMass()
     {
         Vector2 centerOfMass = new();
         foreach (var p in _points)
         {
             centerOfMass += p.Pos;
         }
-        centerOfMass /= _points.Length;
+        centerOfMass /= _points.Count;
         return centerOfMass;
     }
 
     // Shape constructors
 
-    public static MassShape Ball(float x, float y, float radius, float mass, int res, float stiffness, in Context context)
+    public static MassShape Ball(float x, float y, float radius, float mass, int res, float stiffness, Context context)
     {
         float angle = (float) Math.PI / 2f;
         MassShape s = new(context)
         {
             _inflated = true,
-            _points = new PointMass[res],
+            _points = new(),
+            _constraints = new()
         };
-        List<Constraint> constraints = new();
+        // Points
         for (int i = 0; i < res; i++)
         {
             float x0 = radius * (float) Math.Cos(angle);
             float y0 = radius * (float) Math.Sin(angle);
-            s._points[i] = new(x0 + x, y0 + y, mass / res, false, context);
+            s._points.Add(new(x0 + x, y0 + y, mass / res, false, context));
             angle += 2f * (float) Math.PI / res;
         }
+        // Constraints
         for (int i = 0; i < res; i++)
         {
-            constraints.Add(new SpringConstraint(s._points[i], s._points[(i + 1) % res], stiffness, SpringDamping));
+            s._constraints.Add(new SpringConstraint(s._points[i], s._points[(i + 1) % res], stiffness, SpringDamping));
         }
-        s._constraints = constraints.ToArray();
         return s;
     }
 
-    public static MassShape Chain(float x0, float y0, float x1, float y1, float mass, int res, (bool, bool) pins, in Context context)
+    public static MassShape Chain(float x0, float y0, float x1, float y1, float mass, int res, (bool, bool) pins, Context context)
     {
         MassShape c = new(context)
         {
             _inflated = false,
-            _points = new PointMass[res],
-            _constraints = new Constraint[res - 1]
+            _points = new(),
+            _constraints = new()
         };
         Vector2 start = new(x0, y0);
         Vector2 end = new(x1, y1);
@@ -167,49 +168,59 @@ public class MassShape
             {
                 pinned = false;
             }
-            c._points[i] = new(start.X + i * spacing * dir.X, start.Y + i * spacing * dir.Y, mass / res, pinned, context);
+            c._points.Add(new(start.X + i * spacing * dir.X, start.Y + i * spacing * dir.Y, mass / res, pinned, context));
         }
         // Constraints
         for (int i = 0; i < res - 1; i++)
         {
-            c._constraints[i] = new RigidConstraint(c._points[i], c._points[i + 1]);
+            c._constraints.Add(new RigidConstraint(c._points[i], c._points[i + 1]));
         }
         return c;
     }
 
-    public static MassShape Cloth(float x, float y, float width, float height, float mass, int res, float stiffness, in Context context)
+    public static MassShape Cloth(float x, float y, float width, float height, float mass, int res, float stiffness, Context context)
     {
-        int numberOfConstraints = 2 * res * res - 2 * res;
         float pixelsPerConstraintW = width / res;
         float pixelsPerConstraintH = height / res;
         MassShape c = new(context)
         {
             _inflated = false,
-            _points = new PointMass[res * res],
-            _constraints = new Constraint[numberOfConstraints]
+            _points = new(),
+            _constraints = new()
         };
         // Points
         for (int col = 0; col < res; col++)
         {
             for (int row = 0; row < res; row++)
             {
-                bool pinned = row == 0;
-                c._points[col * res + row] = new(x + col * pixelsPerConstraintW, y + row * pixelsPerConstraintH, mass, pinned, context);
+                bool pinned = (col == 0 || col == res - 1) && row == 0;
+                c._points.Add(new(x + col * pixelsPerConstraintW, y + row * pixelsPerConstraintH, mass, pinned, context));
             }
         }
         // Constraints
-        int constraintIndex = 0;
         for (int col = 0; col < res; col++)
         {
             for (int row = 0; row < res; row++)
             {
                 if (col != res - 1)
                 {
-                    c._constraints[constraintIndex++] = new SpringConstraint(c._points[col * res + row], c._points[(col + 1) * res + row], stiffness, SpringDamping);
+                    if (stiffness == 0f)
+                    {
+                        c._constraints.Add(new RigidConstraint(c._points[col * res + row], c._points[(col + 1) * res + row]));
+                    } else
+                    {
+                        c._constraints.Add(new SpringConstraint(c._points[col * res + row], c._points[(col + 1) * res + row], stiffness, SpringDamping));
+                    }
                 }
                 if (row != res - 1)
                 {
-                    c._constraints[constraintIndex++] = new SpringConstraint(c._points[col * res + row], c._points[col * res + row + 1], stiffness, SpringDamping);
+                    if (stiffness == 0f)
+                    {
+                        c._constraints.Add(new RigidConstraint(c._points[col * res + row], c._points[col * res + row + 1]));
+                    } else 
+                    {
+                        c._constraints.Add(new SpringConstraint(c._points[col * res + row], c._points[col * res + row + 1], stiffness, SpringDamping));
+                    }
                 }
             }
         }
