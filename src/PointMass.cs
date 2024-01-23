@@ -109,10 +109,6 @@ public class PointMass
         }
         dir = -Vector2.Normalize(dir);
         frictionF = dir * frictionCoeff * Mass * Math.Abs(Vector2.Dot(Acc, normal));
-        if (_context.DrawForces)
-        {
-            DrawLine((int) Pos.X, (int) Pos.Y, (int) (Pos.X + frictionF.X), (int) (Pos.Y + frictionF.Y), Color.RED);
-        }
         ApplyForce(frictionF);
     }
 }

@@ -78,7 +78,8 @@ public class Loop
             MassShapes = new(),
         };
         _context.SelectedTool = new Pull(_context);
-        _context.MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 37, stiffness: 5e4f, _context));
+        //_context.MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 37, stiffness: 5e4f, _context));
+        _context.MassShapes.Add(MassShape.Ball(WinW / 2f, WinH / 2f, 100f, 10f, 15, 500f, _context));
     }
 
     private static void HandleInput()
@@ -106,6 +107,10 @@ public class Loop
                     _context.SelectedTool = new Delete(_context);
                     break;
             }
+        }
+        if (IsKeyPressed(KeyboardKey.KEY_B))
+        {
+            _context.DrawAABBs = !_context.DrawAABBs;
         }
         if (IsKeyPressed(KeyboardKey.KEY_SPACE))
         {
@@ -147,6 +152,7 @@ public class Context
     public List<MassShape> MassShapes { get; init; }
     public bool GravityEnabled { get; set; }
     public bool DrawForces { get; set; }
+    public bool DrawAABBs { get; set; }
     public bool SimPaused { get; set; }
     public Tool SelectedTool { get; set; }
 

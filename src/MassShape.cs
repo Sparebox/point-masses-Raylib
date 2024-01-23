@@ -14,11 +14,13 @@ public class MassShape
     public List<PointMass> _points;
 
     private readonly Context _context;
-    private bool _inflated;
+    private readonly bool _inflated;
+    private PressureVis _pressureVis;
 
-    public MassShape(Context context) 
+    public MassShape(Context context, bool inflated) 
     {
         _context = context;
+        _inflated = inflated;
     }
 
     public void Update(float timeStep)
@@ -47,6 +49,18 @@ public class MassShape
         {
             p.Draw();
         }
+        if (_context.DrawAABBs)
+        {
+            BoundingBox AABB = GetAABB();
+            DrawRectangleLines((int) AABB.Min.X, (int) AABB.Min.Y, (int) (AABB.Max.X - AABB.Min.X), (int) (AABB.Max.Y - AABB.Min.Y), Color.RED);
+        }
+        if (_context.DrawForces && _pressureVis._lines != null)
+        {
+            foreach (Line line in _pressureVis._lines)
+            {
+                DrawLine((int) line._start.X, (int) line._start.Y, (int) line._end.X, (int) line._end.Y, Color.MAGENTA);
+            }
+        }
     }
 
     public void ApplyForce(in Vector2 force)
@@ -69,14 +83,26 @@ public class MassShape
             normal /= faceLength;
             Vector2 force = faceLength * gasAmount / CalculateVolume() / 2f * normal;
             if (_context.DrawForces)
-            {
-                DrawLine(
-                    (int) (p1.Pos.X + 0.5f * P1ToP2.X), 
-                    (int) (p1.Pos.Y + 0.5f * P1ToP2.Y), 
-                    (int) (p1.Pos.X + 0.5f * P1ToP2.X + force.X / 100f), 
-                    (int) (p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y / 100f), 
-                    Color.WHITE
-                );
+            {   
+                _pressureVis._lines ??= new Line[_points.Count];
+                if (_pressureVis._lines.Length != _points.Count)
+                {
+                    // Update line count since points changed
+                    _pressureVis._lines = new Line[_points.Count];
+                }
+                Line line = new();
+                line._start.X = p1.Pos.X + 0.5f * P1ToP2.X;
+                line._start.Y = p1.Pos.Y + 0.5f * P1ToP2.Y;
+                line._end.X = p1.Pos.X + 0.5f * P1ToP2.X + force.X / 100f;
+                line._end.Y = p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y / 100f;
+                _pressureVis._lines[i] = line;
+                // DrawLine(
+                //     (int) (p1.Pos.X + 0.5f * P1ToP2.X), 
+                //     (int) (p1.Pos.Y + 0.5f * P1ToP2.Y), 
+                //     (int) (p1.Pos.X + 0.5f * P1ToP2.X + force.X / 100f), 
+                //     (int) (p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y / 100f), 
+                //     Color.WHITE
+                // );
             }
             p1.ApplyForce(force);
             p2.ApplyForce(force);
@@ -111,14 +137,56 @@ public class MassShape
         return centerOfMass;
     }
 
+    public BoundingBox GetAABB()
+    {
+        float minX = float.MaxValue;
+        float minY = float.MaxValue;
+        float maxX = 0f;
+        float maxY = 0f;
+        foreach (var p in _points)
+        {
+            if (p.Pos.X <= minX)
+            {
+                minX = p.Pos.X;
+            }
+            if (p.Pos.Y <= minY)
+            {
+                minY = p.Pos.Y;
+            }
+            if (p.Pos.X >= maxX)
+            {
+                maxX = p.Pos.X;
+            }
+            if (p.Pos.Y >= maxY)
+            {
+                maxY = p.Pos.Y;
+            }
+        }
+        return new BoundingBox()
+        {
+            Max = new(maxX, maxY, 0f),
+            Min = new(minX, minY, 0f)
+        };
+    }
+
+    private struct PressureVis
+    {
+        public Line[] _lines;
+    }
+
+    private struct Line
+    {
+        public Vector2 _start;
+        public Vector2 _end;
+    }
+
     // Shape constructors
 
     public static MassShape Ball(float x, float y, float radius, float mass, int res, float stiffness, Context context)
     {
         float angle = (float) Math.PI / 2f;
-        MassShape s = new(context)
+        MassShape s = new(context, true)
         {
-            _inflated = true,
             _points = new(),
             _constraints = new()
         };
@@ -140,9 +208,8 @@ public class MassShape
 
     public static MassShape Chain(float x0, float y0, float x1, float y1, float mass, int res, (bool, bool) pins, Context context)
     {
-        MassShape c = new(context)
+        MassShape c = new(context, false)
         {
-            _inflated = false,
             _points = new(),
             _constraints = new()
         };
@@ -182,9 +249,8 @@ public class MassShape
     {
         float pixelsPerConstraintW = width / res;
         float pixelsPerConstraintH = height / res;
-        MassShape c = new(context)
+        MassShape c = new(context, false)
         {
-            _inflated = false,
             _points = new(),
             _constraints = new()
         };
