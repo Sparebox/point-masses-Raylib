@@ -114,6 +114,22 @@ namespace Tools
             }
         }
 
+        public static void ChangeToolType(Context context)
+        {
+            ToolType[] toolTypes = (ToolType[]) Enum.GetValues(typeof(ToolType));
+            int newToolIndex = (context.SelectedTool.GetToolIndex() + 1) % toolTypes.Length;
+            ToolType newTool = toolTypes[newToolIndex];
+            switch (newTool)
+            {
+                case ToolType.Pull :
+                    context.SelectedTool = new Pull(context);
+                    break;
+                case ToolType.Delete :
+                    context.SelectedTool = new Delete(context);
+                    break;
+            }
+        }
+
         public int GetToolIndex()
         {
             ToolType[] toolTypes = (ToolType[]) Enum.GetValues(typeof(ToolType));
@@ -167,7 +183,7 @@ namespace Tools
             if (shapes.Any())
             {
                 MassShape s = shapes.First();
-                Vector2 com = s.CenterOfMass();
+                Vector2 com = s.CenterOfMass;
                 Vector2 force = PullForceCoeff * (mousePos - com);
                 s.ApplyForce(force);
                 DrawLine((int) com.X, (int) com.Y, (int) mousePos.X, (int) mousePos.Y, Color.RED);

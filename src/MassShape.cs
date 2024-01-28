@@ -10,9 +10,38 @@ public class MassShape
 {
     private const float SpringDamping = 5e4f;
 
+    public Vector2 CenterOfMass
+    {
+        get
+        {
+            return _points.Aggregate(
+                new Vector2(), 
+                (centerOfMass, p) => centerOfMass += p.Pos, 
+                centerOfMass => centerOfMass / _points.Count
+            );
+        }
+    }
+    // pseudo 2D volume a.k.a. area
+    private float Volume
+    {
+        get
+        {
+            float area = 0f;
+            Vector2 centerOfMass = CenterOfMass;
+            for (int i = 0; i < _points.Count; i++)
+            {
+                PointMass p1 = _points[i];
+                PointMass p2 = _points[(i + 1) % _points.Count];
+                float baseLength = Vector2.Distance(p1.Pos, p2.Pos); 
+                Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(p1.Pos, p2.Pos, centerOfMass);
+                float height = Vector2.Distance(closestPoint, centerOfMass);
+                area += 0.5f * baseLength * height;
+            }
+            return area;
+        }
+    }
     public List<Constraint> _constraints;
     public List<PointMass> _points;
-
     private readonly Context _context;
     private readonly bool _inflated;
     private PressureVis _pressureVis;
@@ -85,7 +114,7 @@ public class MassShape
             float faceLength = P1ToP2.Length();
             Vector2 normal = new(P1ToP2.Y, -P1ToP2.X);
             normal /= faceLength;
-            Vector2 force = faceLength * gasAmount / CalculateVolume() / 2f * normal;
+            Vector2 force = faceLength * gasAmount / Volume / 2f * normal;
             if (_context.DrawForces)
             {   
                 _pressureVis._lines ??= new Line[_points.Count];
@@ -104,34 +133,6 @@ public class MassShape
             p1.ApplyForce(force);
             p2.ApplyForce(force);
         }
-    }
-
-    // pseudo 2D volume a.k.a. area
-    private float CalculateVolume()
-    {
-        float area = 0f;
-        Vector2 centerOfMass = CenterOfMass();
-        for (int i = 0; i < _points.Count; i++)
-        {
-            PointMass p1 = _points[i];
-            PointMass p2 = _points[(i + 1) % _points.Count];
-            float baseLength = Vector2.Distance(p1.Pos, p2.Pos); 
-            Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(p1.Pos, p2.Pos, centerOfMass);
-            float height = Vector2.Distance(closestPoint, centerOfMass);
-            area += 0.5f * baseLength * height;
-        }
-        return area;
-    }
-
-    public Vector2 CenterOfMass()
-    {
-        Vector2 centerOfMass = new();
-        foreach (var p in _points)
-        {
-            centerOfMass += p.Pos;
-        }
-        centerOfMass /= _points.Count;
-        return centerOfMass;
     }
 
     public BoundingBox GetAABB()

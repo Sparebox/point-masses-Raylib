@@ -10,7 +10,7 @@ public class PointMass
 {
     private static int _idCounter;
 
-    public const float RestitutionCoeff = 0.9f;
+    public const float RestitutionCoeff = 0.6f;
     public const float KineticFrictionCoeff = 0.01f;
     public const float StaticFrictionCoeff = 1f;
 
@@ -49,7 +49,7 @@ public class PointMass
         }
         if (_context.GravityEnabled)
         {
-            Acc += _context.Gravity;
+            Acc += _context._gravity;
         }
         SolveCollisions();
         Vector2 vel = Vel;
