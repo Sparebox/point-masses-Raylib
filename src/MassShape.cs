@@ -52,6 +52,34 @@ public class MassShape
         _inflated = inflated;
     }
 
+    // Copy constructor
+    public MassShape(in MassShape shape)
+    {
+        _context = shape._context;
+        _inflated = shape._inflated;
+        _points = new();
+        _constraints = new();
+        foreach (var p in shape._points)
+        {
+            _points.Add(new PointMass(p));
+        }
+        foreach (var c in shape._constraints)
+        {
+            Constraint copyConstraint = null;
+            if (c.GetType() == typeof(SpringConstraint))
+            {
+                copyConstraint = new SpringConstraint((SpringConstraint) c);
+            }
+            if (c.GetType() == typeof(RigidConstraint))
+            {
+                copyConstraint = new RigidConstraint((RigidConstraint) c);
+            }
+            copyConstraint.PointA = _points.Where(p => p._id == copyConstraint.PointA._id).First();
+            copyConstraint.PointB = _points.Where(p => p._id == copyConstraint.PointB._id).First();
+            _constraints.Add(copyConstraint);
+        }
+    }
+
     public void Update(float timeStep)
     {
         foreach (Constraint c in _constraints)

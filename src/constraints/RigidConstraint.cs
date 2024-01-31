@@ -10,29 +10,36 @@ public class RigidConstraint : Constraint
 
     public RigidConstraint(in PointMass a, in PointMass b)
     {
-        A = a;
-        B = b;
-        Length = Vector2.Distance(A.Pos, B.Pos);
+        PointA = a;
+        PointB = b;
+        Length = Vector2.Distance(PointA.Pos, PointB.Pos);
+    }
+
+    public RigidConstraint(in RigidConstraint c)
+    {
+        PointA = c.PointA;
+        PointB = c.PointB;
+        Length = c.Length;
     }
 
     public override void Update()
     {
-        Vector2 AtoB = B.Pos - A.Pos;
+        Vector2 AtoB = PointB.Pos - PointA.Pos;
         float dist = AtoB.Length();
         float diff = Length - dist;
         float percentage = diff / dist / 2f;
         Vector2 offset = percentage * dist * Vector2.Normalize(AtoB);
-        if (!A._pinned) {
-            A.Pos -= offset;
+        if (!PointA._pinned) {
+            PointA.Pos -= offset;
         }
-        if (!B._pinned)
+        if (!PointB._pinned)
         {
-            B.Pos += offset;
+            PointB.Pos += offset;
         }
     }
 
     public override void Draw()
     {
-        DrawLine((int) A.Pos.X, (int) A.Pos.Y, (int) B.Pos.X, (int) B.Pos.Y, Color.WHITE);
+        DrawLine((int) PointA.Pos.X, (int) PointA.Pos.Y, (int) PointB.Pos.X, (int) PointB.Pos.Y, Color.WHITE);
     }
 }

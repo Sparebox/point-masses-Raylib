@@ -41,6 +41,19 @@ public class PointMass
         _context = context;
     }
 
+    // Copy constructor
+    public PointMass(in PointMass p)
+    {
+        Pos = p.Pos;
+        PrevPos = Pos;
+        Acc = Vector2.Zero;
+        Mass = p.Mass;
+        Radius = p.Radius;
+        _id = p._id;
+        _pinned = p._pinned;
+        _context = p._context;
+    }
+
     public void Update(float timeStep)
     {
         if (_pinned)

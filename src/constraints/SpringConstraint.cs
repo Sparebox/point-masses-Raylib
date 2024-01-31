@@ -12,17 +12,26 @@ public class SpringConstraint : Constraint
 
     public SpringConstraint(in PointMass a, in PointMass b, float stiffness, float damping)
     {
-        A = a;
-        B = b;
+        PointA = a;
+        PointB = b;
         SpringConstant = stiffness;
-        RestLength = Vector2.Distance(A.Pos, B.Pos);
+        RestLength = Vector2.Distance(PointA.Pos, PointB.Pos);
         DampingCoeff = damping;
+    }
+
+    public SpringConstraint(in SpringConstraint c)
+    {
+        PointA = c.PointA;
+        PointB = c.PointB;
+        SpringConstant = c.SpringConstant;
+        RestLength = c.RestLength;
+        DampingCoeff = c.DampingCoeff;
     }
 
     public override void Update()
     {
-        Vector2 AtoB = B.Pos - A.Pos;
-        Vector2 BrelVel = B.Vel - A.Vel;
+        Vector2 AtoB = PointB.Pos - PointA.Pos;
+        Vector2 BrelVel = PointB.Vel - PointA.Vel;
         float length = AtoB.Length();
         AtoB /= length;
         float diff = length - RestLength;
@@ -30,18 +39,18 @@ public class SpringConstraint : Constraint
         // damping
         force += DampingCoeff * Vector2.Dot(AtoB, BrelVel);
         Vector2 forceVec = force * AtoB;
-        if (!A._pinned)
+        if (!PointA._pinned)
         {
-            A.ApplyForce(forceVec);
+            PointA.ApplyForce(forceVec);
         }
-        if (!B._pinned)
+        if (!PointB._pinned)
         {
-            B.ApplyForce(-forceVec);
+            PointB.ApplyForce(-forceVec);
         }
     }
 
     public override void Draw()
     {
-        DrawLine((int) A.Pos.X, (int) A.Pos.Y, (int) B.Pos.X, (int) B.Pos.Y, Color.WHITE);
+        DrawLine((int) PointA.Pos.X, (int) PointA.Pos.Y, (int) PointB.Pos.X, (int) PointB.Pos.Y, Color.WHITE);
     }
 }

@@ -75,8 +75,9 @@ public class Loop
             DrawForces = false
         };
         context.SelectedTool = new Pull(context);
-        //context.MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 37, stiffness: 5e4f, context));
-        context.MassShapes.Add(MassShape.Ball(WinW / 2f, WinH / 2f, 100f, 10f, 15, 500f, context));
+        context.MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 42, stiffness: 1e5f, context));
+        //context.MassShapes.Add(MassShape.Ball(WinW / 2f, WinH / 2f, 100f, 10f, 15, 500f, context));
+        context.SaveState();
         return context;
     }
 
@@ -98,6 +99,10 @@ public class Loop
         if (IsKeyPressed(KeyboardKey.KEY_B))
         {
             _context.DrawAABBs = !_context.DrawAABBs;
+        }
+        if (IsKeyPressed(KeyboardKey.KEY_R))
+        {
+            _context.LoadState();
         }
         if (IsKeyPressed(KeyboardKey.KEY_SPACE))
         {
@@ -129,45 +134,5 @@ public class Loop
         DrawText(string.Format("Substep: {0} ms", _context._subStep), 10, 130, 20, Color.YELLOW);
         DrawText(string.Format("Gravity: {0}", _context.GravityEnabled ? "Enabled" : "Disabled"), 10, 150, 20, Color.YELLOW);
         DrawText(string.Format("Tool: {0}", _context.SelectedTool.Type), 10, 170, 20, Color.YELLOW);
-    }
-}
-
-public class Context
-{
-    public readonly float _timeStep;
-    public readonly float _subStep;
-    public readonly int _substeps;
-    public readonly float _pixelsPerMeter = 1f / 0.01f;
-    public readonly Vector2 _gravity;
-
-    public List<LineCollider> LineColliders { get; set; }
-    public List<MassShape> MassShapes { get; set; }
-    public bool GravityEnabled { get; set; }
-    public bool DrawForces { get; set; }
-    public bool DrawAABBs { get; set; }
-    public bool SimPaused { get; set; }
-    public Tool SelectedTool { get; set; }
-    public int MassCount 
-    {
-        get 
-        {
-            return MassShapes.Aggregate(0, (count, shape) => count += shape._points.Count);
-        }
-    }
-    public int ConstraintCount 
-    {
-        get
-        {
-            return MassShapes.Aggregate(0, (count, shape) => count += shape._constraints.Count);
-        }
-    }
-
-    public Context(float timeStep, int subSteps, float pixelsPerMeter, Vector2 gravity)
-    {
-        _timeStep = timeStep;
-        _substeps = subSteps;
-        _subStep = timeStep / subSteps;
-        _pixelsPerMeter = pixelsPerMeter;
-        _gravity = gravity * pixelsPerMeter;
     }
 }

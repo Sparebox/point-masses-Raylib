@@ -15,6 +15,12 @@ public class LineCollider
         EndPos = new(x1, y1);
     }
 
+    public LineCollider(in LineCollider c)
+    {
+        StartPos = c.StartPos;
+        EndPos = c.EndPos;
+    }
+
     public void Draw()
     {
         DrawLine((int) StartPos.X, (int) StartPos.Y, (int) EndPos.X, (int) EndPos.Y, Color.WHITE);

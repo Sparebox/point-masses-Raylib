@@ -159,8 +159,8 @@ namespace Tools
             {
                 var shape = shapes.First();
                 shape._constraints.RemoveAll(c => {
-                    return Vector2.DistanceSquared(mousePos, c.A.Pos) < Radius * Radius ||
-                    Vector2.DistanceSquared(mousePos, c.B.Pos) < Radius * Radius;
+                    return Vector2.DistanceSquared(mousePos, c.PointA.Pos) < Radius * Radius ||
+                    Vector2.DistanceSquared(mousePos, c.PointB.Pos) < Radius * Radius;
                 });
                 shape._points.RemoveAll(p => Vector2.DistanceSquared(mousePos, p.Pos) < Radius * Radius);
             }
