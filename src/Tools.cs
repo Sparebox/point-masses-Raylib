@@ -78,6 +78,7 @@ namespace Tools
 {
     public enum ToolType
     {
+        PullCom,
         Pull,
         Delete,
     }
@@ -87,7 +88,6 @@ namespace Tools
         public const float BaseRadiusChange = 10f;
         public const float RadiusChangeMult = 5f;
 
-        public static int ToolIndex { get; set; }
         public static float Radius { get; set; }
 
         public string Type { get { return GetType().ToString().Split(".")[1]; } }
@@ -121,6 +121,9 @@ namespace Tools
             ToolType newTool = toolTypes[newToolIndex];
             switch (newTool)
             {
+                case ToolType.PullCom :
+                    context.SelectedTool = new PullCom(context);
+                    break;
                 case ToolType.Pull :
                     context.SelectedTool = new Pull(context);
                     break;
@@ -167,11 +170,11 @@ namespace Tools
         }
     }
 
-    public class Pull : Tool
+    public class PullCom : Tool
     {
         private const float PullForceCoeff = 1e2f;
 
-        public Pull(Context context)
+        public PullCom(Context context)
         {
             _context = context;
         }
@@ -187,6 +190,31 @@ namespace Tools
                 Vector2 force = PullForceCoeff * (mousePos - com);
                 s.ApplyForce(force);
                 DrawLine((int) com.X, (int) com.Y, (int) mousePos.X, (int) mousePos.Y, Color.RED);
+            }
+        }
+    }
+
+    public class Pull : Tool
+    {
+        private const float PullForceCoeff = 1e3f;
+
+        public Pull(Context context)
+        {
+            _context = context;
+        }
+
+        public override void Update()
+        {
+            Vector2 mousePos = GetMousePosition();
+            var points = Utils.Entities.QueryAreaForPoints(mousePos.X, mousePos.Y, Radius, _context);
+            if (points.Any())
+            {
+                foreach (var p in points)
+                {
+                    Vector2 force = PullForceCoeff * (mousePos - p.Pos);
+                    p.ApplyForce(force);
+                    DrawLine((int) p.Pos.X, (int) p.Pos.Y, (int) mousePos.X, (int) mousePos.Y, Color.RED);
+                }
             }
         }
     }

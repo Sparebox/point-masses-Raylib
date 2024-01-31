@@ -11,6 +11,7 @@ public class Loop
 {   
     public const int WinW = 1600;
     public const int WinH = 900;
+    public const int TargetFPS = 165;
 
     private static float _accumulator;
     private static Context _context;
@@ -22,18 +23,7 @@ public class Loop
         {
             if (!_context.SimPaused)
             {
-                _accumulator += GetFrameTime();
-                while (_accumulator >= _context._timeStep)
-                {
-                    for (int i = 0; i < _context._substeps; i++)
-                    {
-                        foreach (MassShape s in _context.MassShapes)
-                        {
-                            s.Update(_context._subStep);
-                        }
-                    }
-                    _accumulator -= _context._timeStep;
-                }
+                Update();
             }
             HandleInput();
 
@@ -59,7 +49,7 @@ public class Loop
     private static Context Init()
     {
         InitWindow(WinW, WinH, "Point-masses");
-        SetTargetFPS(165);
+        SetTargetFPS(TargetFPS);
         Context context = new(timeStep: 1f / 60f, 13, pixelsPerMeter: 1f / 0.01f, gravity: new(0f, 9.81f))
         {
             LineColliders = new() {
@@ -74,11 +64,27 @@ public class Loop
             DrawAABBs = false,
             DrawForces = false
         };
-        context.SelectedTool = new Pull(context);
+        context.SelectedTool = new PullCom(context);
         context.MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 42, stiffness: 1e5f, context));
         //context.MassShapes.Add(MassShape.Ball(WinW / 2f, WinH / 2f, 100f, 10f, 15, 500f, context));
         context.SaveState();
         return context;
+    }
+
+    private static void Update()
+    {
+        _accumulator += GetFrameTime();
+        while (_accumulator >= _context._timeStep)
+        {
+            for (int i = 0; i < _context._substeps; i++)
+            {
+                foreach (MassShape s in _context.MassShapes)
+                {
+                    s.Update(_context._subStep);
+                }
+            }
+            _accumulator -= _context._timeStep;
+        }
     }
 
     private static void HandleInput()
@@ -126,7 +132,7 @@ public class Loop
     private static void DrawInfo()
     {
         DrawText(string.Format("FPS: {0}", GetFPS()), 10, 10, 20, Color.YELLOW);
-        DrawText(string.Format("{0}", _context.SimPaused ? "PAUSED" : "RUNNING"), 10, 30, 20, Color.YELLOW);
+        DrawText(string.Format("{0}", _context.SimPaused ? "PAUSED" : "RUNNING"), 10, 30, 20, _context.SimPaused ? Color.RED : Color.GREEN);
         DrawText(string.Format("Masses: {0}", _context.MassCount), 10, 50, 20, Color.YELLOW);
         DrawText(string.Format("Constraints: {0}", _context.ConstraintCount), 10, 70, 20, Color.YELLOW);
         DrawText(string.Format("Substeps: {0}", _context._substeps), 10, 90, 20, Color.YELLOW);
