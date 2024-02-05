@@ -24,11 +24,6 @@ namespace Utils
             }
             return lineStart + distOnLine * startToEndNorm;
         }
-
-        public static Vector2 ReflectVec(in Vector2 vec, in Vector2 normal)
-        {
-            return vec - 2f * Vector2.Dot(vec, normal) * normal;
-        }
     }
 
     public static class Entities
@@ -80,6 +75,7 @@ namespace Tools
     {
         PullCom,
         Pull,
+        Wind,
         Delete,
     }
 
@@ -87,8 +83,10 @@ namespace Tools
     {
         public const float BaseRadiusChange = 10f;
         public const float RadiusChangeMult = 5f;
+        public const float BaseAngleChange = 10f;
 
         public static float Radius { get; set; }
+        public static Vector2 Direction { get; set; } = new(1f, 0f);
 
         public string Type { get { return GetType().ToString().Split(".")[1]; } }
 
@@ -96,13 +94,24 @@ namespace Tools
 
         abstract public void Update();
 
-        public static void Draw()
+        public void Draw()
         {
+            int mouseX = GetMouseX();
+            int mouseY = GetMouseY();
+            if (Type == ToolType.Wind.ToString())
+            {
+                DrawLine(mouseX, mouseY, mouseX + (int) (100f * Direction.X), mouseY + (int) (100f * Direction.Y), Color.YELLOW);
+                return;
+            }
             DrawCircleLines(GetMouseX(), GetMouseY(), Radius, Color.YELLOW);
         }
 
-        public static void ChangeRadius(float change)
+        public void ChangeRadius(float change)
         {
+            if (GetType() == typeof(Wind))
+            {
+                return;
+            }
             if (IsKeyDown(KeyboardKey.KEY_LEFT_SHIFT))
             {
                 change *= RadiusChangeMult;
@@ -112,6 +121,18 @@ namespace Tools
             {
                 Radius = 0f;
             }
+        }
+
+        public void ChangeDirection(float angleChange)
+        {
+            if (GetType() != typeof(Wind))
+            {
+                return;
+            }
+            float currentAngle = (float) Math.Atan2(Direction.Y, Direction.X);
+            float newAngle = currentAngle + angleChange;
+            Vector2 newDirection = new((float) Math.Cos(newAngle), (float) Math.Sin(newAngle));
+            Direction = newDirection;
         }
 
         public static void ChangeToolType(Context context)
@@ -126,6 +147,9 @@ namespace Tools
                     break;
                 case ToolType.Pull :
                     context.SelectedTool = new Pull(context);
+                    break;
+                case ToolType.Wind :
+                    context.SelectedTool = new Wind(context);
                     break;
                 case ToolType.Delete :
                     context.SelectedTool = new Delete(context);
@@ -214,6 +238,30 @@ namespace Tools
                     Vector2 force = PullForceCoeff * (mousePos - p.Pos);
                     p.ApplyForce(force);
                     DrawLine((int) p.Pos.X, (int) p.Pos.Y, (int) mousePos.X, (int) mousePos.Y, Color.RED);
+                }
+            }
+        }
+    }
+
+    public class Wind : Tool
+    {
+        private const int MinForce = 500;
+        private const int MaxForce = 5000; 
+
+        public Wind(Context context)
+        {
+            _context = context;
+            Direction = new(1f, 0f);
+        }
+
+        public override void Update()
+        {
+            foreach (var s in _context.MassShapes)
+            {
+                foreach (var p in s._points)
+                {
+                    float forceMult = GetRandomValue(MinForce, MaxForce);
+                    p.ApplyForce(forceMult * Direction);
                 }
             }
         }

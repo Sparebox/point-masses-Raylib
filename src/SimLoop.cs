@@ -38,7 +38,7 @@ public class Loop
             {
                 l.Draw();
             }
-            Tool.Draw();
+            _context.SelectedTool.Draw();
             DrawInfo();
 
             EndDrawing();
@@ -121,11 +121,13 @@ public class Loop
         }
         if (GetMouseWheelMoveV().Y > 0f)
         {
-            Tool.ChangeRadius(Tool.BaseRadiusChange);
+            _context.SelectedTool.ChangeRadius(Tool.BaseRadiusChange);
+            _context.SelectedTool.ChangeDirection(Tool.BaseAngleChange * (float) Math.PI / 180f);
         } 
         else if (GetMouseWheelMoveV().Y < 0f)
         {
-            Tool.ChangeRadius(-Tool.BaseRadiusChange);
+            _context.SelectedTool.ChangeRadius(-Tool.BaseRadiusChange);
+            _context.SelectedTool.ChangeDirection(Tool.BaseAngleChange * (float) -Math.PI / 180f);
         }
     }
 

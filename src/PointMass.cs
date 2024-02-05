@@ -92,7 +92,7 @@ public class PointMass
             {
                 // Collision
                 Vector2 closestToPointNorm = Vector2.Normalize(closestToPoint);
-                Vector2 reflectedVel = Utils.Geometry.ReflectVec(Vel, closestToPointNorm);
+                Vector2 reflectedVel = Vector2.Reflect(Vel, closestToPointNorm);
                 // Correct penetration
                 Pos += (Radius - distToCollider) * closestToPointNorm;
                 Vel = RestitutionCoeff * reflectedVel;
