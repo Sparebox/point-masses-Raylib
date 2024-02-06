@@ -122,12 +122,12 @@ public class Loop
         if (GetMouseWheelMoveV().Y > 0f)
         {
             _context.SelectedTool.ChangeRadius(Tool.BaseRadiusChange);
-            _context.SelectedTool.ChangeDirection(Tool.BaseAngleChange * (float) Math.PI / 180f);
+            _context.SelectedTool.ChangeDirection(Utils.Geometry.Radians(Tool.BaseAngleChange));
         } 
         else if (GetMouseWheelMoveV().Y < 0f)
         {
             _context.SelectedTool.ChangeRadius(-Tool.BaseRadiusChange);
-            _context.SelectedTool.ChangeDirection(Tool.BaseAngleChange * (float) -Math.PI / 180f);
+            _context.SelectedTool.ChangeDirection(-Utils.Geometry.Radians(Tool.BaseAngleChange));
         }
     }
 

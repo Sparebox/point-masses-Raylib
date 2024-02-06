@@ -24,6 +24,11 @@ namespace Utils
             }
             return lineStart + distOnLine * startToEndNorm;
         }
+
+        public static float Radians(float degrees)
+        {
+            return degrees * (float) Math.PI / 180f;
+        }
     }
 
     public static class Entities
@@ -67,6 +72,27 @@ namespace Utils
             return foundShapes;
         }
     }
+
+    public static class Graphic
+    {
+        public const float ArrowBranchLength = 30f;
+        public const float ArrowAngle = 20f;
+
+        public static void DrawArrow(float x0, float y0, float x1, float y1)
+        {
+            Vector2 dir = new(x0 - x1, y0 - y1);
+            dir = Vector2.Normalize(dir);
+            float dirAngle = (float) Math.Atan2(dir.Y, dir.X);
+            float radians = Geometry.Radians(ArrowAngle);
+            float angle1 = dirAngle + radians;
+            float angle2 = dirAngle - radians;
+            Vector2 branchA = new(ArrowBranchLength * (float) Math.Cos(angle1), ArrowBranchLength * (float) Math.Sin(angle1));
+            Vector2 branchB = new(ArrowBranchLength * (float) Math.Cos(angle2), ArrowBranchLength * (float) Math.Sin(angle2));
+            DrawLine((int) x0, (int) y0, (int) x1, (int) y1, Color.YELLOW);
+            DrawLine((int) x1, (int) y1, (int) (x1 + branchA.X), (int) (y1 + branchA.Y), Color.YELLOW);
+            DrawLine((int) x1, (int) y1, (int) (x1 + branchB.X), (int) (y1 + branchB.Y), Color.YELLOW);
+        }
+    }
 }
 
 namespace Tools
@@ -99,11 +125,11 @@ namespace Tools
             int mouseX = GetMouseX();
             int mouseY = GetMouseY();
             if (Type == ToolType.Wind.ToString())
-            {
-                DrawLine(mouseX, mouseY, mouseX + (int) (100f * Direction.X), mouseY + (int) (100f * Direction.Y), Color.YELLOW);
+            {   
+                Utils.Graphic.DrawArrow(mouseX, mouseY, mouseX + (int) (100f * Direction.X), mouseY + (int) (100f * Direction.Y));
                 return;
             }
-            DrawCircleLines(GetMouseX(), GetMouseY(), Radius, Color.YELLOW);
+            DrawCircleLines(mouseX, mouseY, Radius, Color.YELLOW);
         }
 
         public void ChangeRadius(float change)
