@@ -29,6 +29,11 @@ namespace Utils
         {
             return degrees * (float) Math.PI / 180f;
         }
+
+        public static float Degrees(float radians)
+        {
+            return radians * 180f / (float) Math.PI;
+        }
     }
 
     public static class Entities

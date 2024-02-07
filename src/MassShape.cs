@@ -319,4 +319,30 @@ public class MassShape
         }
         return c;
     }
+
+    public static MassShape Pendulum(float x, float y, float length, float mass, int order, Context context)
+    {
+        if (order < 1)
+        {
+            return null;
+        }
+        MassShape c = new(context, false)
+        {
+            _points = new(),
+            _constraints = new()
+        };
+
+        // Points
+        for (int i = 0; i < order + 1; i++)
+        {
+            c._points.Add(new PointMass(x, y, mass / (order + 1), i == 0, context));
+            y += length / (order + 1);
+        }
+        // Constraints
+        for (int i = 0; i < order; i++)
+        {
+            c._constraints.Add(new RigidConstraint(c._points[i], c._points[i + 1]));
+        }
+        return c;
+    }
 }
