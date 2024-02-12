@@ -267,7 +267,7 @@ namespace Tools
                 foreach (var p in points)
                 {
                     Vector2 force = PullForceCoeff * (mousePos - p.Pos);
-                    p.ApplyForce(force);
+                    p.Force += force;
                     DrawLine((int) p.Pos.X, (int) p.Pos.Y, (int) mousePos.X, (int) mousePos.Y, Color.RED);
                 }
             }
@@ -292,7 +292,7 @@ namespace Tools
                 foreach (var p in s._points)
                 {
                     float forceMult = GetRandomValue(MinForce, MaxForce);
-                    p.ApplyForce(forceMult * Direction);
+                    p.Force += forceMult * Direction;
                 }
             }
         }

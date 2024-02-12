@@ -128,7 +128,7 @@ public class MassShape
     {
         foreach (PointMass p in _points)
         {
-            p.ApplyForce(force);
+            p.Force += force;
         }
     }
 
@@ -158,8 +158,8 @@ public class MassShape
                 line._end.Y = p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y * PressureVis.VisForceMult;
                 _pressureVis._lines[i] = line;
             }
-            p1.ApplyForce(force);
-            p2.ApplyForce(force);
+            p1.Force += force;
+            p2.Force += force;
         }
     }
 

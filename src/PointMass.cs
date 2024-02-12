@@ -10,15 +10,14 @@ public class PointMass
 {
     private static int _idCounter;
 
-    public const float RestitutionCoeff = 0.6f;
     public const float KineticFrictionCoeff = 0.01f;
-    public const float StaticFrictionCoeff = 1f;
+    public const float StaticFrictionCoeff = 1.2f;
 
     public readonly int _id;
     public readonly bool _pinned;
     public Vector2 Pos { get; set; }
     public Vector2 PrevPos { get; set; }
-    public Vector2 Acc { get; set; }
+    public Vector2 Force { get; set; }
     public Vector2 Vel
     {
         get { return Pos - PrevPos; }
@@ -33,7 +32,7 @@ public class PointMass
     {
         Pos = new(x, y);
         PrevPos = Pos;
-        Acc = Vector2.Zero;
+        Force = Vector2.Zero;
         Mass = mass;
         Radius = mass * 5f;
         _id = _idCounter++;
@@ -46,7 +45,7 @@ public class PointMass
     {
         Pos = p.Pos;
         PrevPos = Pos;
-        Acc = Vector2.Zero;
+        Force = Vector2.Zero;
         Mass = p.Mass;
         Radius = p.Radius;
         _id = p._id;
@@ -62,23 +61,19 @@ public class PointMass
         }
         if (_context.GravityEnabled)
         {
-            Acc += _context._gravity;
+            Force += _context._gravity;
         }
         SolveCollisions();
+        Vector2 acc = Force / Mass;
         Vector2 vel = Vel;
         PrevPos = Pos;
-        Pos += vel + Acc * timeStep * timeStep;
-        Acc = Vector2.Zero;
+        Pos += vel + acc * timeStep * timeStep;
+        Force = Vector2.Zero;
     }
 
     public void Draw()
     {
         DrawCircleLines((int) Pos.X, (int) Pos.Y, Radius, Color.WHITE);
-    }
-
-    public void ApplyForce(in Vector2 f)
-    {
-        Acc += f / Mass;
     }
 
     public void SolveCollisions()
@@ -95,7 +90,7 @@ public class PointMass
                 Vector2 reflectedVel = Vector2.Reflect(Vel, closestToPointNorm);
                 // Correct penetration
                 Pos += (Radius - distToCollider) * closestToPointNorm;
-                Vel = RestitutionCoeff * reflectedVel;
+                Vel = reflectedVel;
                 ApplyFriction(closestToPointNorm);
             }
         }
@@ -103,25 +98,27 @@ public class PointMass
 
     private void ApplyFriction(in Vector2 normal)
     {
-        // Find direction perpendicular to the normal and opposite to the velocity
+        // Find vel direction perpendicular to the normal
         Vector2 dir = Vel - Vector2.Dot(Vel, normal) * normal;
         if (dir.LengthSquared() == 0f)
         {
             return;
         }
-        Vector2 frictionF;
-        float frictionCoeff;
-        if (dir.LengthSquared() < 0.005f * 0.005f)
+        float normalForce = Vector2.Dot(Force, normal);
+        if (normalForce > 0f)
         {
-            // Static friction
-            frictionCoeff = StaticFrictionCoeff;
-        } else
-        {
-            // Kinetic friction
-            frictionCoeff = KineticFrictionCoeff;
+            // The total force is not towards the normal
+            return;
         }
-        dir = -Vector2.Normalize(dir);
-        frictionF = dir * frictionCoeff * Mass * Math.Abs(Vector2.Dot(Acc, normal));
-        ApplyForce(frictionF);
+        if (Force.LengthSquared() < Math.Pow(StaticFrictionCoeff * -normalForce, 2f))
+        {
+            // Apply static friction
+            Vel += -dir;
+            return;
+        }
+        // Apply kinetic friction
+        dir = Vector2.Normalize(dir);
+        Force += dir * KineticFrictionCoeff * normalForce;
+        // DrawLine((int) Pos.X, (int) Pos.Y, (int) (Pos.X + 50f * frictionVec.X), (int) (Pos.Y + 50f * frictionVec.Y), Color.MAGENTA);
     }
 }
