@@ -10,6 +10,7 @@ public class PointMass
 {
     private static int _idCounter;
 
+    public const float RestitutionCoeff = 0.9f;
     public const float KineticFrictionCoeff = 0.01f;
     public const float StaticFrictionCoeff = 1.2f;
 
@@ -90,7 +91,7 @@ public class PointMass
                 Vector2 reflectedVel = Vector2.Reflect(Vel, closestToPointNorm);
                 // Correct penetration
                 Pos += (Radius - distToCollider) * closestToPointNorm;
-                Vel = reflectedVel;
+                Vel = RestitutionCoeff * reflectedVel;
                 ApplyFriction(closestToPointNorm);
             }
         }

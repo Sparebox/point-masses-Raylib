@@ -57,7 +57,7 @@ public class Loop
             new(0f, 0f, 0f, WinH),
             new(WinW, 0f, WinW, WinH),
             new(0f, WinH, WinW, WinH),
-            new(0f, 900f, 1600f, 200f)
+            //new(0f, 900f, 1600f, 200f)
             },
             MassShapes = new(),
             GravityEnabled = false,
@@ -65,8 +65,8 @@ public class Loop
             DrawForces = false
         };
         context.SelectedTool = new PullCom(context);
-        //context.MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 42, stiffness: 1e5f, context));
-        context.MassShapes.Add(MassShape.Ball(WinW / 2f - 300f, WinH / 2f - 200f, 100f, 10f, 3, 500f, context));
+        context.MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 42, stiffness: 1e5f, context));
+        //context.MassShapes.Add(MassShape.Ball(WinW / 2f - 300f, WinH / 2f - 200f, 50f, 10f, 6, 1000f, context));
         //context.MassShapes.Add(MassShape.Pendulum(WinW / 2f, 30f, 700f, 10f, 10, context));
         
         context.SaveState();
