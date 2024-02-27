@@ -10,9 +10,9 @@ public class PointMass
 {
     private static int _idCounter;
 
-    public const float RestitutionCoeff = 0.9f;
-    public const float KineticFrictionCoeff = 0.01f;
-    public const float StaticFrictionCoeff = 1.2f;
+    public const float RestitutionCoeff = 0.99f;
+    public const float KineticFrictionCoeff = 0.1f;
+    public const float StaticFrictionCoeff = 2f;
 
     public readonly int _id;
     public readonly bool _pinned;
@@ -62,7 +62,7 @@ public class PointMass
         }
         if (_context.GravityEnabled)
         {
-            Force += _context._gravity;
+            Force += Mass * _context._gravity;
         }
         SolveCollisions();
         Vector2 acc = Force / Mass;
@@ -74,7 +74,7 @@ public class PointMass
 
     public void Draw()
     {
-        DrawCircleLines((int) Pos.X, (int) Pos.Y, Radius, Color.WHITE);
+        DrawCircleLines((int) Pos.X, (int) Pos.Y, Radius, Color.White);
     }
 
     public void SolveCollisions()
@@ -120,6 +120,7 @@ public class PointMass
         // Apply kinetic friction
         dir = Vector2.Normalize(dir);
         Force += dir * KineticFrictionCoeff * normalForce;
-        // DrawLine((int) Pos.X, (int) Pos.Y, (int) (Pos.X + 50f * frictionVec.X), (int) (Pos.Y + 50f * frictionVec.Y), Color.MAGENTA);
+        Vector2 vis = dir * KineticFrictionCoeff * normalForce;
+        DrawLine((int) Pos.X, (int) Pos.Y, (int) (Pos.X + vis.X), (int) (Pos.Y + vis.Y), Color.Magenta);
     }
 }

@@ -23,6 +23,6 @@ public class LineCollider
 
     public void Draw()
     {
-        DrawLine((int) StartPos.X, (int) StartPos.Y, (int) EndPos.X, (int) EndPos.Y, Color.WHITE);
+        DrawLine((int) StartPos.X, (int) StartPos.Y, (int) EndPos.X, (int) EndPos.Y, Color.White);
     }
 }

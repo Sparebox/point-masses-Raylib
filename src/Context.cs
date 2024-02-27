@@ -1,6 +1,7 @@
 using System.Data;
 using System.Numerics;
 using Collision;
+using Entity;
 using Physics;
 using Tools;
 
@@ -15,6 +16,7 @@ public class Context
     public readonly Vector2 _gravity;
     private State _saveState;
 
+    public Ramp _ramp;
     public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; set; }
     public bool GravityEnabled { get; set; }

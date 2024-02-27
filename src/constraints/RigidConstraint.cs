@@ -40,6 +40,6 @@ public class RigidConstraint : Constraint
 
     public override void Draw()
     {
-        DrawLine((int) PointA.Pos.X, (int) PointA.Pos.Y, (int) PointB.Pos.X, (int) PointB.Pos.Y, Color.WHITE);
+        DrawLine((int) PointA.Pos.X, (int) PointA.Pos.Y, (int) PointB.Pos.X, (int) PointB.Pos.Y, Color.White);
     }
 }

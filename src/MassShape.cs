@@ -1,5 +1,4 @@
 using System.Numerics;
-using Collision;
 using Raylib_cs;
 using Sim;
 using static Raylib_cs.Raylib;
@@ -109,7 +108,7 @@ public class MassShape
         if (_context.DrawAABBs)
         {
             BoundingBox AABB = GetAABB();
-            DrawRectangleLines((int) AABB.Min.X, (int) AABB.Min.Y, (int) (AABB.Max.X - AABB.Min.X), (int) (AABB.Max.Y - AABB.Min.Y), Color.RED);
+            DrawRectangleLines((int) AABB.Min.X, (int) AABB.Min.Y, (int) (AABB.Max.X - AABB.Min.X), (int) (AABB.Max.Y - AABB.Min.Y), Color.Red);
         }
         if (_context.DrawForces)
         {
@@ -118,7 +117,7 @@ public class MassShape
                 // Draw pressure forces acting on normals
                 foreach (Line line in _pressureVis._lines)
                 {
-                    DrawLine((int) line._start.X, (int) line._start.Y, (int) line._end.X, (int) line._end.Y, Color.MAGENTA);
+                    DrawLine((int) line._start.X, (int) line._start.Y, (int) line._end.X, (int) line._end.Y, Color.Magenta);
                 }
             }
         }
@@ -343,6 +342,16 @@ public class MassShape
         {
             c._constraints.Add(new RigidConstraint(c._points[i], c._points[i + 1]));
         }
+        return c;
+    }
+
+    public static MassShape Particle(float x, float y, float mass, Context context)
+    {
+        MassShape c = new(context, false)
+        {
+            _points = new() { new(x, y, mass, false, context) },
+            _constraints = new()
+        };
         return c;
     }
 }

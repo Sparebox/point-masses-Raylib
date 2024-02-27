@@ -24,16 +24,6 @@ namespace Utils
             }
             return lineStart + distOnLine * startToEndNorm;
         }
-
-        public static float Radians(float degrees)
-        {
-            return degrees * (float) Math.PI / 180f;
-        }
-
-        public static float Degrees(float radians)
-        {
-            return radians * 180f / (float) Math.PI;
-        }
     }
 
     public static class Entities
@@ -88,14 +78,14 @@ namespace Utils
             Vector2 dir = new(x0 - x1, y0 - y1);
             dir = Vector2.Normalize(dir);
             float dirAngle = (float) Math.Atan2(dir.Y, dir.X);
-            float radians = Geometry.Radians(ArrowAngle);
+            float radians = DEG2RAD * ArrowAngle;
             float angle1 = dirAngle + radians;
             float angle2 = dirAngle - radians;
             Vector2 branchA = new(ArrowBranchLength * (float) Math.Cos(angle1), ArrowBranchLength * (float) Math.Sin(angle1));
             Vector2 branchB = new(ArrowBranchLength * (float) Math.Cos(angle2), ArrowBranchLength * (float) Math.Sin(angle2));
-            DrawLine((int) x0, (int) y0, (int) x1, (int) y1, Color.YELLOW);
-            DrawLine((int) x1, (int) y1, (int) (x1 + branchA.X), (int) (y1 + branchA.Y), Color.YELLOW);
-            DrawLine((int) x1, (int) y1, (int) (x1 + branchB.X), (int) (y1 + branchB.Y), Color.YELLOW);
+            DrawLine((int) x0, (int) y0, (int) x1, (int) y1, Color.Yellow);
+            DrawLine((int) x1, (int) y1, (int) (x1 + branchA.X), (int) (y1 + branchA.Y), Color.Yellow);
+            DrawLine((int) x1, (int) y1, (int) (x1 + branchB.X), (int) (y1 + branchB.Y), Color.Yellow);
         }
     }
 }
@@ -134,7 +124,7 @@ namespace Tools
                 Utils.Graphic.DrawArrow(mouseX, mouseY, mouseX + (int) (100f * Direction.X), mouseY + (int) (100f * Direction.Y));
                 return;
             }
-            DrawCircleLines(mouseX, mouseY, Radius, Color.YELLOW);
+            DrawCircleLines(mouseX, mouseY, Radius, Color.Yellow);
         }
 
         public void ChangeRadius(float change)
@@ -143,7 +133,7 @@ namespace Tools
             {
                 return;
             }
-            if (IsKeyDown(KeyboardKey.KEY_LEFT_SHIFT))
+            if (IsKeyDown(KeyboardKey.LeftShift))
             {
                 change *= RadiusChangeMult;
             }
@@ -244,7 +234,7 @@ namespace Tools
                 Vector2 com = s.CenterOfMass;
                 Vector2 force = PullForceCoeff * (mousePos - com);
                 s.ApplyForce(force);
-                DrawLine((int) com.X, (int) com.Y, (int) mousePos.X, (int) mousePos.Y, Color.RED);
+                DrawLine((int) com.X, (int) com.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
             }
         }
     }
@@ -268,7 +258,7 @@ namespace Tools
                 {
                     Vector2 force = PullForceCoeff * (mousePos - p.Pos);
                     p.Force += force;
-                    DrawLine((int) p.Pos.X, (int) p.Pos.Y, (int) mousePos.X, (int) mousePos.Y, Color.RED);
+                    DrawLine((int) p.Pos.X, (int) p.Pos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
                 }
             }
         }
