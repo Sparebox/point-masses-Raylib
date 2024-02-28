@@ -1,4 +1,5 @@
-﻿using ImGuiNET;
+﻿using System.Numerics;
+using ImGuiNET;
 using Physics;
 using Raylib_cs;
 using rlImGui_cs;
@@ -27,27 +28,7 @@ public class Loop
                 Update();
             }
             HandleInput();
-
-            BeginDrawing();
-            ClearBackground(Color.Black);
-
-            foreach (MassShape s in _context.MassShapes)
-            {
-                s.Draw();
-            }
-            foreach (var l in _context.LineColliders)
-            {
-                l.Draw();
-            }
-            //_context._ramp.Draw();
-            _context.SelectedTool.Draw();
-            DrawInfo();
-
-            // GUI
-            rlImGui.Begin();
-            ImGui.ShowDemoWindow();
-            rlImGui.End();
-            EndDrawing();
+            Draw();
         }
         rlImGui.Shutdown();
         CloseWindow();
@@ -73,10 +54,11 @@ public class Loop
         };
         context.SelectedTool = new PullCom(context);
         //context.MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 42, stiffness: 1e5f, context));
-        context.MassShapes.Add(MassShape.Ball(WinW / 2f - 300f, WinH / 2f - 200f, 50f, 10f, 20, 1000f, context));
+        //context.MassShapes.Add(MassShape.Ball(WinW / 2f - 300f, WinH / 2f - 200f, 50f, 10f, 20, 1000f, context));
         //context.MassShapes.Add(MassShape.Pendulum(WinW / 2f, 30f, 700f, 10f, 10, context));
         //context.MassShapes.Add(MassShape.Particle(200f, 50f, 10f, context));
-        //context._ramp = new Entity.Ramp(0f, 200f, 1500f, 200f);
+        context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f, 100f, 10f, context));
+        //context._ramp = new Entity.RotatingCollider(0f, 200f, 1500f, 200f);
         //context.LineColliders.Add(context._ramp._collider);
         context.SaveState();
         return context;
@@ -98,6 +80,29 @@ public class Loop
         }
     }
 
+    private static void Draw()
+    {
+        BeginDrawing();
+        ClearBackground(Color.Black);
+
+        foreach (MassShape s in _context.MassShapes)
+        {
+            s.Draw();
+        }
+        foreach (var l in _context.LineColliders)
+        {
+            l.Draw();
+        }
+        //_context._ramp.Draw();
+        _context.SelectedTool.Draw();
+        
+        // GUI
+        rlImGui.Begin();
+        DrawInfo();
+        rlImGui.End();
+        EndDrawing();
+    }
+
     private static void HandleInput()
     {
         // Keys
@@ -108,10 +113,6 @@ public class Loop
         if (IsKeyPressed(KeyboardKey.F))
         {
             _context.DrawForces = !_context.DrawForces;
-        }
-        if (IsKeyPressed(KeyboardKey.T))
-        {
-            Tool.ChangeToolType(_context);
         }
         if (IsKeyPressed(KeyboardKey.B))
         {
@@ -152,14 +153,22 @@ public class Loop
 
     private static void DrawInfo()
     {
-        DrawText(string.Format("FPS: {0}", GetFPS()), 10, 10, 20, Color.Yellow);
-        DrawText(string.Format("{0}", _context.SimPaused ? "PAUSED" : "RUNNING"), 10, 30, 20, _context.SimPaused ? Color.Red : Color.Green);
-        DrawText(string.Format("Masses: {0}", _context.MassCount), 10, 50, 20, Color.Yellow);
-        DrawText(string.Format("Constraints: {0}", _context.ConstraintCount), 10, 70, 20, Color.Yellow);
-        DrawText(string.Format("Substeps: {0}", _context._substeps), 10, 90, 20, Color.Yellow);
-        DrawText(string.Format("Step: {0} ms", _context._timeStep), 10, 110, 20, Color.Yellow);
-        DrawText(string.Format("Substep: {0} ms", _context._subStep), 10, 130, 20, Color.Yellow);
-        DrawText(string.Format("Gravity: {0}", _context.GravityEnabled ? "Enabled" : "Disabled"), 10, 150, 20, Color.Yellow);
-        DrawText(string.Format("Tool: {0}", _context.SelectedTool.Type), 10, 170, 20, Color.Yellow);
+        ImGui.Begin("Simulation info", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBackground);
+        ImGui.SetWindowPos(Vector2.Zero);
+        ImGui.Text(string.Format("FPS: {0}", GetFPS()));
+        ImGui.PushStyleColor(ImGuiCol.Text, _context.SimPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0, 255f, 0f, 255f));
+        ImGui.Text(string.Format("{0}", _context.SimPaused ? "PAUSED" : "RUNNING"));
+        ImGui.PopStyleColor();
+        ImGui.Text(string.Format("Masses: {0}", _context.MassCount));
+        ImGui.Text(string.Format("Constraints: {0}", _context.ConstraintCount));
+        ImGui.Text(string.Format("Substeps: {0}", _context._substeps));
+        ImGui.Text(string.Format("Step: {0} ms", _context._timeStep));
+        ImGui.Text(string.Format("Substep: {0} ms", _context._subStep));
+        ImGui.Text(string.Format("Gravity: {0}", _context.GravityEnabled ? "Enabled" : "Disabled"));
+        if (ImGui.Combo("Tool", ref _context._selectedToolIndex, Tool.ToolsToString()))
+        {
+            Tool.ChangeToolType(_context);
+        }
+        ImGui.End();
     }
 }

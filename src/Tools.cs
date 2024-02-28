@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Text;
 using Physics;
 using Raylib_cs;
 using Sim;
@@ -159,8 +160,7 @@ namespace Tools
         public static void ChangeToolType(Context context)
         {
             ToolType[] toolTypes = (ToolType[]) Enum.GetValues(typeof(ToolType));
-            int newToolIndex = (context.SelectedTool.GetToolIndex() + 1) % toolTypes.Length;
-            ToolType newTool = toolTypes[newToolIndex];
+            ToolType newTool = toolTypes[context._selectedToolIndex];
             switch (newTool)
             {
                 case ToolType.PullCom :
@@ -178,17 +178,15 @@ namespace Tools
             }
         }
 
-        public int GetToolIndex()
+        public static string ToolsToString()
         {
+            StringBuilder sb = new();
             ToolType[] toolTypes = (ToolType[]) Enum.GetValues(typeof(ToolType));
-            for (int i = 0; i < toolTypes.Length; i++)
+            foreach (var tool in toolTypes)
             {
-                if (Type == toolTypes[i].ToString())
-                {
-                    return i;
-                }
+                sb.Append(tool.ToString() + "\0");
             }
-            return 0;
+            return sb.ToString();
         }
     }
 

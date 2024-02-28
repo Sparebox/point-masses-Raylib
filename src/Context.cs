@@ -16,7 +16,7 @@ public class Context
     public readonly Vector2 _gravity;
     private State _saveState;
 
-    public Ramp _ramp;
+    public RotatingCollider _ramp;
     public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; set; }
     public bool GravityEnabled { get; set; }
@@ -24,6 +24,7 @@ public class Context
     public bool DrawAABBs { get; set; }
     public bool SimPaused { get; set; }
     public Tool SelectedTool { get; set; }
+    public int _selectedToolIndex;
     public int MassCount 
     {
         get 

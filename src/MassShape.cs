@@ -345,6 +345,28 @@ public class MassShape
         return c;
     }
 
+    public static MassShape Box(float x, float y, float size, float mass, Context context)
+    {
+        MassShape c = new(context, false)
+        {
+            _points = new() 
+            {
+                new(x - size / 2f, y - size / 2f, mass / 4f, false, context),
+                new(x + size / 2f, y - size / 2f, mass / 4f, false, context),
+                new(x - size / 2f, y + size / 2f, mass / 4f, false, context),
+                new(x + size / 2f, y + size / 2f, mass / 4f, false, context)
+            },
+            _constraints = new()
+        };
+        c._constraints.Add(new RigidConstraint(c._points[0], c._points[1]));
+        c._constraints.Add(new RigidConstraint(c._points[0], c._points[2]));
+        c._constraints.Add(new RigidConstraint(c._points[1], c._points[3]));
+        c._constraints.Add(new RigidConstraint(c._points[2], c._points[3]));
+        c._constraints.Add(new RigidConstraint(c._points[0], c._points[3]));
+
+        return c;
+    }
+
     public static MassShape Particle(float x, float y, float mass, Context context)
     {
         MassShape c = new(context, false)

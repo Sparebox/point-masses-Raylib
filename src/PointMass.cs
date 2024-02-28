@@ -120,7 +120,7 @@ public class PointMass
         // Apply kinetic friction
         dir = Vector2.Normalize(dir);
         Force += dir * KineticFrictionCoeff * normalForce;
-        Vector2 vis = dir * KineticFrictionCoeff * normalForce;
-        DrawLine((int) Pos.X, (int) Pos.Y, (int) (Pos.X + vis.X), (int) (Pos.Y + vis.Y), Color.Magenta);
+        //Vector2 vis = dir * KineticFrictionCoeff * normalForce;
+        //DrawLine((int) Pos.X, (int) Pos.Y, (int) (Pos.X + vis.X), (int) (Pos.Y + vis.Y), Color.Magenta);
     }
 }
