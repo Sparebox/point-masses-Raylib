@@ -23,7 +23,7 @@ public class Loop
         rlImGui.Setup(true);
         while (!WindowShouldClose())
         {
-            if (!_context.SimPaused)
+            if (!_context._simPaused)
             {
                 Update();
             }
@@ -48,18 +48,20 @@ public class Loop
             //new(0f, 900f, 1600f, 200f)
             },
             MassShapes = new(),
-            GravityEnabled = false,
-            DrawAABBs = false,
-            DrawForces = false
+            _gravityEnabled = false,
+            _drawAABBS = false,
+            _drawForces = false,
+            _simPaused = true
         };
         context.SelectedTool = new PullCom(context);
         //context.MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 42, stiffness: 1e5f, context));
         //context.MassShapes.Add(MassShape.Ball(WinW / 2f - 300f, WinH / 2f - 200f, 50f, 10f, 20, 1000f, context));
         //context.MassShapes.Add(MassShape.Pendulum(WinW / 2f, 30f, 700f, 10f, 10, context));
         //context.MassShapes.Add(MassShape.Particle(200f, 50f, 10f, context));
-        context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f, 100f, 10f, context));
-        //context._ramp = new Entity.RotatingCollider(0f, 200f, 1500f, 200f);
-        //context.LineColliders.Add(context._ramp._collider);
+        //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f, 100f, 10f, context));
+        context.MassShapes.Add(MassShape.HardBall(500f, 200f, 100f, 100f, 30, context));
+        context._ramp = new Entity.RotatingCollider(0f, 200f, WinW, WinH);
+        context.LineColliders.Add(context._ramp._collider);
         context.SaveState();
         return context;
     }
@@ -93,7 +95,7 @@ public class Loop
         {
             l.Draw();
         }
-        //_context._ramp.Draw();
+        _context._ramp.Draw();
         _context.SelectedTool.Draw();
         
         // GUI
@@ -108,15 +110,15 @@ public class Loop
         // Keys
         if (IsKeyPressed(KeyboardKey.G))
         {
-            _context.GravityEnabled = !_context.GravityEnabled;
+            _context._gravityEnabled = !_context._gravityEnabled;
         }
         if (IsKeyPressed(KeyboardKey.F))
         {
-            _context.DrawForces = !_context.DrawForces;
+            _context._drawForces = !_context._drawForces;
         }
         if (IsKeyPressed(KeyboardKey.B))
         {
-            _context.DrawAABBs = !_context.DrawAABBs;
+            _context._drawAABBS = !_context._drawAABBS;
         }
         if (IsKeyPressed(KeyboardKey.R))
         {
@@ -124,7 +126,7 @@ public class Loop
         }
         if (IsKeyPressed(KeyboardKey.Space))
         {
-            _context.SimPaused = !_context.SimPaused;
+            _context._simPaused = !_context._simPaused;
         }
         if (IsKeyDown(KeyboardKey.Up))
         {
@@ -156,15 +158,17 @@ public class Loop
         ImGui.Begin("Simulation info", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBackground);
         ImGui.SetWindowPos(Vector2.Zero);
         ImGui.Text(string.Format("FPS: {0}", GetFPS()));
-        ImGui.PushStyleColor(ImGuiCol.Text, _context.SimPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0, 255f, 0f, 255f));
-        ImGui.Text(string.Format("{0}", _context.SimPaused ? "PAUSED" : "RUNNING"));
+        ImGui.PushStyleColor(ImGuiCol.Text, _context._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0, 255f, 0f, 255f));
+        ImGui.Checkbox(_context._simPaused ? "PAUSE" : "RUNNING", ref _context._simPaused);
         ImGui.PopStyleColor();
         ImGui.Text(string.Format("Masses: {0}", _context.MassCount));
         ImGui.Text(string.Format("Constraints: {0}", _context.ConstraintCount));
         ImGui.Text(string.Format("Substeps: {0}", _context._substeps));
         ImGui.Text(string.Format("Step: {0} ms", _context._timeStep));
         ImGui.Text(string.Format("Substep: {0} ms", _context._subStep));
-        ImGui.Text(string.Format("Gravity: {0}", _context.GravityEnabled ? "Enabled" : "Disabled"));
+        ImGui.Checkbox("Gravity", ref _context._gravityEnabled);
+        ImGui.Checkbox("Draw forces", ref _context._drawForces);
+        ImGui.Checkbox("Draw AABBs", ref _context._drawAABBS);
         if (ImGui.Combo("Tool", ref _context._selectedToolIndex, Tool.ToolsToString()))
         {
             Tool.ChangeToolType(_context);

@@ -41,11 +41,11 @@ public class SpringConstraint : Constraint
         Vector2 forceVec = force * AtoB;
         if (!PointA._pinned)
         {
-            PointA.Force += forceVec;
+            PointA.ApplyForce(forceVec);
         }
         if (!PointB._pinned)
         {
-            PointB.Force += -forceVec;
+            PointB.ApplyForce(-forceVec);
         }
     }
 

@@ -74,9 +74,15 @@ namespace Utils
         public const float ArrowBranchLength = 30f;
         public const float ArrowAngle = 20f;
 
-        public static void DrawArrow(float x0, float y0, float x1, float y1)
+        public static void DrawArrow(float x0, float y0, float x1, float y1, Color color)
         {
-            Vector2 dir = new(x0 - x1, y0 - y1);
+            Vector2 start = new(x0, y0);
+            Vector2 end = new(x1, y1);
+            Vector2 dir = start - end;
+            if (dir.LengthSquared() == 0f)
+            {
+                return;
+            }
             dir = Vector2.Normalize(dir);
             float dirAngle = (float) Math.Atan2(dir.Y, dir.X);
             float radians = DEG2RAD * ArrowAngle;
@@ -84,9 +90,28 @@ namespace Utils
             float angle2 = dirAngle - radians;
             Vector2 branchA = new(ArrowBranchLength * (float) Math.Cos(angle1), ArrowBranchLength * (float) Math.Sin(angle1));
             Vector2 branchB = new(ArrowBranchLength * (float) Math.Cos(angle2), ArrowBranchLength * (float) Math.Sin(angle2));
-            DrawLine((int) x0, (int) y0, (int) x1, (int) y1, Color.Yellow);
-            DrawLine((int) x1, (int) y1, (int) (x1 + branchA.X), (int) (y1 + branchA.Y), Color.Yellow);
-            DrawLine((int) x1, (int) y1, (int) (x1 + branchB.X), (int) (y1 + branchB.Y), Color.Yellow);
+            DrawLine((int) start.X, (int) start.Y, (int) end.X, (int) end.Y, color);
+            DrawLine((int) end.X, (int) end.Y, (int) (end.X + branchA.X), (int) (end.Y + branchA.Y), color);
+            DrawLine((int) end.X, (int) end.Y, (int) (end.X + branchB.X), (int) (end.Y + branchB.Y), color);
+        }
+
+        public static void DrawArrow(in Vector2 start, in Vector2 end, Color color)
+        {
+            Vector2 dir = start - end;
+            if (dir.LengthSquared() == 0f)
+            {
+                return;
+            }
+            dir = Vector2.Normalize(dir);
+            float dirAngle = (float) Math.Atan2(dir.Y, dir.X);
+            float radians = DEG2RAD * ArrowAngle;
+            float angle1 = dirAngle + radians;
+            float angle2 = dirAngle - radians;
+            Vector2 branchA = new(ArrowBranchLength * (float) Math.Cos(angle1), ArrowBranchLength * (float) Math.Sin(angle1));
+            Vector2 branchB = new(ArrowBranchLength * (float) Math.Cos(angle2), ArrowBranchLength * (float) Math.Sin(angle2));
+            DrawLine((int) start.X, (int) start.Y, (int) end.X, (int) end.Y, color);
+            DrawLine((int) end.X, (int) end.Y, (int) (end.X + branchA.X), (int) (end.Y + branchA.Y), color);
+            DrawLine((int) end.X, (int) end.Y, (int) (end.X + branchB.X), (int) (end.Y + branchB.Y), color);
         }
     }
 }
@@ -122,7 +147,7 @@ namespace Tools
             int mouseY = GetMouseY();
             if (Type == ToolType.Wind.ToString())
             {   
-                Utils.Graphic.DrawArrow(mouseX, mouseY, mouseX + (int) (100f * Direction.X), mouseY + (int) (100f * Direction.Y));
+                Utils.Graphic.DrawArrow(mouseX, mouseY, mouseX + (int) (100f * Direction.X), mouseY + (int) (100f * Direction.Y), Color.Yellow);
                 return;
             }
             DrawCircleLines(mouseX, mouseY, Radius, Color.Yellow);
@@ -255,7 +280,7 @@ namespace Tools
                 foreach (var p in points)
                 {
                     Vector2 force = PullForceCoeff * (mousePos - p.Pos);
-                    p.Force += force;
+                    p.ApplyForce(force);
                     DrawLine((int) p.Pos.X, (int) p.Pos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
                 }
             }
@@ -280,7 +305,7 @@ namespace Tools
                 foreach (var p in s._points)
                 {
                     float forceMult = GetRandomValue(MinForce, MaxForce);
-                    p.Force += forceMult * Direction;
+                    p.ApplyForce(forceMult * Direction);
                 }
             }
         }

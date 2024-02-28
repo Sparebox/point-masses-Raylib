@@ -17,12 +17,12 @@ public class Context
     private State _saveState;
 
     public RotatingCollider _ramp;
+    public bool _gravityEnabled;
+    public bool _drawForces;
+    public bool _drawAABBS;
+    public bool _simPaused;
     public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; set; }
-    public bool GravityEnabled { get; set; }
-    public bool DrawForces { get; set; }
-    public bool DrawAABBs { get; set; }
-    public bool SimPaused { get; set; }
     public Tool SelectedTool { get; set; }
     public int _selectedToolIndex;
     public int MassCount 

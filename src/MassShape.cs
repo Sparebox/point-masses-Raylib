@@ -9,6 +9,17 @@ public class MassShape
 {
     private const float SpringDamping = 5e4f;
 
+    public Vector2 TotalVisForce
+    {
+        get
+        {
+            return _points.Aggregate(
+                new Vector2(),
+                (totalVisForce, p) => totalVisForce += p._visForce
+            );
+        }
+    }
+
     public Vector2 CenterOfMass
     {
         get
@@ -105,21 +116,26 @@ public class MassShape
         {
             p.Draw();
         }
-        if (_context.DrawAABBs)
+        if (_context._drawAABBS)
         {
             BoundingBox AABB = GetAABB();
             DrawRectangleLines((int) AABB.Min.X, (int) AABB.Min.Y, (int) (AABB.Max.X - AABB.Min.X), (int) (AABB.Max.Y - AABB.Min.Y), Color.Red);
         }
-        if (_context.DrawForces)
+        if (_context._drawForces)
         {
             if (_inflated && _pressureVis._lines != null)
             {
                 // Draw pressure forces acting on normals
-                foreach (Line line in _pressureVis._lines)
+                foreach (VisLine line in _pressureVis._lines)
                 {
                     DrawLine((int) line._start.X, (int) line._start.Y, (int) line._end.X, (int) line._end.Y, Color.Magenta);
                 }
             }
+            Vector2 COM = CenterOfMass;
+            Vector2 totalVisForce = TotalVisForce;
+            Utils.Graphic.DrawArrow(COM, COM + totalVisForce * 1e-2f, Color.Magenta);
+            //DrawLine((int) COM.X, (int) COM.Y, (int) (COM.X + totalVisForce.X * 1e-2f), (int) (COM.Y + totalVisForce.Y * 1e-2f), Color.Magenta);
+            //_points.ForEach(p => p._visForce = Vector2.Zero);
         }
     }
 
@@ -127,7 +143,7 @@ public class MassShape
     {
         foreach (PointMass p in _points)
         {
-            p.Force += force;
+            p.ApplyForce(force);
         }
     }
 
@@ -142,23 +158,23 @@ public class MassShape
             Vector2 normal = new(P1ToP2.Y, -P1ToP2.X);
             normal /= faceLength;
             Vector2 force = faceLength * gasAmount / Volume / 2f * normal;
-            if (_context.DrawForces)
+            p1.ApplyForce(force);
+            p2.ApplyForce(force);
+            if (_context._drawForces)
             {   
-                _pressureVis._lines ??= new Line[_points.Count];
+                _pressureVis._lines ??= new VisLine[_points.Count];
                 if (_pressureVis._lines.Length != _points.Count)
                 {
                     // Update line count since points changed
-                    _pressureVis._lines = new Line[_points.Count];
+                    _pressureVis._lines = new VisLine[_points.Count];
                 }
-                Line line = new();
+                VisLine line = new();
                 line._start.X = p1.Pos.X + 0.5f * P1ToP2.X;
                 line._start.Y = p1.Pos.Y + 0.5f * P1ToP2.Y;
                 line._end.X = p1.Pos.X + 0.5f * P1ToP2.X + force.X * PressureVis.VisForceMult;
                 line._end.Y = p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y * PressureVis.VisForceMult;
                 _pressureVis._lines[i] = line;
             }
-            p1.Force += force;
-            p2.Force += force;
         }
     }
 
@@ -196,11 +212,11 @@ public class MassShape
 
     private struct PressureVis
     {
-        public const float VisForceMult = 5e-2f;
-        public Line[] _lines;
+        public const float VisForceMult = 1e-3f;
+        public VisLine[] _lines;
     }
 
-    private struct Line
+    private struct VisLine
     {
         public Vector2 _start;
         public Vector2 _end;
@@ -208,7 +224,7 @@ public class MassShape
 
     // Shape constructors
 
-    public static MassShape Ball(float x, float y, float radius, float mass, int res, float stiffness, Context context)
+    public static MassShape SoftBall(float x, float y, float radius, float mass, int res, float stiffness, Context context)
     {
         float angle = (float) Math.PI / 2f;
         MassShape s = new(context, true)
@@ -229,6 +245,38 @@ public class MassShape
         {
             s._constraints.Add(new SpringConstraint(s._points[i], s._points[(i + 1) % res], stiffness, SpringDamping));
         }
+        return s;
+    }
+
+    public static MassShape HardBall(float x, float y, float radius, float mass, int res, Context context)
+    {
+        float angle = (float) Math.PI / 2f;
+        MassShape s = new(context, false)
+        {
+            _points = new(),
+            _constraints = new()
+        };
+        // Points
+        for (int i = 0; i < res; i++)
+        {
+            float x0 = radius * (float) Math.Cos(angle);
+            float y0 = radius * (float) Math.Sin(angle);
+            s._points.Add(new(x0 + x, y0 + y, mass / res, false, context));
+            angle += 2f * (float) Math.PI / res;
+        }
+        // Constraints
+        List<int> visitedPoints = new();
+        for (int i = 0; i < res; i++)
+        {
+            s._constraints.Add(new RigidConstraint(s._points[i], s._points[(i + 1) % res]));
+            if (!visitedPoints.Contains(i))
+            {
+                int nextIndex = res % 2 == 0 ? (i + res / 2 - 1) % res : (i + res / 2) % res;
+                s._constraints.Add(new RigidConstraint(s._points[i], s._points[nextIndex]));
+                visitedPoints.Add(i);
+            }
+        }
+        
         return s;
     }
 

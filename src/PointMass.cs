@@ -16,6 +16,7 @@ public class PointMass
 
     public readonly int _id;
     public readonly bool _pinned;
+    public Vector2 _visForce; // For force visualization
     public Vector2 Pos { get; set; }
     public Vector2 PrevPos { get; set; }
     public Vector2 Force { get; set; }
@@ -60,21 +61,28 @@ public class PointMass
         {
             return;
         }
-        if (_context.GravityEnabled)
+        if (_context._gravityEnabled)
         {
-            Force += Mass * _context._gravity;
+            ApplyForce(Mass * _context._gravity);
         }
         SolveCollisions();
         Vector2 acc = Force / Mass;
         Vector2 vel = Vel;
         PrevPos = Pos;
         Pos += vel + acc * timeStep * timeStep;
+        _visForce = Force;
         Force = Vector2.Zero;
     }
 
     public void Draw()
     {
         DrawCircleLines((int) Pos.X, (int) Pos.Y, Radius, Color.White);
+    }
+
+    public void ApplyForce(in Vector2 force)
+    {
+        Force += force;
+        _visForce += force;
     }
 
     public void SolveCollisions()
@@ -119,7 +127,7 @@ public class PointMass
         }
         // Apply kinetic friction
         dir = Vector2.Normalize(dir);
-        Force += dir * KineticFrictionCoeff * normalForce;
+        ApplyForce(dir * KineticFrictionCoeff * normalForce);
         //Vector2 vis = dir * KineticFrictionCoeff * normalForce;
         //DrawLine((int) Pos.X, (int) Pos.Y, (int) (Pos.X + vis.X), (int) (Pos.Y + vis.Y), Color.Magenta);
     }
