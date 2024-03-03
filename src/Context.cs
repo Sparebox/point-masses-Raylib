@@ -78,7 +78,6 @@ public class Context
             MassShapes.Add(new MassShape(s));
         }
         _ramp = new RotatingCollider(_saveState.Ramp);
-        LineColliders.Add(_ramp._collider);
         Console.WriteLine("Loaded state");
     }
 

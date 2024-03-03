@@ -89,23 +89,12 @@ public class PointMass
     {
         foreach (LineCollider c in _context.LineColliders)
         {
-            Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(c.StartPos, c.EndPos, Pos);
-            Vector2 closestToPoint = Pos - closestPoint;
-            float distToCollider = closestToPoint.Length();
-            if (distToCollider <= Radius)
-            {
-                // Collision
-                Vector2 closestToPointNorm = Vector2.Normalize(closestToPoint);
-                Vector2 reflectedVel = Vector2.Reflect(Vel, closestToPointNorm);
-                // Correct penetration
-                Pos += (Radius - distToCollider) * closestToPointNorm;
-                Vel = RestitutionCoeff * reflectedVel;
-                ApplyFriction(closestToPointNorm);
-            }
+            c.SolveCollision(this);
         }
+        _context._ramp.SolveCollision(this);
     }
 
-    private void ApplyFriction(in Vector2 normal)
+    public void ApplyFriction(in Vector2 normal)
     {
         // Find vel direction perpendicular to the normal
         Vector2 dir = Vel - Vector2.Dot(Vel, normal) * normal;

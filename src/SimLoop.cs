@@ -61,7 +61,6 @@ public class Loop
         //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f, 100f, 10f, context));
         context.MassShapes.Add(MassShape.HardBall(500f, 200f, 100f, 100f, 20, context));
         context._ramp = new Entity.RotatingCollider(0f, 200f, WinW, WinH);
-        context.LineColliders.Add(context._ramp._collider);
         context.SaveState();
         return context;
     }
