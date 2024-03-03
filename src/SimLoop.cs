@@ -59,7 +59,7 @@ public class Loop
         //context.MassShapes.Add(MassShape.Pendulum(WinW / 2f, 30f, 700f, 10f, 10, context));
         //context.MassShapes.Add(MassShape.Particle(200f, 50f, 10f, context));
         //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f, 100f, 10f, context));
-        context.MassShapes.Add(MassShape.HardBall(500f, 200f, 100f, 100f, 30, context));
+        context.MassShapes.Add(MassShape.HardBall(500f, 200f, 100f, 100f, 20, context));
         context._ramp = new Entity.RotatingCollider(0f, 200f, WinW, WinH);
         context.LineColliders.Add(context._ramp._collider);
         context.SaveState();
@@ -155,17 +155,17 @@ public class Loop
 
     private static void DrawInfo()
     {
-        ImGui.Begin("Simulation info", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBackground);
+        ImGui.Begin("Simulation info", ImGuiWindowFlags.NoMove);
         ImGui.SetWindowPos(Vector2.Zero);
         ImGui.Text(string.Format("FPS: {0}", GetFPS()));
-        ImGui.PushStyleColor(ImGuiCol.Text, _context._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0, 255f, 0f, 255f));
+        ImGui.PushStyleColor(ImGuiCol.Text, _context._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
         ImGui.Checkbox(_context._simPaused ? "PAUSE" : "RUNNING", ref _context._simPaused);
         ImGui.PopStyleColor();
         ImGui.Text(string.Format("Masses: {0}", _context.MassCount));
         ImGui.Text(string.Format("Constraints: {0}", _context.ConstraintCount));
         ImGui.Text(string.Format("Substeps: {0}", _context._substeps));
-        ImGui.Text(string.Format("Step: {0} ms", _context._timeStep));
-        ImGui.Text(string.Format("Substep: {0} ms", _context._subStep));
+        ImGui.Text(string.Format("Step: {0:0.0000} ms", _context._timeStep));
+        ImGui.Text(string.Format("Substep: {0:0.0000} ms", _context._subStep));
         ImGui.Checkbox("Gravity", ref _context._gravityEnabled);
         ImGui.Checkbox("Draw forces", ref _context._drawForces);
         ImGui.Checkbox("Draw AABBs", ref _context._drawAABBS);

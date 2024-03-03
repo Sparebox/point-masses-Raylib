@@ -104,6 +104,10 @@ public class MassShape
         {
             Inflate(5e6f);
         }
+        if (CheckPointCollision(GetMousePosition()))
+        {
+            Console.WriteLine("COLLISION");
+        }
     }
 
     public void Draw()
@@ -134,8 +138,6 @@ public class MassShape
             Vector2 COM = CenterOfMass;
             Vector2 totalVisForce = TotalVisForce;
             Utils.Graphic.DrawArrow(COM, COM + totalVisForce * 1e-2f, Color.Magenta);
-            //DrawLine((int) COM.X, (int) COM.Y, (int) (COM.X + totalVisForce.X * 1e-2f), (int) (COM.Y + totalVisForce.Y * 1e-2f), Color.Magenta);
-            //_points.ForEach(p => p._visForce = Vector2.Zero);
         }
     }
 
@@ -186,21 +188,21 @@ public class MassShape
         float maxY = 0f;
         foreach (var p in _points)
         {
-            if (p.Pos.X <= minX)
+            if (p.Pos.X - p.Radius <= minX)
             {
-                minX = p.Pos.X;
+                minX = p.Pos.X - p.Radius;
             }
-            if (p.Pos.Y <= minY)
+            if (p.Pos.Y - p.Radius <= minY)
             {
-                minY = p.Pos.Y;
+                minY = p.Pos.Y - p.Radius;
             }
-            if (p.Pos.X >= maxX)
+            if (p.Pos.X + p.Radius >= maxX)
             {
-                maxX = p.Pos.X;
+                maxX = p.Pos.X + p.Radius;
             }
-            if (p.Pos.Y >= maxY)
+            if (p.Pos.Y + p.Radius >= maxY)
             {
-                maxY = p.Pos.Y;
+                maxY = p.Pos.Y + p.Radius;
             }
         }
         return new BoundingBox()
@@ -208,6 +210,42 @@ public class MassShape
             Max = new(maxX, maxY, 0f),
             Min = new(minX, minY, 0f)
         };
+    }
+
+    public bool CheckPointCollision(in Vector2 point)
+    {
+        BoundingBox aabb = GetAABB();
+        Rectangle aabbRect = new()
+        {
+            Position = new(aabb.Min.X, aabb.Min.Y),
+            Width = aabb.Max.X - aabb.Min.X,
+            Height = aabb.Max.Y - aabb.Min.Y
+        };
+        if (!CheckCollisionPointRec(point, aabbRect))
+        {
+            return false;
+        }
+        Vector2 outsidePoint = new(point.X + (aabb.Max.X - point.X + 5f), point.Y);
+        List<Vector2> collisionPoints = new(); 
+        for (int i = 0; i < _points.Count; i++)
+        {
+            Vector2 startPos = _points[i].Pos;
+            Vector2 endPos = _points[(i + 1) % _points.Count].Pos;
+            Vector2 collisionPoint = new();
+            bool hadCollision = CheckCollisionLines(startPos, endPos, point, outsidePoint, ref collisionPoint);
+            if (hadCollision)
+            {
+                collisionPoints.Add(collisionPoint);
+            }
+        }
+        if (collisionPoints.Count > 0 && collisionPoints.Count % 2 != 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     private struct PressureVis
@@ -400,17 +438,17 @@ public class MassShape
             _points = new() 
             {
                 new(x - size / 2f, y - size / 2f, mass / 4f, false, context),
-                new(x + size / 2f, y - size / 2f, mass / 4f, false, context),
                 new(x - size / 2f, y + size / 2f, mass / 4f, false, context),
-                new(x + size / 2f, y + size / 2f, mass / 4f, false, context)
+                new(x + size / 2f, y + size / 2f, mass / 4f, false, context),
+                new(x + size / 2f, y - size / 2f, mass / 4f, false, context)
             },
             _constraints = new()
         };
         c._constraints.Add(new RigidConstraint(c._points[0], c._points[1]));
-        c._constraints.Add(new RigidConstraint(c._points[0], c._points[2]));
-        c._constraints.Add(new RigidConstraint(c._points[1], c._points[3]));
+        c._constraints.Add(new RigidConstraint(c._points[1], c._points[2]));
         c._constraints.Add(new RigidConstraint(c._points[2], c._points[3]));
-        c._constraints.Add(new RigidConstraint(c._points[0], c._points[3]));
+        c._constraints.Add(new RigidConstraint(c._points[3], c._points[0]));
+        c._constraints.Add(new RigidConstraint(c._points[0], c._points[2]));
 
         return c;
     }

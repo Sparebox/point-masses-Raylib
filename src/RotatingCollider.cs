@@ -7,12 +7,15 @@ namespace Entity;
 public class RotatingCollider
 {
     public LineCollider _collider;
-    public Vector2 _dir;
 
     public RotatingCollider(float x0, float y0, float x1, float y1)
     {
         _collider = new LineCollider(x0, y0, x1, y1);
-        _dir = Vector2.Normalize(_collider.EndPos - _collider.StartPos);
+    }
+
+    public RotatingCollider(RotatingCollider r)
+    {
+        _collider = new LineCollider(r._collider);
     }
 
     public void Raise(float amount)
