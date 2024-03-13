@@ -61,7 +61,7 @@ public class Context
         {
             _saveState.MassShapes.Add(new MassShape(s));
         }
-        _saveState.Ramp = new RotatingCollider(_ramp);
+        //_saveState.Ramp = new RotatingCollider(_ramp);
         Console.WriteLine("Saved state");
     }
 
@@ -77,7 +77,7 @@ public class Context
         {
             MassShapes.Add(new MassShape(s));
         }
-        _ramp = new RotatingCollider(_saveState.Ramp);
+        //_ramp = new RotatingCollider(_saveState.Ramp);
         Console.WriteLine("Loaded state");
     }
 

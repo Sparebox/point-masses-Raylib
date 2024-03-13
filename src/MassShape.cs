@@ -7,7 +7,10 @@ namespace Physics;
 
 public class MassShape
 {
+    private static int _idCounter;
     private const float SpringDamping = 5e4f;
+
+    public readonly int _id;
 
     public Vector2 TotalVisForce
     {
@@ -37,19 +40,16 @@ public class MassShape
         get
         {
             float area = 0f;
-            Vector2 centerOfMass = CenterOfMass;
             for (int i = 0; i < _points.Count; i++)
             {
                 PointMass p1 = _points[i];
                 PointMass p2 = _points[(i + 1) % _points.Count];
-                float baseLength = Vector2.Distance(p1.Pos, p2.Pos); 
-                Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(p1.Pos, p2.Pos, centerOfMass);
-                float height = Vector2.Distance(closestPoint, centerOfMass);
-                area += 0.5f * baseLength * height;
+                area += (p1.Pos.Y + p2.Pos.Y) * (p1.Pos.X - p2.Pos.X);
             }
-            return area;
+            return area / 2f;
         }
     }
+    
     public List<Constraint> _constraints;
     public List<PointMass> _points;
     private readonly Context _context;
@@ -60,6 +60,7 @@ public class MassShape
     {
         _context = context;
         _inflated = inflated;
+        _id = _idCounter++;
     }
 
     // Copy constructor
@@ -67,6 +68,7 @@ public class MassShape
     {
         _context = shape._context;
         _inflated = shape._inflated;
+        _id = _idCounter++;
         _points = new();
         _constraints = new();
         foreach (var p in shape._points)
@@ -84,8 +86,8 @@ public class MassShape
             {
                 copyConstraint = new RigidConstraint((RigidConstraint) c);
             }
-            copyConstraint.PointA = _points.Where(p => p._id == copyConstraint.PointA._id).First();
-            copyConstraint.PointB = _points.Where(p => p._id == copyConstraint.PointB._id).First();
+            copyConstraint.PointA = _points.Where(p => p == copyConstraint.PointA).First();
+            copyConstraint.PointB = _points.Where(p => p == copyConstraint.PointB).First();
             _constraints.Add(copyConstraint);
         }
     }
@@ -103,10 +105,6 @@ public class MassShape
         if (_inflated)
         {
             Inflate(5e6f);
-        }
-        if (CheckPointCollision(GetMousePosition()))
-        {
-            Console.WriteLine("COLLISION");
         }
     }
 
@@ -146,6 +144,14 @@ public class MassShape
         foreach (PointMass p in _points)
         {
             p.ApplyForce(force);
+        }
+    }
+
+    public void Move(in Vector2 translation)
+    {
+        foreach (PointMass p in _points)
+        {
+            p.Pos += translation;
         }
     }
 
@@ -212,9 +218,9 @@ public class MassShape
         };
     }
 
-    public bool CheckPointCollision(in Vector2 point)
+    public static bool CheckPointCollision(MassShape shape, in Vector2 point)
     {
-        BoundingBox aabb = GetAABB();
+        BoundingBox aabb = shape.GetAABB();
         Rectangle aabbRect = new()
         {
             Position = new(aabb.Min.X, aabb.Min.Y),
@@ -225,20 +231,20 @@ public class MassShape
         {
             return false;
         }
-        Vector2 outsidePoint = new(point.X + (aabb.Max.X - point.X + 5f), point.Y);
-        List<Vector2> collisionPoints = new(); 
-        for (int i = 0; i < _points.Count; i++)
+        Vector2 outsidePoint = new(point.X + aabb.Max.X - point.X + 5f, point.Y);
+        int collisionCount = 0;
+        for (int i = 0; i < shape._points.Count; i++)
         {
-            Vector2 startPos = _points[i].Pos;
-            Vector2 endPos = _points[(i + 1) % _points.Count].Pos;
+            Vector2 startPos = shape._points[i].Pos;
+            Vector2 endPos = shape._points[(i + 1) % shape._points.Count].Pos;
             Vector2 collisionPoint = new();
             bool hadCollision = CheckCollisionLines(startPos, endPos, point, outsidePoint, ref collisionPoint);
             if (hadCollision)
             {
-                collisionPoints.Add(collisionPoint);
+                collisionCount++;
             }
         }
-        if (collisionPoints.Count > 0 && collisionPoints.Count % 2 != 0)
+        if (collisionCount > 0 && collisionCount % 2 != 0)
         {
             return true;
         }
@@ -246,6 +252,92 @@ public class MassShape
         {
             return false;
         }
+    }
+
+    public static void SolveCollisions(Context context)
+    {
+        foreach (var shapeA in context.MassShapes)
+        {
+            foreach (var point in shapeA._points)
+            {
+                foreach (var shapeB in context.MassShapes)
+                {
+                    if (shapeA == shapeB)
+                    {
+                        continue;
+                    }
+                    if (CheckPointCollision(shapeB, point.Pos))
+                    {
+                        HandleCollision(shapeB, point);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void HandleCollision(MassShape shape, PointMass pointMass)
+    {
+        PointMass closestA = null;
+        PointMass closestB = null;
+        float closestDistSq = float.MaxValue;
+        Vector2 closestPoint = new();
+        for (int i = 0; i < shape._points.Count; i++)
+        {
+            PointMass lineStart = shape._points[i];
+            PointMass lineEnd = shape._points[(i + 1) % shape._points.Count];
+            Vector2 pointOnLine = Utils.Geometry.ClosestPointOnLine(lineStart.Pos, lineEnd.Pos, pointMass.Pos);
+            float distSq = Vector2.DistanceSquared(pointOnLine, pointMass.Pos);
+            if (distSq < closestDistSq)
+            {
+                closestA = lineStart;
+                closestB = lineEnd;
+                closestDistSq = distSq;
+                closestPoint = pointOnLine;
+            }
+        }
+        Vector2 pointToClosest = closestPoint - pointMass.Pos;
+        if (pointToClosest.LengthSquared() == 0f)
+        {
+            return;
+        }
+        float offset = pointToClosest.Length() / 2f;
+        pointToClosest = Vector2.Normalize(pointToClosest);
+        Vector2 avgVel = (closestA.Vel + closestB.Vel) / 2f;
+        Vector2 relVel = pointMass.Vel - avgVel;
+        pointMass.Pos += offset * pointToClosest;
+        closestA.Pos += offset * -pointToClosest;
+        closestB.Pos += offset * -pointToClosest;
+        // Apply impulse
+        float combinedMass = closestA.Mass + closestB.Mass;
+        float impulseMag = -(1f + PointMass.RestitutionCoeff) * Vector2.Dot(relVel, pointToClosest) / (1f / combinedMass + 1f / pointMass.Mass);
+        Vector2 impulse = impulseMag * pointToClosest;
+        pointMass.Vel = impulse / pointMass.Mass;
+        closestA.Vel = -impulse / combinedMass / 2f;
+        closestB.Vel = -impulse / combinedMass / 2f;
+    }
+
+    public static bool operator == (MassShape a, MassShape b)
+    {
+        return a._id == b._id;
+    }
+
+    public static bool operator != (MassShape a, MassShape b)
+    {
+        return a._id != b._id;
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj == null || !obj.GetType().Equals(typeof(MassShape)))
+        {
+            return false;
+        }
+        return _id == ((MassShape) obj)._id;
+    }
+
+    public override int GetHashCode()
+    {
+        return base.GetHashCode();
     }
 
     private struct PressureVis
@@ -450,6 +542,27 @@ public class MassShape
         c._constraints.Add(new RigidConstraint(c._points[3], c._points[0]));
         c._constraints.Add(new RigidConstraint(c._points[0], c._points[2]));
 
+        return c;
+    }
+
+    public static MassShape SoftBox(float x, float y, float size, float mass, float stiffness, Context context)
+    {
+        MassShape c = new(context, false)
+        {
+            _points = new() 
+            {
+                new(x - size / 2f, y - size / 2f, mass / 4f, false, context),
+                new(x - size / 2f, y + size / 2f, mass / 4f, false, context),
+                new(x + size / 2f, y + size / 2f, mass / 4f, false, context),
+                new(x + size / 2f, y - size / 2f, mass / 4f, false, context)
+            },
+            _constraints = new()
+        };
+        c._constraints.Add(new SpringConstraint(c._points[0], c._points[1], stiffness, SpringDamping));
+        c._constraints.Add(new SpringConstraint(c._points[1], c._points[2], stiffness, SpringDamping));
+        c._constraints.Add(new SpringConstraint(c._points[2], c._points[3], stiffness, SpringDamping));
+        c._constraints.Add(new SpringConstraint(c._points[3], c._points[0], stiffness, SpringDamping));
+        c._constraints.Add(new SpringConstraint(c._points[0], c._points[2], stiffness, SpringDamping));
         return c;
     }
 

@@ -91,7 +91,7 @@ public class PointMass
         {
             c.SolveCollision(this);
         }
-        _context._ramp.SolveCollision(this);
+        //_context._ramp.SolveCollision(this);
     }
 
     public void ApplyFriction(in Vector2 normal)
@@ -119,5 +119,29 @@ public class PointMass
         ApplyForce(dir * KineticFrictionCoeff * normalForce);
         //Vector2 vis = dir * KineticFrictionCoeff * normalForce;
         //DrawLine((int) Pos.X, (int) Pos.Y, (int) (Pos.X + vis.X), (int) (Pos.Y + vis.Y), Color.Magenta);
+    }
+
+    public static bool operator == (PointMass a, PointMass b)
+    {
+        return a._id == b._id;
+    }
+
+    public static bool operator != (PointMass a, PointMass b)
+    {
+        return a._id != b._id;
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj == null || !obj.GetType().Equals(typeof(PointMass)))
+        {
+            return false;
+        }
+        return _id == ((PointMass) obj)._id;
+    }
+
+    public override int GetHashCode()
+    {
+        return base.GetHashCode();
     }
 }
