@@ -10,7 +10,7 @@ public class PointMass
 {
     private static int _idCounter;
 
-    public const float RestitutionCoeff = 0.99f;
+    public const float RestitutionCoeff = 1f;
     public const float KineticFrictionCoeff = 0.1f;
     public const float StaticFrictionCoeff = 2f;
 

@@ -253,10 +253,20 @@ namespace Tools
             var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
             if (shapes.Any())
             {
-                MassShape s = shapes.First();
-                Vector2 com = s.CenterOfMass;
+                MassShape closest = null;
+                float closestDistSq = float.MaxValue;
+                foreach (var shape in shapes)
+                {
+                    float distSq = Vector2.DistanceSquared(mousePos, shape.CenterOfMass);
+                    if (distSq < closestDistSq)
+                    {
+                        closest = shape;
+                        closestDistSq = distSq;
+                    }
+                }
+                Vector2 com = closest.CenterOfMass;
                 Vector2 force = PullForceCoeff * (mousePos - com);
-                s.ApplyForce(force);
+                closest.ApplyForce(force);
                 DrawLine((int) com.X, (int) com.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
             }
         }

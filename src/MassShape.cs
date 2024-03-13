@@ -23,17 +23,21 @@ public class MassShape
         }
     }
 
+    public float Mass { get { return _points.Select(p => p.Mass).Sum(); } }
+
     public Vector2 CenterOfMass
     {
         get
         {
             return _points.Aggregate(
                 new Vector2(), 
-                (centerOfMass, p) => centerOfMass += p.Pos, 
-                centerOfMass => centerOfMass / _points.Count
+                (centerOfMass, p) => centerOfMass += p.Mass * p.Pos, 
+                centerOfMass => centerOfMass / Mass
             );
         }
     }
+
+    
     // pseudo 2D volume a.k.a. area
     private float Volume
     {
