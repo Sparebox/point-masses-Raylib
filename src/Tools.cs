@@ -266,7 +266,7 @@ namespace Tools
                 }
                 Vector2 com = closest.CenterOfMass;
                 Vector2 force = PullForceCoeff * (mousePos - com);
-                closest.ApplyForce(force);
+                closest.ApplyForceCOM(force);
                 DrawLine((int) com.X, (int) com.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
             }
         }

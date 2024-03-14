@@ -151,6 +151,14 @@ public class MassShape
         }
     }
 
+    public void ApplyForceCOM(in Vector2 force)
+    {
+        foreach (PointMass p in _points)
+        {
+            p.ApplyForce(p.Mass * force);
+        }
+    }
+
     public void Move(in Vector2 translation)
     {
         foreach (PointMass p in _points)
@@ -304,13 +312,21 @@ public class MassShape
         {
             return;
         }
-        float offset = pointToClosest.Length() / 2f;
+        float totalOffset = pointToClosest.Length() / 2f * 0.9f; // 0.9 relaxation factor
+        float lineLen = Vector2.Distance(closestA.Pos, closestB.Pos);
+        if (lineLen == 0f)
+        {
+            return;
+        }
+        float distToB = Vector2.Distance(closestPoint, closestB.Pos);
+        float aOffset = distToB / lineLen * totalOffset;
+        float bOffset = totalOffset - aOffset;
         pointToClosest = Vector2.Normalize(pointToClosest);
         Vector2 avgVel = (closestA.Vel + closestB.Vel) / 2f;
         Vector2 relVel = pointMass.Vel - avgVel;
-        pointMass.Pos += offset * pointToClosest;
-        closestA.Pos += offset * -pointToClosest;
-        closestB.Pos += offset * -pointToClosest;
+        pointMass.Pos += totalOffset * pointToClosest;
+        closestA.Pos += aOffset * -pointToClosest;
+        closestB.Pos += bOffset * -pointToClosest;
         // Apply impulse
         float combinedMass = closestA.Mass + closestB.Mass;
         float impulseMag = -(1f + PointMass.RestitutionCoeff) * Vector2.Dot(relVel, pointToClosest) / (1f / combinedMass + 1f / pointMass.Mass);
