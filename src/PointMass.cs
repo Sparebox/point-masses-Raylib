@@ -10,7 +10,7 @@ public class PointMass
 {
     private static int _idCounter;
 
-    public const float RestitutionCoeff = 1f;
+    public const float RestitutionCoeff = 0.0f;
     public const float KineticFrictionCoeff = 0.1f;
     public const float StaticFrictionCoeff = 2f;
 
@@ -91,7 +91,7 @@ public class PointMass
         {
             c.SolveCollision(this);
         }
-        //_context._ramp.SolveCollision(this);
+        _context._ramp.SolveCollision(this);
     }
 
     public void ApplyFriction(in Vector2 normal)

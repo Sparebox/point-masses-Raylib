@@ -1,6 +1,7 @@
 using System.Numerics;
 using Raylib_cs;
 using Sim;
+using Tools;
 using static Raylib_cs.Raylib;
 
 namespace Physics;
@@ -230,7 +231,7 @@ public class MassShape
         };
     }
 
-    public static bool CheckPointCollision(MassShape shape, in Vector2 point)
+    public static bool CheckPointMassCollision(MassShape shape, PointMass point)
     {
         BoundingBox aabb = shape.GetAABB();
         Rectangle aabbRect = new()
@@ -239,18 +240,18 @@ public class MassShape
             Width = aabb.Max.X - aabb.Min.X,
             Height = aabb.Max.Y - aabb.Min.Y
         };
-        if (!CheckCollisionPointRec(point, aabbRect))
+        if (!CheckCollisionPointRec(point.Pos, aabbRect))
         {
             return false;
         }
-        Vector2 outsidePoint = new(point.X + aabb.Max.X - point.X + 5f, point.Y);
+        Vector2 outsidePoint = new(point.Pos.X + aabb.Max.X - point.Pos.X + 5f, point.Pos.Y);
         int collisionCount = 0;
         for (int i = 0; i < shape._points.Count; i++)
         {
             Vector2 startPos = shape._points[i].Pos;
             Vector2 endPos = shape._points[(i + 1) % shape._points.Count].Pos;
             Vector2 collisionPoint = new();
-            bool hadCollision = CheckCollisionLines(startPos, endPos, point, outsidePoint, ref collisionPoint);
+            bool hadCollision = CheckCollisionLines(startPos, endPos, point.Pos, outsidePoint, ref collisionPoint);
             if (hadCollision)
             {
                 collisionCount++;
@@ -278,7 +279,7 @@ public class MassShape
                     {
                         continue;
                     }
-                    if (CheckPointCollision(shapeB, point.Pos))
+                    if (CheckPointMassCollision(shapeB, point))
                     {
                         HandleCollision(shapeB, point);
                     }
@@ -312,7 +313,7 @@ public class MassShape
         {
             return;
         }
-        float totalOffset = pointToClosest.Length() / 2f * 0.9f; // 0.9 relaxation factor
+        float totalOffset = pointToClosest.Length() / 2f; // 0.9 relaxation factor
         float lineLen = Vector2.Distance(closestA.Pos, closestB.Pos);
         if (lineLen == 0f)
         {

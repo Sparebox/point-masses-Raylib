@@ -62,33 +62,33 @@ public class Loop
         //context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f + 200f, 200f, 10f, 20, 1000f, context));
         //context.MassShapes.Add(MassShape.Pendulum(WinW / 2f, 30f, 700f, 10f, 10, context));
         //context.MassShapes.Add(MassShape.Particle(200f, 50f, 10f, context));
-        //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f - 300f, 100f, 10f, context));
-        //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f, 100f, 20f, context));
-        //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f, 100f, 10f, 1e4f, context));
-        //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f + 200f, 100f, 20f, 1e4f, context));
-        //context.MassShapes.Add(MassShape.HardBall(500f, 200f, 100f, 10f, 15, context));
-        //context.MassShapes.Add(MassShape.HardBall(200f, 200f, 100f, 10f, 15, context));
-        //context._ramp = new Entity.RotatingCollider(0f, 200f, WinW, WinH);
-        MassShape shape = new(context, false);
-        shape._points = new() 
-        {
-            new(50f, 50f, 1f, false, context),
-            new(50f, 100f, 1f, false, context),
-            new(200f, 50f, 1f, false, context),
-            new(200f, 100f, 1f, false, context),
-            new(250f, 75f, 10f, false, context)
-        };
-        shape._constraints = new()
-        {
-            new RigidConstraint(shape._points[0], shape._points[1]),
-            new RigidConstraint(shape._points[0], shape._points[2]),
-            new RigidConstraint(shape._points[2], shape._points[3]),
-            new RigidConstraint(shape._points[1], shape._points[3]),
-            new RigidConstraint(shape._points[0], shape._points[3]),
-            new RigidConstraint(shape._points[2], shape._points[4]),
-            new RigidConstraint(shape._points[3], shape._points[4]),
-        };
-        context.MassShapes.Add(shape);
+        //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f - 300f, 100f, 1f, context));
+        //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f, 100f, 1f, context));
+        //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f, 100f, 1f, 1e3f, context));
+        //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f + 200f, 100f, 1f, 1e3f, context));
+        //context.MassShapes.Add(MassShape.HardBall(500f, 200f, 100f, 5f, 5, context));
+        context.MassShapes.Add(MassShape.HardBall(200f, 200f, 100f, 5f, 6, context));
+        context._ramp = new Entity.RotatingCollider(0f, 200f, WinW, WinH);
+        // MassShape shape = new(context, false);
+        // shape._points = new() 
+        // {
+        //     new(50f, 50f, 1f, false, context),
+        //     new(50f, 100f, 1f, false, context),
+        //     new(200f, 50f, 1f, false, context),
+        //     new(200f, 100f, 1f, false, context),
+        //     new(250f, 75f, 10f, false, context)
+        // };
+        // shape._constraints = new()
+        // {
+        //     new RigidConstraint(shape._points[0], shape._points[1]),
+        //     new RigidConstraint(shape._points[0], shape._points[2]),
+        //     new RigidConstraint(shape._points[2], shape._points[3]),
+        //     new RigidConstraint(shape._points[1], shape._points[3]),
+        //     new RigidConstraint(shape._points[0], shape._points[3]),
+        //     new RigidConstraint(shape._points[2], shape._points[4]),
+        //     new RigidConstraint(shape._points[3], shape._points[4]),
+        // };
+        // context.MassShapes.Add(shape);
         context.SaveState();
         return context;
     }
@@ -123,7 +123,7 @@ public class Loop
         {
             l.Draw();
         }
-        //_context._ramp.Draw();
+        _context._ramp.Draw();
         _context.SelectedTool.Draw();
         
         // GUI
