@@ -20,6 +20,7 @@ public class Context
     public bool _gravityEnabled;
     public bool _drawForces;
     public bool _drawAABBS;
+    public bool _drawBodyInfo;
     public bool _simPaused;
     public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; set; }

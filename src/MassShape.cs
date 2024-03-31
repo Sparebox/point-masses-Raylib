@@ -10,7 +10,6 @@ public class MassShape
 {
     private static int _idCounter;
     private const float SpringDamping = 5e4f;
-
     public readonly int _id;
 
     public Vector2 TotalVisForce
@@ -38,9 +37,53 @@ public class MassShape
         }
     }
 
+    public float AngularMass
+    {
+        get
+        {
+            if (IsRigid && _angularMass.HasValue) 
+            {
+                return (float) _angularMass;
+            }
+            Vector2 COM = CenterOfMass;
+            float angularMass = 0f;
+            foreach (var p in _points)
+            {
+                float distSq = Vector2.DistanceSquared(COM, p.Pos);
+                angularMass += p.Mass * distSq;
+            }
+            if (IsRigid)
+            {
+                _angularMass = angularMass;
+            }
+            return angularMass;
+        }
+        set => _angularMass = value;
+    }
+
+    public bool IsRigid
+    {
+        get
+        {
+            if (_isRigid.HasValue) 
+            {
+                return (bool) _isRigid;
+            }
+            foreach (var c in _constraints)
+            {
+                if (c.GetType() == typeof(SpringConstraint))
+                {
+                    _isRigid = false;
+                    return (bool) _isRigid;
+                }
+            }
+            _isRigid = true;
+            return (bool) _isRigid;
+        }
+    }
     
     // pseudo 2D volume a.k.a. area
-    private float Volume
+    public float Volume
     {
         get
         {
@@ -60,6 +103,8 @@ public class MassShape
     private readonly Context _context;
     private readonly bool _inflated;
     private PressureVis _pressureVis;
+    private float? _angularMass;
+    private bool? _isRigid;
 
     public MassShape(Context context, bool inflated) 
     {
@@ -135,12 +180,18 @@ public class MassShape
                 // Draw pressure forces acting on normals
                 foreach (VisLine line in _pressureVis._lines)
                 {
-                    DrawLine((int) line._start.X, (int) line._start.Y, (int) line._end.X, (int) line._end.Y, Color.Magenta);
+                    Utils.Graphic.DrawArrow(line._start, line._end, Color.Magenta);
                 }
             }
             Vector2 COM = CenterOfMass;
             Vector2 totalVisForce = TotalVisForce;
             Utils.Graphic.DrawArrow(COM, COM + totalVisForce * 1e-2f, Color.Magenta);
+        }
+        if (_context._drawBodyInfo)
+        {
+            float angularMass = AngularMass;
+            Vector2 COM = CenterOfMass;
+            DrawText(string.Format("Angular mass: {0:.0}", angularMass), (int) COM.X, (int) COM.Y, 15, Color.Green);
         }
     }
 
@@ -363,7 +414,7 @@ public class MassShape
 
     private struct PressureVis
     {
-        public const float VisForceMult = 1e-3f;
+        public const float VisForceMult = 0.5e-1f;
         public VisLine[] _lines;
     }
 

@@ -12,7 +12,7 @@ public class Loop
 {   
     public const int WinW = 1600;
     public const int WinH = 900;
-    public const int TargetFPS = 165;
+    public const int TargetFPS = 60;
 
     private static float _accumulator;
     private static Context _context;
@@ -55,7 +55,7 @@ public class Loop
         };
         context.SelectedTool = new PullCom(context);
         //context.MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 42, stiffness: 1e5f, context));
-        // context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f - 200f, 50f, 10f, 20, 1000f, context));
+        context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f - 200f, 50f, 10f, 20, 1000f, context));
         // context.MassShapes.Add(MassShape.SoftBall(WinW / 2f + 300f, WinH / 2f - 200f, 50f, 10f, 20, 1000f, context));
         // context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f, 50f, 10f, 20, 1000f, context));
         // context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f + 200f, 50f, 10f, 20, 1000f, context));
@@ -67,7 +67,8 @@ public class Loop
         //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f, 100f, 1f, 1e3f, context));
         //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f + 200f, 100f, 1f, 1e3f, context));
         //context.MassShapes.Add(MassShape.HardBall(500f, 200f, 100f, 5f, 5, context));
-        context.MassShapes.Add(MassShape.HardBall(200f, 200f, 100f, 5f, 6, context));
+        //context.MassShapes.Add(MassShape.HardBall(200f, 200f, 100f, 10f, 6, context));
+        //context.MassShapes.Add(MassShape.HardBall(600f, 200f, 10f, 5f, 6, context));
         context._ramp = new Entity.RotatingCollider(0f, 200f, WinW, WinH);
         // MassShape shape = new(context, false);
         // shape._points = new() 
@@ -197,6 +198,7 @@ public class Loop
         ImGui.Checkbox("Gravity", ref _context._gravityEnabled);
         ImGui.Checkbox("Draw forces", ref _context._drawForces);
         ImGui.Checkbox("Draw AABBs", ref _context._drawAABBS);
+        ImGui.Checkbox("Draw body info", ref _context._drawBodyInfo);
         if (ImGui.Combo("Tool", ref _context._selectedToolIndex, Tool.ToolsToString()))
         {
             Tool.ChangeToolType(_context);
