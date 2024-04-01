@@ -123,6 +123,7 @@ namespace Tools
         PullCom,
         Pull,
         Wind,
+        Rotate,
         Delete,
     }
 
@@ -197,6 +198,9 @@ namespace Tools
                 case ToolType.Wind :
                     context.SelectedTool = new Wind(context);
                     break;
+                case ToolType.Rotate :
+                    context.SelectedTool = new Rotate(context);
+                    break;
                 case ToolType.Delete :
                     context.SelectedTool = new Delete(context);
                     break;
@@ -213,6 +217,22 @@ namespace Tools
             }
             return sb.ToString();
         }
+
+        public static MassShape FindClosestShape(in Vector2 pos, List<MassShape> shapes)
+        {
+            MassShape closest = null;
+            float closestDistSq = float.MaxValue;
+            foreach (var shape in shapes)
+            {
+                float distSq = Vector2.DistanceSquared(pos, shape.CenterOfMass);
+                if (distSq < closestDistSq)
+                {
+                    closest = shape;
+                    closestDistSq = distSq;
+                }
+            }
+            return closest;
+        }
     }
 
     public class Delete : Tool
@@ -226,15 +246,16 @@ namespace Tools
         {
             Vector2 mousePos = GetMousePosition();
             var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
-            if (shapes.Any())
+            if (!shapes.Any())
             {
-                var shape = shapes.First();
-                shape._constraints.RemoveAll(c => {
-                    return Vector2.DistanceSquared(mousePos, c.PointA.Pos) < Radius * Radius ||
-                    Vector2.DistanceSquared(mousePos, c.PointB.Pos) < Radius * Radius;
-                });
-                shape._points.RemoveAll(p => Vector2.DistanceSquared(mousePos, p.Pos) < Radius * Radius);
+                return;
             }
+            var shape = shapes.First();
+            shape._constraints.RemoveAll(c => {
+                return Vector2.DistanceSquared(mousePos, c.PointA.Pos) < Radius * Radius ||
+                Vector2.DistanceSquared(mousePos, c.PointB.Pos) < Radius * Radius;
+            });
+            shape._points.RemoveAll(p => Vector2.DistanceSquared(mousePos, p.Pos) < Radius * Radius);
         }
     }
 
@@ -251,24 +272,15 @@ namespace Tools
         {
             Vector2 mousePos = GetMousePosition();
             var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
-            if (shapes.Any())
+            if (!shapes.Any())
             {
-                MassShape closest = null;
-                float closestDistSq = float.MaxValue;
-                foreach (var shape in shapes)
-                {
-                    float distSq = Vector2.DistanceSquared(mousePos, shape.CenterOfMass);
-                    if (distSq < closestDistSq)
-                    {
-                        closest = shape;
-                        closestDistSq = distSq;
-                    }
-                }
-                Vector2 com = closest.CenterOfMass;
-                Vector2 force = PullForceCoeff * (mousePos - com);
-                closest.ApplyForceCOM(force);
-                DrawLine((int) com.X, (int) com.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
+                return;
             }
+            MassShape closest = FindClosestShape(mousePos, shapes);
+            Vector2 com = closest.CenterOfMass;
+            Vector2 force = PullForceCoeff * (mousePos - com);
+            closest.ApplyForceCOM(force);
+            DrawLine((int) com.X, (int) com.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
         }
     }
 
@@ -285,14 +297,15 @@ namespace Tools
         {
             Vector2 mousePos = GetMousePosition();
             var points = Utils.Entities.QueryAreaForPoints(mousePos.X, mousePos.Y, Radius, _context);
-            if (points.Any())
+            if (!points.Any())
             {
-                foreach (var p in points)
-                {
-                    Vector2 force = PullForceCoeff * (mousePos - p.Pos);
-                    p.ApplyForce(force);
-                    DrawLine((int) p.Pos.X, (int) p.Pos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
-                }
+                return;
+            }
+            foreach (var p in points)
+            {
+                Vector2 force = PullForceCoeff * (mousePos - p.Pos);
+                p.ApplyForce(force);
+                DrawLine((int) p.Pos.X, (int) p.Pos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
             }
         }
     }
@@ -317,6 +330,40 @@ namespace Tools
                     float forceMult = GetRandomValue(MinForce, MaxForce);
                     p.ApplyForce(forceMult * Direction);
                 }
+            }
+        }
+    }
+
+    public class Rotate : Tool
+    {
+        private const float ForceAmount = 1e4f;
+
+        public Rotate(Context context)
+        {
+            _context = context;
+        }
+
+        public override void Update()
+        {
+            Vector2 mousePos = GetMousePosition();
+            var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
+            if (!shapes.Any())
+            {
+                return;
+            }
+            MassShape closest = FindClosestShape(mousePos, shapes);
+            Vector2 COM = closest.CenterOfMass;
+            foreach (var p in closest._points)
+            {
+                Vector2 comToPoint = p.Pos - COM;
+                float radius = comToPoint.Length();
+                if (radius == 0f)
+                {
+                    continue;
+                }
+                Vector2 normal = new(comToPoint.Y / radius, -comToPoint.X / radius);
+                float sign = IsMouseButtonDown(MouseButton.Right) ? -1f : 1f;
+                p.ApplyForce(sign * ForceAmount * normal);
             }
         }
     }

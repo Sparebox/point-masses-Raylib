@@ -198,10 +198,10 @@ public class MassShape
         }
         if (_context._drawBodyInfo)
         {
-            float angularMass = AngularMass;
             Vector2 COM = CenterOfMass;
-            DrawText(string.Format("Angular mass: {0:0.}", angularMass), (int) COM.X, (int) COM.Y, 15, Color.Green);
-            DrawText(string.Format("Rot energy: {0:0.##}", RotEnergy), (int) COM.X, (int) (COM.Y + 20f), 15, Color.Green);
+            DrawText(string.Format("Angular mass: {0:0.}", AngularMass), (int) COM.X, (int) COM.Y, 15, Color.Green);
+            DrawText(string.Format("Angular vel: {0}", GetAngularVel() * RAD2DEG), (int) COM.X, (int) (COM.Y + 20f), 15, Color.Green);
+            DrawText(string.Format("Rot energy: {0:0.##}", RotEnergy), (int) COM.X, (int) (COM.Y + 40f), 15, Color.Green);
         }
     }
 
@@ -412,7 +412,7 @@ public class MassShape
             }
             Vector2 normal = new(radiusVector.Y / radius, -radiusVector.X / radius);
             float perpVel = Vector2.Dot(p.Vel, normal);
-            angularVel += perpVel / radius;
+            return perpVel / radius;
         }
         return angularVel / _points.Count;
     }
