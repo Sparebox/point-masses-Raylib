@@ -12,7 +12,7 @@ public class Loop
 {   
     public const int WinW = 1600;
     public const int WinH = 900;
-    public const int TargetFPS = 60;
+    public const int TargetFPS = 165;
 
     private static float _accumulator;
     private static Context _context;

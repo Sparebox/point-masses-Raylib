@@ -81,6 +81,15 @@ public class MassShape
             return (bool) _isRigid;
         }
     }
+
+    public float RotEnergy
+    {
+        get
+        {
+            float angVel = GetAngularVel();
+            return 0.5f * AngularMass * angVel * angVel;
+        }
+    }
     
     // pseudo 2D volume a.k.a. area
     public float Volume
@@ -191,7 +200,8 @@ public class MassShape
         {
             float angularMass = AngularMass;
             Vector2 COM = CenterOfMass;
-            DrawText(string.Format("Angular mass: {0:.0}", angularMass), (int) COM.X, (int) COM.Y, 15, Color.Green);
+            DrawText(string.Format("Angular mass: {0:0.}", angularMass), (int) COM.X, (int) COM.Y, 15, Color.Green);
+            DrawText(string.Format("Rot energy: {0:0.##}", RotEnergy), (int) COM.X, (int) (COM.Y + 20f), 15, Color.Green);
         }
     }
 
@@ -364,7 +374,7 @@ public class MassShape
         {
             return;
         }
-        float totalOffset = pointToClosest.Length() / 2f; // 0.9 relaxation factor
+        float totalOffset = pointToClosest.Length() / 2f;
         float lineLen = Vector2.Distance(closestA.Pos, closestB.Pos);
         if (lineLen == 0f)
         {
@@ -386,6 +396,25 @@ public class MassShape
         pointMass.Vel = impulse / pointMass.Mass;
         closestA.Vel = -impulse / combinedMass / 2f;
         closestB.Vel = -impulse / combinedMass / 2f;
+    }
+
+    private float GetAngularVel()
+    {
+        Vector2 COM = CenterOfMass;
+        float angularVel = 0f;
+        foreach (var p in _points)
+        {
+            Vector2 radiusVector = p.Pos - COM;
+            float radius = radiusVector.Length();
+            if (radius == 0f)
+            {
+                continue;
+            }
+            Vector2 normal = new(radiusVector.Y / radius, -radiusVector.X / radius);
+            float perpVel = Vector2.Dot(p.Vel, normal);
+            angularVel += perpVel / radius;
+        }
+        return angularVel / _points.Count;
     }
 
     public static bool operator == (MassShape a, MassShape b)
