@@ -10,9 +10,10 @@ public class PointMass
 {
     private static int _idCounter;
 
-    public const float RestitutionCoeff = 1.0f;
-    public const float KineticFrictionCoeff = 1e1f;
-    public const float StaticFrictionCoeff = 1e2f;
+    public const float RestitutionCoeff = 0.5f;
+    public const float KineticFrictionCoeff = 1f;
+    public const float StaticFrictionCoeff = 3f;
+    public const float RadiusFactor = 2f;
 
     public readonly int _id;
     public readonly bool _pinned;
@@ -36,7 +37,7 @@ public class PointMass
         PrevPos = Pos;
         Force = Vector2.Zero;
         Mass = mass;
-        Radius = mass * 5f;
+        Radius = mass * RadiusFactor;
         _id = _idCounter++;
         _pinned = pinned;
         _context = context;
@@ -89,9 +90,35 @@ public class PointMass
     {
         foreach (LineCollider c in _context.LineColliders)
         {
-            c.SolveCollision(this);
+            c.SolveStaticCollision(this);
         }
-        _context._ramp.SolveCollision(this);
+        _context._ramp.SolveStaticCollision(this);
+    }
+
+    public static void SolvePointToPointCollisions(float timeStep, PointMass pointA, PointMass pointB)
+    {   
+        Vector2 normal = pointB.Pos - pointA.Pos;
+        float dist = normal.LengthSquared();
+        if (dist <= pointA.Radius * pointA.Radius + pointB.Radius * pointB.Radius)
+        {
+            // Do expensive square root here
+            dist = (float) Math.Sqrt(dist);
+            if (dist == 0f)
+            {
+                return;
+            }
+            normal.X /= dist;
+            normal.Y /= dist;
+            // Apply impulse
+            Vector2 relVel = pointB.Vel - pointA.Vel;
+            float impulseMag = -(1f + RestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / pointA.Mass + 1f / pointB.Mass);
+            Vector2 impulse = impulseMag * normal;
+            pointA.Vel += -impulse / pointA.Mass;
+            pointB.Vel += impulse / pointB.Mass;
+            Vector2 offsetVector = 0.5f * (pointA.Radius + pointB.Radius - dist) * normal * timeStep;
+            pointA.Pos += -offsetVector;
+            pointB.Pos += offsetVector;
+        }
     }
 
     public void ApplyFriction(in Vector2 normal)
@@ -117,18 +144,8 @@ public class PointMass
         // Apply kinetic friction
         dir = Vector2.Normalize(dir);
         ApplyForce(dir * KineticFrictionCoeff * normalForce);
-        //Vector2 vis = dir * KineticFrictionCoeff * normalForce;
-        //DrawLine((int) Pos.X, (int) Pos.Y, (int) (Pos.X + vis.X), (int) (Pos.Y + vis.Y), Color.Magenta);
-    }
-
-    public static bool operator == (PointMass a, PointMass b)
-    {
-        return a._id == b._id;
-    }
-
-    public static bool operator != (PointMass a, PointMass b)
-    {
-        return a._id != b._id;
+        // Vector2 vis = dir * KineticFrictionCoeff * normalForce;
+        // Utils.Graphic.DrawArrow((int) Pos.X, (int) Pos.Y, (int) (Pos.X + vis.X), (int) (Pos.Y + vis.Y), Color.Magenta);
     }
 
     public override bool Equals(object obj)

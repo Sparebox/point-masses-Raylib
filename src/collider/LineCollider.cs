@@ -16,6 +16,12 @@ public class LineCollider
         EndPos = new(x1, y1);
     }
 
+    public LineCollider(in Vector2 start, in Vector2 end)
+    {
+        StartPos = start;
+        EndPos = end;
+    }
+
     public LineCollider(in LineCollider c)
     {
         StartPos = c.StartPos;
@@ -27,13 +33,15 @@ public class LineCollider
         DrawLine((int) StartPos.X, (int) StartPos.Y, (int) EndPos.X, (int) EndPos.Y, Color.White);
     }
 
-    public void SolveCollision(PointMass p)
+    public void SolveStaticCollision(PointMass p)
     {
         Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(StartPos, EndPos, p.Pos);
         Vector2 closestToPoint = p.Pos - closestPoint;
-        float distToCollider = closestToPoint.Length();
-        if (distToCollider <= p.Radius)
+        float distToCollider = closestToPoint.LengthSquared();
+        if (distToCollider <= p.Radius * p.Radius)
         {
+            // Do expensive square root here
+            distToCollider = (float) Math.Sqrt(distToCollider);
             // Collision
             Vector2 closestToPointNorm = Vector2.Normalize(closestToPoint);
             Vector2 reflectedVel = Vector2.Reflect(p.Vel, closestToPointNorm);
@@ -42,5 +50,17 @@ public class LineCollider
             p.Vel = PointMass.RestitutionCoeff * reflectedVel;
             p.ApplyFriction(closestToPointNorm);
         }
+    }
+
+    public bool CheckCollision(PointMass p)
+    {
+        Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(StartPos, EndPos, p.Pos);
+        Vector2 closestToPoint = p.Pos - closestPoint;
+        float distToCollider = closestToPoint.LengthSquared();
+        if (distToCollider <= p.Radius * p.Radius)
+        {
+            return true;
+        }
+        return false;
     }
 }

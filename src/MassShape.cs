@@ -1,7 +1,6 @@
 using System.Numerics;
 using Raylib_cs;
 using Sim;
-using Tools;
 using static Raylib_cs.Raylib;
 
 namespace Physics;
@@ -145,8 +144,8 @@ public class MassShape
             {
                 copyConstraint = new RigidConstraint((RigidConstraint) c);
             }
-            copyConstraint.PointA = _points.Where(p => p == copyConstraint.PointA).First();
-            copyConstraint.PointB = _points.Where(p => p == copyConstraint.PointB).First();
+            copyConstraint.PointA = _points.Where(p => p.Equals(copyConstraint.PointA)).First();
+            copyConstraint.PointB = _points.Where(p => p.Equals(copyConstraint.PointB)).First();
             _constraints.Add(copyConstraint);
         }
     }
@@ -292,9 +291,9 @@ public class MassShape
         };
     }
 
-    public static bool CheckPointMassCollision(MassShape shape, PointMass point)
+    public bool CheckPointMassCollision(PointMass point)
     {
-        BoundingBox aabb = shape.GetAABB();
+        BoundingBox aabb = GetAABB();
         Rectangle aabbRect = new()
         {
             Position = new(aabb.Min.X, aabb.Min.Y),
@@ -307,10 +306,10 @@ public class MassShape
         }
         Vector2 outsidePoint = new(point.Pos.X + aabb.Max.X - point.Pos.X + 5f, point.Pos.Y);
         int collisionCount = 0;
-        for (int i = 0; i < shape._points.Count; i++)
+        for (int i = 0; i < _points.Count; i++)
         {
-            Vector2 startPos = shape._points[i].Pos;
-            Vector2 endPos = shape._points[(i + 1) % shape._points.Count].Pos;
+            Vector2 startPos = _points[i].Pos;
+            Vector2 endPos = _points[(i + 1) % _points.Count].Pos;
             Vector2 collisionPoint = new();
             bool hadCollision = CheckCollisionLines(startPos, endPos, point.Pos, outsidePoint, ref collisionPoint);
             if (hadCollision)
@@ -328,37 +327,49 @@ public class MassShape
         }
     }
 
-    public static void SolveCollisions(Context context)
+    public void HandleCollisions(MassShape shape)
     {
-        foreach (var shapeA in context.MassShapes)
+        foreach (var point in shape._points)
         {
-            foreach (var point in shapeA._points)
+            if (CheckPointMassCollision(point))
             {
-                foreach (var shapeB in context.MassShapes)
-                {
-                    if (shapeA == shapeB)
-                    {
-                        continue;
-                    }
-                    if (CheckPointMassCollision(shapeB, point))
-                    {
-                        HandleCollision(shapeB, point);
-                    }
-                }
+                HandleCollision(point);
             }
         }
     }
 
-    private static void HandleCollision(MassShape shape, PointMass pointMass)
+    public static void SolveCollisions(Context context)
+    {
+        foreach (var shapeA in context.MassShapes)
+        {
+            foreach (var shapeB in context.MassShapes)
+            {
+                if (shapeA.Equals(shapeB))
+                {
+                    continue;
+                }
+                foreach (var pointA in shapeA._points)
+                {
+                    foreach (var pointB in shapeB._points)
+                    {
+                        PointMass.SolvePointToPointCollisions(context._subStep, pointA, pointB);
+                    }
+                }
+                shapeA.HandleCollisions(shapeB);
+            }
+        }
+    }
+
+    private void HandleCollision(PointMass pointMass)
     {
         PointMass closestA = null;
         PointMass closestB = null;
         float closestDistSq = float.MaxValue;
         Vector2 closestPoint = new();
-        for (int i = 0; i < shape._points.Count; i++)
+        for (int i = 0; i < _points.Count; i++)
         {
-            PointMass lineStart = shape._points[i];
-            PointMass lineEnd = shape._points[(i + 1) % shape._points.Count];
+            PointMass lineStart = _points[i];
+            PointMass lineEnd = _points[(i + 1) % _points.Count];
             Vector2 pointOnLine = Utils.Geometry.ClosestPointOnLine(lineStart.Pos, lineEnd.Pos, pointMass.Pos);
             float distSq = Vector2.DistanceSquared(pointOnLine, pointMass.Pos);
             if (distSq < closestDistSq)
@@ -393,9 +404,9 @@ public class MassShape
         float combinedMass = closestA.Mass + closestB.Mass;
         float impulseMag = -(1f + PointMass.RestitutionCoeff) * Vector2.Dot(relVel, pointToClosest) / (1f / combinedMass + 1f / pointMass.Mass);
         Vector2 impulse = impulseMag * pointToClosest;
-        pointMass.Vel = impulse / pointMass.Mass;
-        closestA.Vel = -impulse / combinedMass / 2f;
-        closestB.Vel = -impulse / combinedMass / 2f;
+        pointMass.Vel += impulse / pointMass.Mass;
+        closestA.Vel += -impulse / combinedMass / 2f;
+        closestB.Vel += -impulse / combinedMass / 2f;
     }
 
     private float GetAngularVel()
@@ -642,7 +653,6 @@ public class MassShape
         c._constraints.Add(new RigidConstraint(c._points[2], c._points[3]));
         c._constraints.Add(new RigidConstraint(c._points[3], c._points[0]));
         c._constraints.Add(new RigidConstraint(c._points[0], c._points[2]));
-
         return c;
     }
 
