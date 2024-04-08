@@ -312,47 +312,33 @@ public class MassShape
         };
     }
 
-    public bool CheckPointMassCollision(PointMass point)
+    public bool CheckPointMassCollision(PointMass otherPoint, MassShape otherShape)
     {
-        BoundingBox aabb = GetAABB();
-        Rectangle aabbRect = new()
-        {
-            Position = new(aabb.Min.X, aabb.Min.Y),
-            Width = aabb.Max.X - aabb.Min.X,
-            Height = aabb.Max.Y - aabb.Min.Y
-        };
-        if (!CheckCollisionPointRec(point.Pos, aabbRect))
+        BoundingBox selfAABB = GetAABB();
+        BoundingBox otherAABB = otherShape.GetAABB();
+        if (!CheckCollisionBoxes(selfAABB, otherAABB))
         {
             return false;
         }
-        Vector2 outsidePoint = new(point.Pos.X + aabb.Max.X - point.Pos.X + 5f, point.Pos.Y);
-        int collisionCount = 0;
         for (int i = 0; i < _points.Count; i++)
         {
             Vector2 startPos = _points[i].Pos;
             Vector2 endPos = _points[(i + 1) % _points.Count].Pos;
-            Vector2 collisionPoint = new();
-            bool hadCollision = CheckCollisionLines(startPos, endPos, point.Pos, outsidePoint, ref collisionPoint);
-            if (hadCollision)
+            Vector2 towardsClosestPoint = Utils.Geometry.ClosestPointOnLine(startPos, endPos, otherPoint.Pos) - otherPoint.Pos;
+            float distSq = towardsClosestPoint.LengthSquared();
+            if (distSq <= otherPoint.Radius * otherPoint.Radius)
             {
-                collisionCount++;
+                return true;
             }
         }
-        if (collisionCount > 0 && collisionCount % 2 != 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return false;
     }
 
-    public void HandleCollisions(MassShape shape)
+    public void HandleLineCollisions(MassShape shape)
     {
         foreach (var point in shape._points)
         {
-            if (CheckPointMassCollision(point))
+            if (CheckPointMassCollision(point, shape))
             {
                 HandleCollision(point);
             }
@@ -376,7 +362,7 @@ public class MassShape
                         PointMass.SolvePointToPointCollisions(context._subStep, pointA, pointB);
                     }
                 }
-                shapeA.HandleCollisions(shapeB);
+                shapeA.HandleLineCollisions(shapeB);
             }
         }
     }
@@ -402,11 +388,11 @@ public class MassShape
             }
         }
         Vector2 pointToClosest = closestPoint - pointMass.Pos;
-        if (pointToClosest.LengthSquared() == 0f)
+        float totalOffset = pointMass.Radius - pointToClosest.Length();
+        if (totalOffset == 0f)
         {
             return;
         }
-        float totalOffset = pointToClosest.Length() / 2f;
         float lineLen = Vector2.Distance(closestA.Pos, closestB.Pos);
         if (lineLen == 0f)
         {
@@ -418,9 +404,9 @@ public class MassShape
         pointToClosest = Vector2.Normalize(pointToClosest);
         Vector2 avgVel = (closestA.Vel + closestB.Vel) / 2f;
         Vector2 relVel = pointMass.Vel - avgVel;
-        pointMass.Pos += totalOffset * pointToClosest;
-        closestA.Pos += aOffset * -pointToClosest;
-        closestB.Pos += bOffset * -pointToClosest;
+        pointMass.Pos += totalOffset * -pointToClosest;
+        closestA.Pos += aOffset * pointToClosest;
+        closestB.Pos += bOffset * pointToClosest;
         // Apply impulse
         float combinedMass = closestA.Mass + closestB.Mass;
         float impulseMag = -(1f + PointMass.RestitutionCoeff) * Vector2.Dot(relVel, pointToClosest) / (1f / combinedMass + 1f / pointMass.Mass);

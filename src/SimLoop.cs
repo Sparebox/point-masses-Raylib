@@ -55,9 +55,9 @@ public class Loop
         };
         context.SelectedTool = new PullCom(context);
         //context.MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 42, stiffness: 1e5f, context));
-        // context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f - 200f, 50f, 20f, 20, 1000f, context));
-        context.MassShapes.Add(MassShape.SoftBall(WinW / 2f + 300f, WinH / 2f - 200f, 50f, 100f, 20, 1000f, context));
-        context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f - 100f, 50f, 100f, 20, 1000f, context));
+        context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f - 200f, 50f, 20f, 20, 1000f, context));
+        context.MassShapes.Add(MassShape.SoftBall(WinW / 2f + 300f, WinH / 2f - 200f, 50f, 20f, 20, 1000f, context));
+        context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f - 100f, 50f, 20f, 20, 1000f, context));
         //context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 100f, WinH / 2f - 100f, 50f, 50f, 20, 1000f, context));
         //context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f + 200f, 200f, 10f, 20, 1000f, context));
         //context.MassShapes.Add(MassShape.Pendulum(WinW / 2f, 30f, 700f, 10f, 10, context));

@@ -79,7 +79,8 @@ namespace Utils
             Vector2 start = new(x0, y0);
             Vector2 end = new(x1, y1);
             Vector2 dir = start - end;
-            if (dir.LengthSquared() == 0f)
+            float lenSq = dir.LengthSquared();
+            if (lenSq < 1f * 1f)
             {
                 return;
             }
