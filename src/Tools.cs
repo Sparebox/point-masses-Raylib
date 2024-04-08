@@ -80,7 +80,7 @@ namespace Utils
             Vector2 end = new(x1, y1);
             Vector2 dir = start - end;
             float lenSq = dir.LengthSquared();
-            if (lenSq < 1f * 1f)
+            if (lenSq < 5f * 5f)
             {
                 return;
             }
@@ -99,7 +99,8 @@ namespace Utils
         public static void DrawArrow(in Vector2 start, in Vector2 end, Color color)
         {
             Vector2 dir = start - end;
-            if (dir.LengthSquared() == 0f)
+            float lenSq = dir.LengthSquared();
+            if (lenSq < 5f * 5f)
             {
                 return;
             }

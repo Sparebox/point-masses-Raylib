@@ -95,7 +95,7 @@ public class PointMass
         //_context._ramp.SolveStaticCollision(this);
     }
 
-    public static void SolvePointToPointCollisions(float timeStep, PointMass pointA, PointMass pointB)
+    public static void SolvePointToPointCollisions(PointMass pointA, PointMass pointB)
     {   
         Vector2 normal = pointB.Pos - pointA.Pos;
         float dist = normal.LengthSquared();

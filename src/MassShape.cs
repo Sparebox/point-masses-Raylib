@@ -359,7 +359,7 @@ public class MassShape
                 {
                     foreach (var pointB in shapeB._points)
                     {
-                        PointMass.SolvePointToPointCollisions(context._subStep, pointA, pointB);
+                        PointMass.SolvePointToPointCollisions(pointA, pointB);
                     }
                 }
                 shapeA.HandleLineCollisions(shapeB);
