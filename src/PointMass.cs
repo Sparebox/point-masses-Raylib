@@ -12,7 +12,7 @@ public class PointMass
 
     public const float RestitutionCoeff = 0.5f;
     public const float KineticFrictionCoeff = 1f;
-    public const float StaticFrictionCoeff = 3f;
+    public const float StaticFrictionCoeff = 1f;
     public const float RadiusFactor = 2f;
 
     public readonly int _id;
@@ -99,7 +99,7 @@ public class PointMass
     {   
         Vector2 normal = pointB.Pos - pointA.Pos;
         float dist = normal.LengthSquared();
-        if (dist <= pointA.Radius * pointA.Radius + pointB.Radius * pointB.Radius)
+        if (dist <= Math.Pow(pointA.Radius + pointB.Radius, 2f))
         {
             // Do expensive square root here
             dist = (float) Math.Sqrt(dist);
@@ -115,7 +115,7 @@ public class PointMass
             Vector2 impulse = impulseMag * normal;
             pointA.Vel += -impulse / pointA.Mass;
             pointB.Vel += impulse / pointB.Mass;
-            Vector2 offsetVector = 0.5f * (pointA.Radius + pointB.Radius - dist) * normal * timeStep;
+            Vector2 offsetVector = 0.5f * (pointA.Radius + pointB.Radius - dist) * normal;
             pointA.Pos += -offsetVector;
             pointB.Pos += offsetVector;
         }
