@@ -1,4 +1,5 @@
 using System.Numerics;
+using ImGuiNET;
 using Raylib_cs;
 using Sim;
 using static Raylib_cs.Raylib;
@@ -7,10 +8,6 @@ namespace Physics;
 
 public class MassShape
 {
-    private static int _idCounter;
-    private const float SpringDamping = 5e4f;
-    public readonly int _id;
-
     public Vector2 TotalVisForce
     {
         get
@@ -22,7 +19,18 @@ public class MassShape
         }
     }
 
-    public float Mass { get { return _points.Select(p => p.Mass).Sum(); } }
+    public float Mass
+    {
+        get 
+        { 
+            if (_mass.HasValue)
+            {
+                return (float) _mass;
+            }
+            _mass = _points.Select(p => p.Mass).Sum();
+            return (float) _mass;
+        } 
+    }
 
     public Vector2 CenterOfMass
     {
@@ -32,6 +40,18 @@ public class MassShape
                 new Vector2(), 
                 (centerOfMass, p) => centerOfMass += p.Mass * p.Pos, 
                 centerOfMass => centerOfMass / Mass
+            );
+        }
+    }
+
+    public Vector2 Centroid
+    {
+        get
+        {
+            return _points.Aggregate(
+                new Vector2(),
+                (centroid, p) => centroid += p.Pos,
+                centroid => centroid / _points.Count
             );
         }
     }
@@ -106,13 +126,17 @@ public class MassShape
         }
     }
     
+    public readonly int _id;
     public List<Constraint> _constraints;
     public List<PointMass> _points;
     private readonly Context _context;
     private readonly bool _inflated;
     private PressureVis _pressureVis;
+    private float? _mass;
     private float? _angularMass;
     private bool? _isRigid;
+    private static int _idCounter;
+    private const float SpringDamping = 5e4f;
 
     public MassShape(Context context, bool inflated) 
     {
@@ -197,10 +221,7 @@ public class MassShape
         }
         if (_context._drawBodyInfo)
         {
-            Vector2 COM = CenterOfMass;
-            DrawText(string.Format("Angular mass: {0:0.}", AngularMass), (int) COM.X, (int) COM.Y, 15, Color.Green);
-            DrawText(string.Format("Angular vel: {0}", GetAngularVel() * RAD2DEG), (int) COM.X, (int) (COM.Y + 20f), 15, Color.Green);
-            DrawText(string.Format("Rot energy: {0:0.##}", RotEnergy), (int) COM.X, (int) (COM.Y + 40f), 15, Color.Green);
+            DrawInfo();
         }
     }
 
@@ -426,6 +447,20 @@ public class MassShape
             return perpVel / radius;
         }
         return angularVel / _points.Count;
+    }
+
+    private void DrawInfo()
+    {
+        ImGui.Begin(string.Format("Body {0} info", _id), ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
+        ImGui.SetWindowPos(Centroid + new Vector2(25f, 0f));
+        ImGui.SetWindowSize(new (170f, 100f));
+        ImGui.Text(string.Format("Mass: {0}", Mass));
+        ImGui.Text(string.Format("Angular mass: {0:0}", AngularMass));
+        ImGui.Text(string.Format("Angular vel: {0}", GetAngularVel() * RAD2DEG));
+        ImGui.Text(string.Format("Rot energy: {0:0.##}", RotEnergy));
+        ImGui.End();
+        Vector2 offset = new(-_context._textureManager._centerOfMassIcon.Width / 2f, -_context._textureManager._centerOfMassIcon.Height / 2f);
+        DrawTextureEx(_context._textureManager._centerOfMassIcon, Centroid + 0.5f * offset, 0f, 0.5f, Color.White);
     }
 
     public static bool operator == (MassShape a, MassShape b)

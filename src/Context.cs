@@ -3,6 +3,7 @@ using System.Numerics;
 using Collision;
 using Entity;
 using Physics;
+using Textures;
 using Tools;
 
 namespace Sim;
@@ -14,6 +15,7 @@ public class Context
     public readonly int _substeps;
     public readonly float _pixelsPerMeter = 1f / 0.01f;
     public readonly Vector2 _gravity;
+    public readonly TextureManager _textureManager;
     private State _saveState;
 
     public RotatingCollider _ramp;
@@ -48,6 +50,7 @@ public class Context
         _subStep = timeStep / subSteps;
         _pixelsPerMeter = pixelsPerMeter;
         _gravity = gravity * pixelsPerMeter;
+        _textureManager = new TextureManager();
     }
 
     public void SaveState()

@@ -92,7 +92,7 @@ public class PointMass
         {
             c.SolveStaticCollision(this);
         }
-        _context._ramp.SolveStaticCollision(this);
+        //_context._ramp.SolveStaticCollision(this);
     }
 
     public static void SolvePointToPointCollisions(float timeStep, PointMass pointA, PointMass pointB)

@@ -55,21 +55,21 @@ public class Loop
         };
         context.SelectedTool = new PullCom(context);
         //context.MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 42, stiffness: 1e5f, context));
-        //context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f - 200f, 50f, 20f, 20, 1000f, context));
-        context.MassShapes.Add(MassShape.SoftBall(WinW / 2f + 300f, WinH / 2f - 200f, 50f, 30f, 20, 1000f, context));
-        context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f - 100f, 50f, 30f, 20, 1000f, context));
-        context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 100f, WinH / 2f - 100f, 50f, 30f, 20, 1000f, context));
+        context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f - 200f, 50f, 20f, 20, 1000f, context));
+        context.MassShapes.Add(MassShape.SoftBall(WinW / 2f + 300f, WinH / 2f - 200f, 50f, 50f, 20, 1000f, context));
+        context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f - 100f, 50f, 50f, 20, 1000f, context));
+        context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 100f, WinH / 2f - 100f, 50f, 50f, 20, 1000f, context));
         //context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f + 200f, 200f, 10f, 20, 1000f, context));
         //context.MassShapes.Add(MassShape.Pendulum(WinW / 2f, 30f, 700f, 10f, 10, context));
         //context.MassShapes.Add(MassShape.Particle(200f, 50f, 10f, context));
         //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f - 300f, 100f, 30f, context));
         //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f, 70f, 10f, context));
-        //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f, 100f, 5, 1e3f, context));
-        //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f - 200f, 100f, 5, 1e3f, context));
+        //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f, 60f, 20f, 5e4f, context));
+        //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f - 200f, 100f, 20f, 5e4f, context));
         // context.MassShapes.Add(MassShape.HardBall(500f, 200f, 50f, 20f, 6, context));
         // context.MassShapes.Add(MassShape.HardBall(700f, 200f, 50f, 20f, 6, context));
         // context.MassShapes.Add(MassShape.HardBall(300f, 200f, 50f, 20f, 6, context));
-        context._ramp = new Entity.RotatingCollider(0f, 200f, WinW, WinH);
+        //context._ramp = new Entity.RotatingCollider(0f, 200f, WinW, WinH);
         // MassShape shape = new(context, false);
         // shape._points = new() 
         // {
@@ -114,6 +114,7 @@ public class Loop
     private static void Draw()
     {
         BeginDrawing();
+        rlImGui.Begin();
         ClearBackground(Color.Black);
 
         foreach (MassShape s in _context.MassShapes)
@@ -124,11 +125,10 @@ public class Loop
         {
             l.Draw();
         }
-        _context._ramp.Draw();
+        //_context._ramp.Draw();
         _context.SelectedTool.Draw();
         
         // GUI
-        rlImGui.Begin();
         DrawInfo();
         rlImGui.End();
         EndDrawing();
