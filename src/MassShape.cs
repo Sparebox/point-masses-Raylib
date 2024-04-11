@@ -126,6 +126,7 @@ public class MassShape
         }
     }
     
+    public const float GasAmountMult = 1e6f;
     public readonly int _id;
     public List<Constraint> _constraints;
     public List<PointMass> _points;
@@ -135,6 +136,7 @@ public class MassShape
     private PressureVis _pressureVis;
     private float? _mass;
     private float? _angularMass;
+    private float _gasAmount;
     private bool? _isRigid;
     private static int _idCounter;
     private const float SpringDamping = 5e4f;
@@ -194,7 +196,7 @@ public class MassShape
         }
         if (_inflated)
         {
-            Inflate(5e6f);
+            Inflate();
         }
     }
 
@@ -233,14 +235,6 @@ public class MassShape
         }
     }
 
-    public void DrawPreview(in Vector2 pos)
-    {
-        foreach (PointMass p in _points)
-        {
-            p.DrawPreview(pos);
-        }
-    }
-
     public void ApplyForce(in Vector2 force)
     {
         foreach (PointMass p in _points)
@@ -262,10 +256,11 @@ public class MassShape
         foreach (PointMass p in _points)
         {
             p.Pos += translation;
+            p.PrevPos = p.Pos;
         }
     }
 
-    private void Inflate(float gasAmount)
+    private void Inflate()
     {
         for (int i = 0; i < _points.Count; i++)
         {
@@ -275,7 +270,7 @@ public class MassShape
             float faceLength = P1ToP2.Length();
             Vector2 normal = new(P1ToP2.Y, -P1ToP2.X);
             normal /= faceLength;
-            Vector2 force = faceLength * gasAmount / Volume / 2f * normal;
+            Vector2 force = faceLength * GasAmountMult * _gasAmount / Volume / 2f * normal;
             p1.ApplyForce(force);
             p2.ApplyForce(force);
             if (_context._drawForces)
@@ -477,7 +472,7 @@ public class MassShape
 
     public override bool Equals(object obj)
     {
-        if (obj == null || !obj.GetType().Equals(typeof(MassShape)))
+        if (obj is null || !obj.GetType().Equals(typeof(MassShape)))
         {
             return false;
         }
@@ -503,13 +498,14 @@ public class MassShape
 
     // Shape constructors
 
-    public static MassShape SoftBall(float x, float y, float radius, float mass, int res, float stiffness, Context context)
+    public static MassShape SoftBall(float x, float y, float radius, float mass, int res, float stiffness, float gasAmount, Context context)
     {
         float angle = (float) Math.PI / 2f;
         MassShape s = new(context, true)
         {
             _points = new(),
-            _constraints = new()
+            _constraints = new(),
+            _gasAmount = gasAmount
         };
         // Points
         for (int i = 0; i < res; i++)

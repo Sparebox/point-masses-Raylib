@@ -80,11 +80,6 @@ public class PointMass
         DrawCircleLines((int) Pos.X, (int) Pos.Y, Radius, Color.White);
     }
 
-    public void DrawPreview(in Vector2 pos)
-    {
-        DrawCircleLines((int) pos.X, (int) pos.Y, Radius, Color.White);
-    }
-
     public void ApplyForce(in Vector2 force)
     {
         Force += force;

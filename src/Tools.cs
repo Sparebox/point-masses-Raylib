@@ -118,7 +118,7 @@ public abstract class Tool
 
 public class Spawn : Tool
 {
-    private enum SpawnTarget
+    public enum SpawnTarget
     {
         Box,
         SoftBox,
@@ -126,59 +126,73 @@ public class Spawn : Tool
         SoftBall,
     }
 
-    private SpawnTarget _currentTarget;
+    public SpawnTarget _currentTarget;
+    public float _mass;
+    public float _gasAmount;
+    public float _stiffness;
+    public int _resolution;
     private MassShape _shapeToSpawn;
-    private float _mass;
 
     public Spawn(Context context)
     {
         _context = context;
         _currentTarget = SpawnTarget.Box;
+        _resolution = 3;
+        _stiffness = 1e3f;
+        _gasAmount = 1f;
+        Vector2 mousePos = GetMousePosition();
+        _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, 20f, _context);
     }
 
     public override void Use() 
     {
-        switch (_currentTarget)
+        if (_shapeToSpawn is null || Radius == 0f || _mass == 0f)
         {
-            case SpawnTarget.Box:
-                _context.MassShapes.Add(_shapeToSpawn);
-                break;
-            case SpawnTarget.SoftBox:
-                break;
-            case SpawnTarget.Ball:
-                break;
-            case SpawnTarget.SoftBall:
-                break;
+            return;
         }
+        _context.MassShapes.Add(_shapeToSpawn);
+        _shapeToSpawn = new MassShape(_shapeToSpawn);
     }
 
     public override void Draw()
     {
+        if (_shapeToSpawn is null)
+        {
+            return;
+        }
         Vector2 mousePos = GetMousePosition();
-        var winFlags = ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse;
-        ImGui.Begin("Spawn target", winFlags);
-        ImGui.SetWindowPos(mousePos + new Vector2(0f, 25f));
-        ImGui.SetWindowSize(new Vector2(150f, 50f));
-        if (ImGui.Combo("Spawn target", ref _context._selectedSpawnTargetIndex, TargetsToComboString()))
-        ImGui.End();
-        _shapeToSpawn?.DrawPreview(mousePos);
+        Vector2 translation = mousePos - _shapeToSpawn.Centroid;
+        _shapeToSpawn.Move(translation);
+        _shapeToSpawn.Draw();
     }
 
-    public void ChangeSpawnTarget(bool nextTarget)
+    public void UpdateSpawnTarget()
     {
         SpawnTarget[] spawnTargets = (SpawnTarget[]) Enum.GetValues(typeof(SpawnTarget));
-        _context._selectedSpawnTargetIndex = Math.Max(0, (_context._selectedSpawnTargetIndex + (nextTarget ? 1 : -1)) % spawnTargets.Length);
         _currentTarget = spawnTargets[_context._selectedSpawnTargetIndex];
+        if (_shapeToSpawn is null)
+        {
+            return;
+        }
         Vector2 mousePos = GetMousePosition();
         switch (_currentTarget)
         {
             case SpawnTarget.Box:
                 _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, _mass, _context);
                 break;
+            case SpawnTarget.SoftBox:
+                _shapeToSpawn = MassShape.SoftBox(mousePos.X, mousePos.Y, Radius, _mass, 1e3f, _context);
+                break;
+            case SpawnTarget.Ball:
+                _shapeToSpawn = MassShape.HardBall(mousePos.X, mousePos.Y, Radius, _mass, _resolution, _context);
+                break;
+            case SpawnTarget.SoftBall:
+                _shapeToSpawn = MassShape.SoftBall(mousePos.X, mousePos.Y, Radius, _mass, _resolution, _stiffness, _gasAmount, _context);
+                break;
         }
     }
 
-    private static string TargetsToComboString()
+    public static string TargetsToComboString()
     {
         StringBuilder sb = new();
         SpawnTarget[] spawnTargets = (SpawnTarget[]) Enum.GetValues(typeof(SpawnTarget));

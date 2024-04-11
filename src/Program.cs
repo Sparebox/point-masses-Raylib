@@ -182,24 +182,23 @@ public class Program
         }
         if (GetMouseWheelMoveV().Y > 0f)
         {
-            if (_context.SelectedTool.GetType().Equals(typeof(Spawn)))
-            {
-                Spawn spawnTool = (Spawn) _context.SelectedTool;
-                spawnTool.ChangeSpawnTarget(true);
-            }
             _context.SelectedTool.ChangeRadius(Tool.BaseRadiusChange);
             _context.SelectedTool.ChangeDirection(DEG2RAD * Tool.BaseAngleChange);
-            
+            if (_context.SelectedTool.GetType() == typeof(Spawn))
+            {
+                var spawnTool = (Spawn) _context.SelectedTool;
+                spawnTool.UpdateSpawnTarget();
+            }
         } 
         else if (GetMouseWheelMoveV().Y < 0f)
         {
-            if (_context.SelectedTool.GetType().Equals(typeof(Spawn)))
-            {
-                Spawn spawnTool = (Spawn) _context.SelectedTool;
-                spawnTool.ChangeSpawnTarget(false);
-            }
             _context.SelectedTool.ChangeRadius(-Tool.BaseRadiusChange);
             _context.SelectedTool.ChangeDirection(DEG2RAD * -Tool.BaseAngleChange);
+            if (_context.SelectedTool.GetType() == typeof(Spawn))
+            {
+                var spawnTool = (Spawn) _context.SelectedTool;
+                spawnTool.UpdateSpawnTarget();
+            }
         }
     }
 
@@ -225,7 +224,38 @@ public class Program
         {
             Tool.ChangeToolType(_context);
         }
-        if (ImGui.IsWindowFocused())
+        if (_context.SelectedTool.GetType().Equals(typeof(Spawn)))
+        {
+            var spawnTool = (Spawn) _context.SelectedTool;
+            if (ImGui.Combo("Spawn target", ref _context._selectedSpawnTargetIndex, Spawn.TargetsToComboString()))
+            {
+                spawnTool.UpdateSpawnTarget();
+            }
+            if (ImGui.InputFloat("Mass", ref spawnTool._mass))
+            {
+                spawnTool._mass = Math.Abs(spawnTool._mass);
+                spawnTool.UpdateSpawnTarget();
+            }
+            if (spawnTool._currentTarget == Spawn.SpawnTarget.Ball || spawnTool._currentTarget == Spawn.SpawnTarget.SoftBall)
+            {
+                if (ImGui.InputInt("Resolution", ref spawnTool._resolution))
+                {
+                    spawnTool._resolution = Math.Abs(spawnTool._resolution);
+                    spawnTool.UpdateSpawnTarget();
+                }
+                if (ImGui.InputFloat("Gas amount", ref spawnTool._gasAmount))
+                {
+                    spawnTool._gasAmount = Math.Abs(spawnTool._gasAmount);
+                    spawnTool.UpdateSpawnTarget();
+                }
+                if (ImGui.InputFloat("Stiffness", ref spawnTool._stiffness))
+                {
+                    spawnTool._stiffness = Math.Abs(spawnTool._stiffness);
+                    spawnTool.UpdateSpawnTarget();
+                }
+            }
+        }
+        if (ImGui.IsMouseHoveringRect(ImGui.GetWindowContentRegionMin(), ImGui.GetWindowContentRegionMax()))
         {
             _context._toolEnabled = false;
         }
