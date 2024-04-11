@@ -24,10 +24,12 @@ public class Context
     public bool _drawAABBS;
     public bool _drawBodyInfo;
     public bool _simPaused;
+    public bool _toolEnabled;
     public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; set; }
     public Tool SelectedTool { get; set; }
     public int _selectedToolIndex;
+    public int _selectedSpawnTargetIndex;
     public int MassCount 
     {
         get 
@@ -51,6 +53,7 @@ public class Context
         _pixelsPerMeter = pixelsPerMeter;
         _gravity = gravity * pixelsPerMeter;
         _textureManager = new TextureManager();
+        _toolEnabled = true;
     }
 
     public void SaveState()

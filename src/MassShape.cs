@@ -129,6 +129,7 @@ public class MassShape
     public readonly int _id;
     public List<Constraint> _constraints;
     public List<PointMass> _points;
+    public bool _toBeDeleted;
     private readonly Context _context;
     private readonly bool _inflated;
     private PressureVis _pressureVis;
@@ -143,6 +144,7 @@ public class MassShape
         _context = context;
         _inflated = inflated;
         _id = _idCounter++;
+        _toBeDeleted = false;
     }
 
     // Copy constructor
@@ -151,6 +153,7 @@ public class MassShape
         _context = shape._context;
         _inflated = shape._inflated;
         _id = _idCounter++;
+        _toBeDeleted = false;
         _points = new();
         _constraints = new();
         foreach (var p in shape._points)
@@ -176,6 +179,11 @@ public class MassShape
 
     public void Update(float timeStep)
     {
+        if (!_points.Any())
+        {
+            _toBeDeleted = true;
+            return;
+        }
         foreach (Constraint c in _constraints)
         {
             c.Update();
@@ -222,6 +230,14 @@ public class MassShape
         if (_context._drawBodyInfo)
         {
             DrawInfo();
+        }
+    }
+
+    public void DrawPreview(in Vector2 pos)
+    {
+        foreach (PointMass p in _points)
+        {
+            p.DrawPreview(pos);
         }
     }
 

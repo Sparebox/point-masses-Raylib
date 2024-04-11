@@ -109,6 +109,7 @@ public class Program
                 }
                 MassShape.SolveCollisions(_context);
             }
+            _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
             _accumulator -= _context._timeStep;
         }
     }
@@ -168,17 +169,35 @@ public class Program
             _context._ramp.Lower(10f * GetFrameTime());
         }
         // Mouse
-        if (IsMouseButtonDown(MouseButton.Left))
+        if (_context.SelectedTool.GetType().Equals(typeof(Spawn)))
         {
-            _context.SelectedTool.Update();
+            if (IsMouseButtonPressed(MouseButton.Left) && _context._toolEnabled)
+            {
+                _context.SelectedTool.Use();
+            }
+        }
+        else if (IsMouseButtonDown(MouseButton.Left) && _context._toolEnabled)
+        {
+            _context.SelectedTool.Use();
         }
         if (GetMouseWheelMoveV().Y > 0f)
         {
+            if (_context.SelectedTool.GetType().Equals(typeof(Spawn)))
+            {
+                Spawn spawnTool = (Spawn) _context.SelectedTool;
+                spawnTool.ChangeSpawnTarget(true);
+            }
             _context.SelectedTool.ChangeRadius(Tool.BaseRadiusChange);
             _context.SelectedTool.ChangeDirection(DEG2RAD * Tool.BaseAngleChange);
+            
         } 
         else if (GetMouseWheelMoveV().Y < 0f)
         {
+            if (_context.SelectedTool.GetType().Equals(typeof(Spawn)))
+            {
+                Spawn spawnTool = (Spawn) _context.SelectedTool;
+                spawnTool.ChangeSpawnTarget(false);
+            }
             _context.SelectedTool.ChangeRadius(-Tool.BaseRadiusChange);
             _context.SelectedTool.ChangeDirection(DEG2RAD * -Tool.BaseAngleChange);
         }
@@ -194,6 +213,7 @@ public class Program
         ImGui.PopStyleColor();
         ImGui.Text(string.Format("Masses: {0}", _context.MassCount));
         ImGui.Text(string.Format("Constraints: {0}", _context.ConstraintCount));
+        ImGui.Text(string.Format("Shapes: {0}", _context.MassShapes.Count));
         ImGui.Text(string.Format("Substeps: {0}", _context._substeps));
         ImGui.Text(string.Format("Step: {0:0.0000} ms", _context._timeStep));
         ImGui.Text(string.Format("Substep: {0:0.0000} ms", _context._subStep));
@@ -201,9 +221,17 @@ public class Program
         ImGui.Checkbox("Draw forces", ref _context._drawForces);
         ImGui.Checkbox("Draw AABBs", ref _context._drawAABBS);
         ImGui.Checkbox("Draw body info", ref _context._drawBodyInfo);
-        if (ImGui.Combo("Tool", ref _context._selectedToolIndex, Tool.ToolsToString()))
+        if (ImGui.Combo("Tool", ref _context._selectedToolIndex, Tool.ToolsToComboString()))
         {
             Tool.ChangeToolType(_context);
+        }
+        if (ImGui.IsWindowFocused())
+        {
+            _context._toolEnabled = false;
+        }
+        else
+        {
+            _context._toolEnabled = true;
         }
         ImGui.End();
     }

@@ -11,8 +11,8 @@ public class PointMass
     private static int _idCounter;
 
     public const float RestitutionCoeff = 0.5f;
-    public const float KineticFrictionCoeff = 1f;
-    public const float StaticFrictionCoeff = 1f;
+    public const float KineticFrictionCoeff = 1.5f;
+    public const float StaticFrictionCoeff = 2f;
     public const float RadiusFactor = 2f;
 
     public readonly int _id;
@@ -78,6 +78,11 @@ public class PointMass
     public void Draw()
     {
         DrawCircleLines((int) Pos.X, (int) Pos.Y, Radius, Color.White);
+    }
+
+    public void DrawPreview(in Vector2 pos)
+    {
+        DrawCircleLines((int) pos.X, (int) pos.Y, Radius, Color.White);
     }
 
     public void ApplyForce(in Vector2 force)
