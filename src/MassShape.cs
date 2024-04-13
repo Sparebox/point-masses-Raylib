@@ -423,8 +423,10 @@ public class MassShape
         float impulseMag = -(1f + PointMass.RestitutionCoeff) * Vector2.Dot(relVel, pointToClosest) / (1f / combinedMass + 1f / pointMass.Mass);
         Vector2 impulse = impulseMag * pointToClosest;
         pointMass.Vel += impulse / pointMass.Mass;
-        closestA.Vel += -impulse / combinedMass / 2f;
-        closestB.Vel += -impulse / combinedMass / 2f;
+        closestA.Vel += -impulse / (combinedMass - closestB.Mass);
+        closestB.Vel += -impulse / (combinedMass - closestA.Mass);
+        // Apply friction
+        pointMass.ApplyFriction(-pointToClosest);
     }
 
     private float GetAngularVel()

@@ -11,8 +11,8 @@ public class PointMass
     private static int _idCounter;
 
     public const float RestitutionCoeff = 0.5f;
-    public const float KineticFrictionCoeff = 1.5f;
-    public const float StaticFrictionCoeff = 2f;
+    public const float KineticFrictionCoeff = 1f;
+    public const float StaticFrictionCoeff = 0.5f;
     public const float RadiusFactor = 2f;
 
     public readonly int _id;
@@ -90,7 +90,7 @@ public class PointMass
     {
         foreach (LineCollider c in _context.LineColliders)
         {
-            c.SolveStaticCollision(this);
+            c.SolveCollision(this);
         }
         //_context._ramp.SolveStaticCollision(this);
     }
@@ -123,6 +123,10 @@ public class PointMass
 
     public void ApplyFriction(in Vector2 normal)
     {
+        if (Vel.LengthSquared() == 0f)
+        {
+            return;
+        }
         // Find vel direction perpendicular to the normal
         Vector2 dir = Vel - Vector2.Dot(Vel, normal) * normal;
         if (dir.LengthSquared() == 0f)
@@ -130,7 +134,7 @@ public class PointMass
             return;
         }
         float normalForce = Vector2.Dot(Force, normal);
-        if (normalForce > 0f)
+        if (normalForce >= 0f)
         {
             // The total force is not towards the normal
             return;
@@ -144,8 +148,8 @@ public class PointMass
         // Apply kinetic friction
         dir = Vector2.Normalize(dir);
         ApplyForce(dir * KineticFrictionCoeff * normalForce);
-        // Vector2 vis = dir * KineticFrictionCoeff * normalForce;
-        // Utils.Graphic.DrawArrow((int) Pos.X, (int) Pos.Y, (int) (Pos.X + vis.X), (int) (Pos.Y + vis.Y), Color.Magenta);
+        //Vector2 vis = dir * KineticFrictionCoeff * normalForce;
+        //Utils.Graphic.DrawArrow((int) Pos.X, (int) Pos.Y, (int) (Pos.X + vis.X), (int) (Pos.Y + vis.Y), Color.Magenta);
     }
 
     public override bool Equals(object obj)

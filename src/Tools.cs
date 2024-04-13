@@ -124,6 +124,7 @@ public class Spawn : Tool
         SoftBox,
         Ball,
         SoftBall,
+        Particle
     }
 
     public SpawnTarget _currentTarget;
@@ -137,6 +138,7 @@ public class Spawn : Tool
     {
         _context = context;
         _currentTarget = SpawnTarget.Box;
+        _mass = 10f;
         _resolution = 3;
         _stiffness = 1e3f;
         _gasAmount = 1f;
@@ -188,6 +190,9 @@ public class Spawn : Tool
                 break;
             case SpawnTarget.SoftBall:
                 _shapeToSpawn = MassShape.SoftBall(mousePos.X, mousePos.Y, Radius, _mass, _resolution, _stiffness, _gasAmount, _context);
+                break;
+            case SpawnTarget.Particle:
+                _shapeToSpawn = MassShape.Particle(mousePos.X, mousePos.Y, _mass, _context);
                 break;
         }
     }
