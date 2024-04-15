@@ -13,7 +13,6 @@ public class Context
     public readonly float _timeStep;
     public readonly float _subStep;
     public readonly int _substeps;
-    public readonly float _pixelsPerMeter = 1f / 0.01f;
     public readonly Vector2 _gravity;
     public readonly TextureManager _textureManager;
     private State _saveState;
@@ -45,13 +44,12 @@ public class Context
         }
     }
 
-    public Context(float timeStep, int subSteps, float pixelsPerMeter, Vector2 gravity)
+    public Context(float timeStep, int subSteps, Vector2 gravity)
     {
         _timeStep = timeStep;
         _substeps = subSteps;
         _subStep = timeStep / subSteps;
-        _pixelsPerMeter = pixelsPerMeter;
-        _gravity = gravity * pixelsPerMeter;
+        _gravity = gravity;
         _textureManager = new TextureManager();
         _toolEnabled = true;
     }

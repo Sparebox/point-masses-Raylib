@@ -69,7 +69,7 @@ public class MassShape
             foreach (var p in _points)
             {
                 float distSq = Vector2.DistanceSquared(COM, p.Pos);
-                angularMass += p.Mass * distSq;
+                angularMass += p.Mass * Utils.UnitConversion.PixelsToMeters(distSq);
             }
             if (IsRigid)
             {
@@ -105,7 +105,7 @@ public class MassShape
     {
         get
         {
-            float angVel = GetAngularVel();
+            float angVel = AngVel;
             return 0.5f * AngularMass * angVel * angVel;
         }
     }
@@ -125,6 +125,29 @@ public class MassShape
             return area / 2f;
         }
     }
+
+    public float Angle
+    {
+        get
+        {
+            if (!_points.Any())
+            {
+                return 0f;
+            }
+            Vector2 com = CenterOfMass;
+            Vector2 pos = _points.First().Pos;
+            Vector2 dir = pos - com;
+            return (float) Math.Atan2(dir.Y, dir.X);
+        }
+    }
+
+    public float AngVel
+    {
+        get
+        {
+            return (Angle - _lastAngle) / _context._subStep;
+        }
+    }
     
     public const float GasAmountMult = 1e6f;
     public readonly int _id;
@@ -134,6 +157,7 @@ public class MassShape
     private readonly Context _context;
     private readonly bool _inflated;
     private PressureVis _pressureVis;
+    private float _lastAngle;
     private float? _mass;
     private float? _angularMass;
     private float _gasAmount;
@@ -181,6 +205,7 @@ public class MassShape
 
     public void Update(float timeStep)
     {
+        _lastAngle = Angle;
         if (!_points.Any())
         {
             _toBeDeleted = true;
@@ -429,34 +454,16 @@ public class MassShape
         pointMass.ApplyFriction(-pointToClosest);
     }
 
-    private float GetAngularVel()
-    {
-        Vector2 COM = CenterOfMass;
-        float angularVel = 0f;
-        foreach (var p in _points)
-        {
-            Vector2 radiusVector = p.Pos - COM;
-            float radius = radiusVector.Length();
-            if (radius == 0f)
-            {
-                continue;
-            }
-            Vector2 normal = new(radiusVector.Y / radius, -radiusVector.X / radius);
-            float perpVel = Vector2.Dot(p.Vel, normal);
-            return perpVel / radius;
-        }
-        return angularVel / _points.Count;
-    }
-
     private void DrawInfo()
     {
         ImGui.Begin(string.Format("Body {0} info", _id), ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
         ImGui.SetWindowPos(Centroid + new Vector2(25f, 0f));
-        ImGui.SetWindowSize(new (170f, 100f));
-        ImGui.Text(string.Format("Mass: {0}", Mass));
-        ImGui.Text(string.Format("Angular mass: {0:0}", AngularMass));
-        ImGui.Text(string.Format("Angular vel: {0}", GetAngularVel() * RAD2DEG));
-        ImGui.Text(string.Format("Rot energy: {0:0.##}", RotEnergy));
+        ImGui.SetWindowSize(new (230f, 130f));
+        ImGui.Text(string.Format("Mass: {0} kg", Mass));
+        ImGui.Text(string.Format("Moment of inertia: {0:0} kgm^2", AngularMass));
+        ImGui.Text(string.Format("Angle: {0:0} deg", Angle * RAD2DEG));
+        ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel * RAD2DEG));
+        ImGui.Text(string.Format("Rot energy: {0:0.##} kJ", RotEnergy / 1e3));
         ImGui.End();
         Vector2 offset = new(-_context._textureManager._centerOfMassIcon.Width / 2f, -_context._textureManager._centerOfMassIcon.Height / 2f);
         DrawTextureEx(_context._textureManager._centerOfMassIcon, Centroid + 0.5f * offset, 0f, 0.5f, Color.White);

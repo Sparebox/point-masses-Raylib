@@ -38,7 +38,7 @@ public class Program
     {
         InitWindow(WinW, WinH, "Point-masses");
         SetTargetFPS(TargetFPS);
-        Context context = new(timeStep: 1f / 60f, 13, pixelsPerMeter: 1f / 0.01f, gravity: new(0f, 9.81f))
+        Context context = new(timeStep: 1f / 60f, 13, gravity: new(0f, Utils.UnitConversion.MetersToPixels(9.81f)))
         {
             LineColliders = new() {
             new(0f, 0f, WinW, 0f),
@@ -160,14 +160,14 @@ public class Program
         {
             _context._simPaused = !_context._simPaused;
         }
-        if (IsKeyDown(KeyboardKey.Up))
-        {
-            _context._ramp.Raise(10f * GetFrameTime());
-        }
-        if (IsKeyDown(KeyboardKey.Down))
-        {
-            _context._ramp.Lower(10f * GetFrameTime());
-        }
+        // if (IsKeyDown(KeyboardKey.Up))
+        // {
+        //     _context._ramp.Raise(10f * GetFrameTime());
+        // }
+        // if (IsKeyDown(KeyboardKey.Down))
+        // {
+        //     _context._ramp.Lower(10f * GetFrameTime());
+        // }
         // Mouse
         if (_context.SelectedTool.GetType().Equals(typeof(Spawn)))
         {
@@ -214,8 +214,8 @@ public class Program
         ImGui.Text(string.Format("Constraints: {0}", _context.ConstraintCount));
         ImGui.Text(string.Format("Shapes: {0}", _context.MassShapes.Count));
         ImGui.Text(string.Format("Substeps: {0}", _context._substeps));
-        ImGui.Text(string.Format("Step: {0:0.0000} ms", _context._timeStep));
-        ImGui.Text(string.Format("Substep: {0:0.0000} ms", _context._subStep));
+        ImGui.Text(string.Format("Step: {0:0.0000} ms", _context._timeStep * 1e3f));
+        ImGui.Text(string.Format("Substep: {0:0.0000} ms", _context._subStep * 1e3f));
         ImGui.Checkbox("Gravity", ref _context._gravityEnabled);
         ImGui.Checkbox("Draw forces", ref _context._drawForces);
         ImGui.Checkbox("Draw AABBs", ref _context._drawAABBS);

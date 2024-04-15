@@ -1,6 +1,5 @@
 using System.Numerics;
 using System.Text;
-using ImGuiNET;
 using Physics;
 using Raylib_cs;
 using Sim;
@@ -15,6 +14,7 @@ public enum ToolType
     Wind,
     Rotate,
     Spawn,
+    Ruler,
     Delete,
 }
 
@@ -82,6 +82,9 @@ public abstract class Tool
             case ToolType.Spawn :
                 context.SelectedTool = new Spawn(context);
                 break;
+            case ToolType.Ruler :
+                context.SelectedTool = new Ruler(context);
+                break;
             case ToolType.Delete :
                 context.SelectedTool = new Delete(context);
                 break;
@@ -118,6 +121,18 @@ public abstract class Tool
 
 public class Spawn : Tool
 {
+    private const float DefaultMass = 10f;
+    private const int DefaultRes = 3;
+    private const float DefaultStiffness = 1e3f;
+    private const float DefaultGasAmt = 3f;
+
+    public SpawnTarget _currentTarget;
+    public float _mass;
+    public float _gasAmount;
+    public float _stiffness;
+    public int _resolution;
+    private MassShape _shapeToSpawn;
+
     public enum SpawnTarget
     {
         Box,
@@ -127,23 +142,16 @@ public class Spawn : Tool
         Particle
     }
 
-    public SpawnTarget _currentTarget;
-    public float _mass;
-    public float _gasAmount;
-    public float _stiffness;
-    public int _resolution;
-    private MassShape _shapeToSpawn;
-
     public Spawn(Context context)
     {
         _context = context;
         _currentTarget = SpawnTarget.Box;
-        _mass = 10f;
-        _resolution = 3;
-        _stiffness = 1e3f;
-        _gasAmount = 1f;
+        _mass = DefaultMass;
+        _resolution = DefaultRes;
+        _stiffness = DefaultStiffness;
+        _gasAmount = DefaultGasAmt;
         Vector2 mousePos = GetMousePosition();
-        _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, 20f, _context);
+        _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, _mass, _context);
     }
 
     public override void Use() 
@@ -242,6 +250,8 @@ public class Delete : Tool
 public class PullCom : Tool
 {
     private const float PullForceCoeff = 1e2f;
+    private bool _shouldVisualize = false;
+    private Vector2 _centerOfMass;
 
     public PullCom(Context context)
     {
@@ -257,26 +267,34 @@ public class PullCom : Tool
             return;
         }
         MassShape closest = FindClosestShape(mousePos, shapes);
-        Vector2 com = closest.CenterOfMass;
-        Vector2 force = PullForceCoeff * (mousePos - com);
+        _centerOfMass = closest.CenterOfMass;
+        Vector2 force = PullForceCoeff * (mousePos - _centerOfMass);
         closest.ApplyForceCOM(force);
-        DrawLine((int) com.X, (int) com.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
+        _shouldVisualize = true;
     }
 
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
         DrawCircleLines((int) mousePos.X, (int) mousePos.Y, Radius, Color.Yellow);
+        if (_shouldVisualize)
+        {
+            _shouldVisualize = false;
+            DrawLine((int) _centerOfMass.X, (int) _centerOfMass.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
+        }
     }
 }
 
 public class Pull : Tool
 {
     private const float PullForceCoeff = 1e3f;
+    private readonly HashSet<Vector2> _positions;
+    private bool _shouldVisualize;
 
     public Pull(Context context)
     {
         _context = context;
+        _positions = new();
     }
 
     public override void Use()
@@ -287,25 +305,35 @@ public class Pull : Tool
         {
             return;
         }
+        _positions.Clear();
         foreach (var p in points)
         {
             Vector2 force = PullForceCoeff * (mousePos - p.Pos);
             p.ApplyForce(force);
-            DrawLine((int) p.Pos.X, (int) p.Pos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
+            _positions.Add(p.Pos);
         }
+        _shouldVisualize = true;
     }
 
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
         DrawCircleLines((int) mousePos.X, (int) mousePos.Y, Radius, Color.Yellow);
+        if (_shouldVisualize)
+        {
+            _shouldVisualize = false;
+            foreach (var pos in _positions)
+            {
+               DrawLine((int) pos.X, (int) pos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
+            }
+        }
     }
 }
 
 public class Wind : Tool
 {
-    private const int MinForce = 500;
-    private const int MaxForce = 5000; 
+    private const int MinForce = (int) 5e2;
+    private const int MaxForce = (int) 5e3; 
 
     public Wind(Context context)
     {
@@ -369,5 +397,29 @@ public class Rotate : Tool
     {
         Vector2 mousePos = GetMousePosition();
         DrawCircleLines((int) mousePos.X, (int) mousePos.Y, Radius, Color.Yellow);
+    }
+}
+
+public class Ruler : Tool
+{
+    private Vector2 _startPos;
+
+    public Ruler(Context context)
+    {
+        _context = context;
+    }
+
+    public override void Draw()
+    {
+        Vector2 mousePos = GetMousePosition();
+        float len = Vector2.Distance(_startPos, mousePos);
+        DrawText(len.ToString(), (int) mousePos.X, (int) mousePos.Y, 15, Color.Yellow);
+        DrawLine((int) _startPos.X, (int) _startPos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Yellow);
+    }
+
+    public override void Use()
+    {
+
+        _startPos = GetMousePosition();
     }
 }
