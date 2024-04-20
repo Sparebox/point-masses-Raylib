@@ -8,7 +8,7 @@ namespace Utils;
 
 public static class UnitConversion
 {
-    public const float PixelsPerMeter = 500f;
+    public const float PixelsPerMeter = 300f;
 
     public static float PixelsToMeters(float pixels)
     {
@@ -83,7 +83,7 @@ public static class Entities
     }
 }
 
-public static class Graphic
+public static class Graphics
 {
     public const float ArrowBranchLength = 20f;
     public const float ArrowAngle = 20f;

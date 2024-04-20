@@ -24,6 +24,9 @@ public class Context
     public bool _drawBodyInfo;
     public bool _simPaused;
     public bool _toolEnabled;
+    public float _globalRestitutionCoeff = 0.33f;
+    public float _globalKineticFrictionCoeff = 1f;
+    public float _globalStaticFrictionCoeff = 2f;
     public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; set; }
     public Tool SelectedTool { get; set; }
@@ -52,6 +55,12 @@ public class Context
         _gravity = gravity;
         _textureManager = new TextureManager();
         _toolEnabled = true;
+        _gravityEnabled = false;
+        _drawAABBS = false;
+        _drawForces = false;
+        _simPaused = true;
+        MassShapes = new();
+        LineColliders = new();
     }
 
     public void SaveState()

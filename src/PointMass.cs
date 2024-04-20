@@ -9,11 +9,7 @@ namespace Physics;
 public class PointMass
 {
     private static int _idCounter;
-
-    public const float RestitutionCoeff = 0.5f;
-    public const float KineticFrictionCoeff = 1f;
-    public const float StaticFrictionCoeff = 0.5f;
-    public const float RadiusFactor = 2f;
+    public const float RadiusToMassRatio = 2f;
 
     public readonly int _id;
     public readonly bool _pinned;
@@ -21,6 +17,7 @@ public class PointMass
     public Vector2 Pos { get; set; }
     public Vector2 PrevPos { get; set; }
     public Vector2 Force { get; set; }
+    public Vector2 PrevForce { get; private set; }
     public Vector2 Vel
     {
         get { return Pos - PrevPos; }
@@ -37,7 +34,7 @@ public class PointMass
         PrevPos = Pos;
         Force = Vector2.Zero;
         Mass = mass;
-        Radius = mass * RadiusFactor;
+        Radius = mass * RadiusToMassRatio;
         _id = _idCounter++;
         _pinned = pinned;
         _context = context;
@@ -56,7 +53,7 @@ public class PointMass
         _context = p._context;
     }
 
-    public void Update(float timeStep)
+    public void Update()
     {
         if (_pinned)
         {
@@ -66,12 +63,13 @@ public class PointMass
         {
             ApplyForce(Mass * _context._gravity);
         }
-        SolveCollisions();
+        SolveLineCollisions();
         Vector2 acc = Force / Mass;
         Vector2 vel = Vel;
         PrevPos = Pos;
-        Pos += vel + acc * timeStep * timeStep;
+        Pos += vel + acc * _context._subStep * _context._subStep;
         _visForce = Force;
+        PrevForce = Force;
         Force = Vector2.Zero;
     }
 
@@ -86,20 +84,20 @@ public class PointMass
         _visForce += force;
     }
 
-    public void SolveCollisions()
+    public void SolveLineCollisions()
     {
         foreach (LineCollider c in _context.LineColliders)
         {
-            c.SolveCollision(this);
+            c.SolveCollision(this, _context);
         }
         //_context._ramp.SolveStaticCollision(this);
     }
 
-    public static void SolvePointToPointCollisions(PointMass pointA, PointMass pointB)
+    public void SolvePointToPointCollision(PointMass otherPoint)
     {   
-        Vector2 normal = pointB.Pos - pointA.Pos;
+        Vector2 normal = otherPoint.Pos - Pos;
         float dist = normal.LengthSquared();
-        if (dist <= Math.Pow(pointA.Radius + pointB.Radius, 2f))
+        if (dist <= Math.Pow(Radius + otherPoint.Radius, 2f))
         {
             // Do expensive square root here
             dist = (float) Math.Sqrt(dist);
@@ -110,14 +108,14 @@ public class PointMass
             normal.X /= dist;
             normal.Y /= dist;
             // Apply impulse
-            Vector2 relVel = pointB.Vel - pointA.Vel;
-            float impulseMag = -(1f + RestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / pointA.Mass + 1f / pointB.Mass);
+            Vector2 relVel = otherPoint.Vel - Vel;
+            float impulseMag = -(1f + _context._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / Mass + 1f / otherPoint.Mass);
             Vector2 impulse = impulseMag * normal;
-            pointA.Vel += -impulse / pointA.Mass;
-            pointB.Vel += impulse / pointB.Mass;
-            Vector2 offsetVector = 0.5f * (pointA.Radius + pointB.Radius - dist) * normal;
-            pointA.Pos += -offsetVector;
-            pointB.Pos += offsetVector;
+            Vel += -impulse / Mass;
+            otherPoint.Vel += impulse / otherPoint.Mass;
+            Vector2 offsetVector = 0.5f * (Radius + otherPoint.Radius - dist) * normal;
+            Pos += -offsetVector;
+            otherPoint.Pos += offsetVector;
         }
     }
 
@@ -133,13 +131,13 @@ public class PointMass
         {
             return;
         }
-        float normalForce = Vector2.Dot(Force, normal);
+        float normalForce = Vector2.Dot(PrevForce, normal);
         if (normalForce >= 0f)
         {
             // The total force is not towards the normal
             return;
         }
-        if (Force.LengthSquared() < Math.Pow(StaticFrictionCoeff * -normalForce, 2f))
+        if (PrevForce.LengthSquared() < Math.Pow(_context._globalStaticFrictionCoeff * -normalForce, 2f))
         {
             // Apply static friction
             Vel += -dir;
@@ -147,7 +145,7 @@ public class PointMass
         }
         // Apply kinetic friction
         dir = Vector2.Normalize(dir);
-        ApplyForce(dir * KineticFrictionCoeff * normalForce);
+        ApplyForce(dir * _context._globalKineticFrictionCoeff * normalForce);
         //Vector2 vis = dir * KineticFrictionCoeff * normalForce;
         //Utils.Graphic.DrawArrow((int) Pos.X, (int) Pos.Y, (int) (Pos.X + vis.X), (int) (Pos.Y + vis.Y), Color.Magenta);
     }

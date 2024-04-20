@@ -1,6 +1,7 @@
 using System.Numerics;
 using Physics;
 using Raylib_cs;
+using Sim;
 using static Raylib_cs.Raylib;
 
 namespace Collision;
@@ -33,7 +34,7 @@ public class LineCollider
         DrawLine((int) StartPos.X, (int) StartPos.Y, (int) EndPos.X, (int) EndPos.Y, Color.White);
     }
 
-    public void SolveCollision(PointMass p)
+    public void SolveCollision(PointMass p, Context context)
     {
         Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(StartPos, EndPos, p.Pos);
         Vector2 closestToPoint = p.Pos - closestPoint;
@@ -48,7 +49,7 @@ public class LineCollider
             // Reduce only normal aligned velocity
             Vector2 reflectedNormalVel = Vector2.Dot(reflectedVel, closestToPointNorm) * closestToPointNorm;
             Vector2 parallelVel = reflectedVel - reflectedNormalVel;
-            reflectedNormalVel *= PointMass.RestitutionCoeff;
+            reflectedNormalVel *= context._globalRestitutionCoeff;
             // Correct penetration
             p.Pos += (p.Radius - distToCollider) * closestToPointNorm;
             p.Vel =  parallelVel + reflectedNormalVel; 

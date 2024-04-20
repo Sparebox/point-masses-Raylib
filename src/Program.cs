@@ -38,20 +38,15 @@ public class Program
     {
         InitWindow(WinW, WinH, "Point-masses");
         SetTargetFPS(TargetFPS);
-        Context context = new(timeStep: 1f / 60f, 13, gravity: new(0f, Utils.UnitConversion.MetersToPixels(9.81f)))
+        Context context = new(timeStep: 1f / 60f, 13, gravity: new(0f, Utils.UnitConversion.MetersToPixels(6f)))
         {
-            LineColliders = new() {
+            LineColliders = {
             new(0f, 0f, WinW, 0f),
             new(0f, 0f, 0f, WinH),
             new(WinW, 0f, WinW, WinH),
             new(0f, WinH, WinW, WinH),
             //new(0f, 900f, 1600f, 200f)
-            },
-            MassShapes = new(),
-            _gravityEnabled = false,
-            _drawAABBS = false,
-            _drawForces = false,
-            _simPaused = true
+            }
         };
         context.SelectedTool = new PullCom(context);
         //context.MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 42, stiffness: 1e5f, context));
@@ -62,8 +57,8 @@ public class Program
         //context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f + 200f, 200f, 10f, 20, 1000f, context));
         //context.MassShapes.Add(MassShape.Pendulum(WinW / 2f, 30f, 700f, 10f, 10, context));
         //context.MassShapes.Add(MassShape.Particle(200f, 50f, 10f, context));
-        //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f - 300f, 100f, 30f, context));
-        //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f, 70f, 10f, context));
+        context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f - 300f, 100f, 10f, context));
+        context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f - 100f, 200f, 50f, context));
         //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f - 200f, 60f, 20f, 5e4f, context));
         //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f, 100f, 20f, 5e4f, context));
         //context.MassShapes.Add(MassShape.HardBall(500f, 200f, 50f, 20f, 6, context));
@@ -72,26 +67,6 @@ public class Program
         //context.MassShapes.Add(MassShape.Particle(WinW / 2f, WinH / 2f, 10f, context));
         //context.MassShapes.Add(MassShape.Particle(WinW / 2f + 100f, WinH / 2f, 10f, context));
         //context._ramp = new Entity.RotatingCollider(0f, 200f, WinW, WinH);
-        // MassShape shape = new(context, false);
-        // shape._points = new() 
-        // {
-        //     new(50f, 50f, 1f, false, context),
-        //     new(50f, 100f, 1f, false, context),
-        //     new(200f, 50f, 1f, false, context),
-        //     new(200f, 100f, 1f, false, context),
-        //     new(250f, 75f, 10f, false, context)
-        // };
-        // shape._constraints = new()
-        // {
-        //     new RigidConstraint(shape._points[0], shape._points[1]),
-        //     new RigidConstraint(shape._points[0], shape._points[2]),
-        //     new RigidConstraint(shape._points[2], shape._points[3]),
-        //     new RigidConstraint(shape._points[1], shape._points[3]),
-        //     new RigidConstraint(shape._points[0], shape._points[3]),
-        //     new RigidConstraint(shape._points[2], shape._points[4]),
-        //     new RigidConstraint(shape._points[3], shape._points[4]),
-        // };
-        // context.MassShapes.Add(shape);
         context.SaveState();
         return context;
     }
@@ -105,9 +80,8 @@ public class Program
             {
                 foreach (MassShape s in _context.MassShapes)
                 {
-                    s.Update(_context._subStep);
+                    s.Update();
                 }
-                MassShape.SolveCollisions(_context);
             }
             _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
             _accumulator -= _context._timeStep;
@@ -116,7 +90,7 @@ public class Program
 
     private static void Draw()
     {
-        BeginDrawing();
+        BeginDrawing(); // raylib
         rlImGui.Begin();
         ClearBackground(Color.Black);
 
@@ -128,13 +102,10 @@ public class Program
         {
             l.Draw();
         }
-        //_context._ramp.Draw();
         _context.SelectedTool.Draw();
-        
-        // GUI
-        DrawInfo();
+        DrawInfo(); // GUI
         rlImGui.End();
-        EndDrawing();
+        EndDrawing(); // raylib
     }
 
     private static void HandleInput()
@@ -168,18 +139,8 @@ public class Program
         // {
         //     _context._ramp.Lower(10f * GetFrameTime());
         // }
+        _context.SelectedTool.Use();
         // Mouse
-        if (_context.SelectedTool.GetType().Equals(typeof(Spawn)))
-        {
-            if (IsMouseButtonPressed(MouseButton.Left) && _context._toolEnabled)
-            {
-                _context.SelectedTool.Use();
-            }
-        }
-        else if (IsMouseButtonDown(MouseButton.Left) && _context._toolEnabled)
-        {
-            _context.SelectedTool.Use();
-        }
         if (GetMouseWheelMoveV().Y > 0f)
         {
             _context.SelectedTool.ChangeRadius(Tool.BaseRadiusChange);
@@ -220,6 +181,9 @@ public class Program
         ImGui.Checkbox("Draw forces", ref _context._drawForces);
         ImGui.Checkbox("Draw AABBs", ref _context._drawAABBS);
         ImGui.Checkbox("Draw body info", ref _context._drawBodyInfo);
+        ImGui.InputFloat("Global restitution coeff:", ref _context._globalRestitutionCoeff);
+        ImGui.InputFloat("Global kinetic friction coeff:", ref _context._globalKineticFrictionCoeff);
+        ImGui.InputFloat("Global static friction coeff:", ref _context._globalStaticFrictionCoeff);
         if (ImGui.Combo("Tool", ref _context._selectedToolIndex, Tool.ToolsToComboString()))
         {
             Tool.ChangeToolType(_context);

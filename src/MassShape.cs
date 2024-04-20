@@ -203,7 +203,7 @@ public class MassShape
         }
     }
 
-    public void Update(float timeStep)
+    public void Update()
     {
         _lastAngle = Angle;
         if (!_points.Any())
@@ -217,12 +217,13 @@ public class MassShape
         }
         foreach (PointMass p in _points)
         {
-            p.Update(timeStep);
+            p.Update();
         }
         if (_inflated)
         {
             Inflate();
         }
+        SolveCollisions();
     }
 
     public void Draw()
@@ -247,12 +248,12 @@ public class MassShape
                 // Draw pressure forces acting on normals
                 foreach (VisLine line in _pressureVis._lines)
                 {
-                    Utils.Graphic.DrawArrow(line._start, line._end, Color.Magenta);
+                    Utils.Graphics.DrawArrow(line._start, line._end, Color.Magenta);
                 }
             }
             Vector2 COM = CenterOfMass;
             Vector2 totalVisForce = TotalVisForce;
-            Utils.Graphic.DrawArrow(COM, COM + totalVisForce * 1e-2f, Color.Magenta);
+            Utils.Graphics.DrawArrow(COM, COM + totalVisForce * 1e-2f, Color.Magenta);
         }
         if (_context._drawBodyInfo)
         {
@@ -348,7 +349,7 @@ public class MassShape
         };
     }
 
-    public bool CheckPointMassCollision(PointMass otherPoint, MassShape otherShape)
+    private bool CheckPointMassCollision(PointMass otherPoint, MassShape otherShape)
     {
         BoundingBox selfAABB = GetAABB();
         BoundingBox otherAABB = otherShape.GetAABB();
@@ -370,36 +371,33 @@ public class MassShape
         return false;
     }
 
-    public void HandleLineCollisions(MassShape shape)
+    private void HandleLineCollisions(MassShape otherShape)
     {
-        foreach (var point in shape._points)
+        foreach (var point in otherShape._points)
         {
-            if (CheckPointMassCollision(point, shape))
+            if (CheckPointMassCollision(point, otherShape))
             {
                 HandleCollision(point);
             }
         }
     }
 
-    public static void SolveCollisions(Context context)
+    public void SolveCollisions()
     {
-        foreach (var shapeA in context.MassShapes)
+        foreach (var otherShape in _context.MassShapes)
         {
-            foreach (var shapeB in context.MassShapes)
+            if (otherShape.Equals(this))
             {
-                if (shapeA.Equals(shapeB))
-                {
-                    continue;
-                }
-                foreach (var pointA in shapeA._points)
-                {
-                    foreach (var pointB in shapeB._points)
-                    {
-                        PointMass.SolvePointToPointCollisions(pointA, pointB);
-                    }
-                }
-                shapeA.HandleLineCollisions(shapeB);
+                continue;
             }
+            foreach (var pointMassA in _points)
+            {
+                foreach (var pointMassB in otherShape._points)
+                {
+                    pointMassA.SolvePointToPointCollision(pointMassB);
+                }
+            }
+            HandleLineCollisions(otherShape);
         }
     }
 
@@ -445,7 +443,7 @@ public class MassShape
         closestB.Pos += bOffset * pointToClosest;
         // Apply impulse
         float combinedMass = closestA.Mass + closestB.Mass;
-        float impulseMag = -(1f + PointMass.RestitutionCoeff) * Vector2.Dot(relVel, pointToClosest) / (1f / combinedMass + 1f / pointMass.Mass);
+        float impulseMag = -(1f + _context._globalRestitutionCoeff) * Vector2.Dot(relVel, pointToClosest) / (1f / combinedMass + 1f / pointMass.Mass);
         Vector2 impulse = impulseMag * pointToClosest;
         pointMass.Vel += impulse / pointMass.Mass;
         closestA.Vel += -impulse / (combinedMass - closestB.Mass);

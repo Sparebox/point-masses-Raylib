@@ -156,6 +156,10 @@ public class Spawn : Tool
 
     public override void Use() 
     {
+        if (!IsMouseButtonPressed(MouseButton.Left) || !_context._toolEnabled)
+        {
+            return;
+        }
         if (_shapeToSpawn is null || Radius == 0f || _mass == 0f)
         {
             return;
@@ -226,6 +230,10 @@ public class Delete : Tool
 
     public override void Use()
     {
+        if (!IsMouseButtonDown(MouseButton.Left) || !_context._toolEnabled)
+        {
+            return;
+        }
         Vector2 mousePos = GetMousePosition();
         var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
         if (!shapes.Any())
@@ -260,6 +268,10 @@ public class PullCom : Tool
 
     public override void Use()
     {
+        if (!IsMouseButtonDown(MouseButton.Left) || !_context._toolEnabled)
+        {
+            return;
+        }
         Vector2 mousePos = GetMousePosition();
         var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
         if (!shapes.Any())
@@ -299,6 +311,10 @@ public class Pull : Tool
 
     public override void Use()
     {
+        if (!IsMouseButtonDown(MouseButton.Left) || !_context._toolEnabled)
+        {
+            return;
+        }
         Vector2 mousePos = GetMousePosition();
         var points = Utils.Entities.QueryAreaForPoints(mousePos.X, mousePos.Y, Radius, _context);
         if (!points.Any())
@@ -343,6 +359,10 @@ public class Wind : Tool
 
     public override void Use()
     {
+        if (!IsMouseButtonDown(MouseButton.Left) || !_context._toolEnabled)
+        {
+            return;
+        }
         foreach (var s in _context.MassShapes)
         {
             foreach (var p in s._points)
@@ -356,7 +376,7 @@ public class Wind : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        Utils.Graphic.DrawArrow(mousePos.X, mousePos.Y, mousePos.X + (int) (100f * Direction.X), mousePos.Y + (int) (100f * Direction.Y), Color.Yellow);
+        Utils.Graphics.DrawArrow(mousePos.X, mousePos.Y, mousePos.X + (int) (100f * Direction.X), mousePos.Y + (int) (100f * Direction.Y), Color.Yellow);
     }
 }
 
@@ -371,6 +391,10 @@ public class Rotate : Tool
 
     public override void Use()
     {
+        if (!IsMouseButtonDown(MouseButton.Left) || !_context._toolEnabled)
+        {
+            return;
+        }
         Vector2 mousePos = GetMousePosition();
         var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
         if (!shapes.Any())
@@ -403,6 +427,7 @@ public class Rotate : Tool
 public class Ruler : Tool
 {
     private Vector2 _startPos;
+    private bool _shouldVisualize;
 
     public Ruler(Context context)
     {
@@ -411,15 +436,23 @@ public class Ruler : Tool
 
     public override void Draw()
     {
+        if(!_shouldVisualize)
+        {
+            return;
+        }
         Vector2 mousePos = GetMousePosition();
-        float len = Vector2.Distance(_startPos, mousePos);
-        DrawText(len.ToString(), (int) mousePos.X, (int) mousePos.Y, 15, Color.Yellow);
+        float len = Utils.UnitConversion.PixelsToMeters(Vector2.Distance(_startPos, mousePos));
+        DrawText(string.Format("{0:0.00} m", len), (int) mousePos.X, (int) mousePos.Y + 20, 30, Color.Yellow);
         DrawLine((int) _startPos.X, (int) _startPos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Yellow);
     }
 
     public override void Use()
     {
-
-        _startPos = GetMousePosition();
+        _shouldVisualize = IsMouseButtonDown(MouseButton.Left) && _context._toolEnabled;
+        if (IsMouseButtonReleased(MouseButton.Left) || IsMouseButtonPressed(MouseButton.Left))
+        {
+            _startPos = GetMousePosition();
+            _shouldVisualize = false;
+        }
     }
 }
