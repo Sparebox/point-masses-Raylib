@@ -10,13 +10,13 @@ namespace Sim;
 
 public class Context
 {
-    public readonly float _timeStep;
-    public readonly float _subStep;
-    public readonly int _substeps;
-    public readonly Vector2 _gravity;
-    public readonly TextureManager _textureManager;
-    private State _saveState;
+    public readonly float TimeStep;
+    public readonly float SubStep;
+    public readonly int Substeps;
+    public readonly Vector2 Gravity;
+    public readonly TextureManager TextureManager;
 
+    private State _saveState;
     public RotatingCollider _ramp;
     public bool _gravityEnabled;
     public bool _drawForces;
@@ -24,9 +24,9 @@ public class Context
     public bool _drawBodyInfo;
     public bool _simPaused;
     public bool _toolEnabled;
-    public float _globalRestitutionCoeff = 0.33f;
+    public float _globalRestitutionCoeff = 0.3f;
     public float _globalKineticFrictionCoeff = 1f;
-    public float _globalStaticFrictionCoeff = 2f;
+    public float _globalStaticFrictionCoeff = 1f;
     public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; set; }
     public Tool SelectedTool { get; set; }
@@ -36,24 +36,31 @@ public class Context
     {
         get 
         {
-            return MassShapes.Aggregate(0, (count, shape) => count += shape._points.Count);
+            return MassShapes.Aggregate(0, (count, shape) => count + shape._points.Count);
         }
     }
     public int ConstraintCount 
     {
         get
         {
-            return MassShapes.Aggregate(0, (count, shape) => count += shape._constraints.Count);
+            return MassShapes.Aggregate(0, (count, shape) => count + shape._constraints.Count);
+        }
+    }
+    public float SystemEnergy
+    {
+        get
+        {
+            return MassShapes.Aggregate(0f, (energy, shape) => energy + shape.LinEnergy + shape.RotEnergy);
         }
     }
 
     public Context(float timeStep, int subSteps, Vector2 gravity)
     {
-        _timeStep = timeStep;
-        _substeps = subSteps;
-        _subStep = timeStep / subSteps;
-        _gravity = gravity;
-        _textureManager = new TextureManager();
+        TimeStep = timeStep;
+        Substeps = subSteps;
+        SubStep = timeStep / subSteps;
+        Gravity = gravity;
+        TextureManager = new TextureManager();
         _toolEnabled = true;
         _gravityEnabled = false;
         _drawAABBS = false;

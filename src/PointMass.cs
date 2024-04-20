@@ -61,13 +61,13 @@ public class PointMass
         }
         if (_context._gravityEnabled)
         {
-            ApplyForce(Mass * _context._gravity);
+            ApplyForce(Mass * _context.Gravity);
         }
         SolveLineCollisions();
         Vector2 acc = Force / Mass;
         Vector2 vel = Vel;
         PrevPos = Pos;
-        Pos += vel + acc * _context._subStep * _context._subStep;
+        Pos += vel + acc * _context.SubStep * _context.SubStep;
         _visForce = Force;
         PrevForce = Force;
         Force = Vector2.Zero;
@@ -107,15 +107,18 @@ public class PointMass
             }
             normal.X /= dist;
             normal.Y /= dist;
-            // Apply impulse
-            Vector2 relVel = otherPoint.Vel - Vel;
-            float impulseMag = -(1f + _context._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / Mass + 1f / otherPoint.Mass);
-            Vector2 impulse = impulseMag * normal;
-            Vel += -impulse / Mass;
-            otherPoint.Vel += impulse / otherPoint.Mass;
+            Vector2 thisPreVel = Vel;
+            Vector2 otherPreVel = otherPoint.Vel;
+            Vector2 relVel = otherPreVel - thisPreVel;
+            // Correct penetration
             Vector2 offsetVector = 0.5f * (Radius + otherPoint.Radius - dist) * normal;
             Pos += -offsetVector;
             otherPoint.Pos += offsetVector;
+            // Apply impulse
+            float impulseMag = -(1f + _context._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / Mass + 1f / otherPoint.Mass);
+            Vector2 impulse = impulseMag * normal;
+            Vel = thisPreVel -impulse / Mass;
+            otherPoint.Vel = otherPreVel + impulse / otherPoint.Mass;
         }
     }
 

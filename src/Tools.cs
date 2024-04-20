@@ -122,9 +122,9 @@ public abstract class Tool
 public class Spawn : Tool
 {
     private const float DefaultMass = 10f;
-    private const int DefaultRes = 3;
-    private const float DefaultStiffness = 1e3f;
-    private const float DefaultGasAmt = 3f;
+    private const int DefaultRes = 15;
+    private const float DefaultStiffness = 1e5f;
+    private const float DefaultGasAmt = 10f;
 
     public SpawnTarget _currentTarget;
     public float _mass;
@@ -204,7 +204,7 @@ public class Spawn : Tool
                 _shapeToSpawn = MassShape.SoftBall(mousePos.X, mousePos.Y, Radius, _mass, _resolution, _stiffness, _gasAmount, _context);
                 break;
             case SpawnTarget.Particle:
-                _shapeToSpawn = MassShape.Particle(mousePos.X, mousePos.Y, _mass, _context);
+                _shapeToSpawn = MassShape.Particle(mousePos.X, mousePos.Y, Radius, _context);
                 break;
         }
     }

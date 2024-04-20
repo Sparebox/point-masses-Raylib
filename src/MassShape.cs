@@ -56,6 +56,15 @@ public class MassShape
         }
     }
 
+    public Vector2 Vel
+    {
+        get
+        {
+            Vector2 vel = (CenterOfMass - _lastCenterOfMass) / _context.SubStep;
+            return Utils.UnitConversion.PixelsToMeters(vel);
+        }
+    }
+
     public float AngularMass
     {
         get
@@ -86,18 +95,18 @@ public class MassShape
         {
             if (_isRigid.HasValue) 
             {
-                return (bool) _isRigid;
+                return _isRigid.Value;
             }
             foreach (var c in _constraints)
             {
                 if (c.GetType() == typeof(SpringConstraint))
                 {
                     _isRigid = false;
-                    return (bool) _isRigid;
+                    return _isRigid.Value;
                 }
             }
             _isRigid = true;
-            return (bool) _isRigid;
+            return _isRigid.Value;
         }
     }
 
@@ -107,6 +116,14 @@ public class MassShape
         {
             float angVel = AngVel;
             return 0.5f * AngularMass * angVel * angVel;
+        }
+    }
+
+    public float LinEnergy
+    {
+        get
+        {
+            return 0.5f * Mass * Vel.LengthSquared();
         }
     }
     
@@ -145,19 +162,21 @@ public class MassShape
     {
         get
         {
-            return (Angle - _lastAngle) / _context._subStep;
+            return (Angle - _lastAngle) / _context.SubStep;
         }
     }
     
     public const float GasAmountMult = 1e6f;
     public readonly int _id;
+    private readonly Context _context;
+    private readonly bool _inflated;
+
     public List<Constraint> _constraints;
     public List<PointMass> _points;
     public bool _toBeDeleted;
-    private readonly Context _context;
-    private readonly bool _inflated;
-    private PressureVis _pressureVis;
+    private Vector2 _lastCenterOfMass;
     private float _lastAngle;
+    private PressureVis _pressureVis;
     private float? _mass;
     private float? _angularMass;
     private float _gasAmount;
@@ -211,6 +230,10 @@ public class MassShape
             _toBeDeleted = true;
             return;
         }
+        if (_context._drawBodyInfo)
+        {
+            _lastCenterOfMass = CenterOfMass;
+        }
         foreach (Constraint c in _constraints)
         {
             c.Update();
@@ -223,7 +246,6 @@ public class MassShape
         {
             Inflate();
         }
-        SolveCollisions();
     }
 
     public void Draw()
@@ -382,22 +404,25 @@ public class MassShape
         }
     }
 
-    public void SolveCollisions()
+    public static void SolveCollisions(Context context)
     {
-        foreach (var otherShape in _context.MassShapes)
+        foreach (var shapeA in context.MassShapes)
         {
-            if (otherShape.Equals(this))
+            foreach (var shapeB in context.MassShapes)
             {
-                continue;
-            }
-            foreach (var pointMassA in _points)
-            {
-                foreach (var pointMassB in otherShape._points)
+                if (shapeA.Equals(shapeB))
                 {
-                    pointMassA.SolvePointToPointCollision(pointMassB);
+                    continue;
                 }
+                foreach (var pointMassA in shapeA._points)
+                {
+                    foreach (var pointMassB in shapeB._points)
+                    {
+                        pointMassA.SolvePointToPointCollision(pointMassB);
+                    }
+                }
+                shapeA.HandleLineCollisions(shapeB);
             }
-            HandleLineCollisions(otherShape);
         }
     }
 
@@ -437,7 +462,10 @@ public class MassShape
         float bOffset = totalOffset - aOffset;
         pointToClosest = Vector2.Normalize(pointToClosest);
         Vector2 avgVel = (closestA.Vel + closestB.Vel) / 2f;
-        Vector2 relVel = pointMass.Vel - avgVel;
+        Vector2 preVel = pointMass.Vel;
+        Vector2 closestApreVel = closestA.Vel;
+        Vector2 closestBpreVel = closestB.Vel;
+        Vector2 relVel = preVel - avgVel;
         pointMass.Pos += totalOffset * -pointToClosest;
         closestA.Pos += aOffset * pointToClosest;
         closestB.Pos += bOffset * pointToClosest;
@@ -445,9 +473,9 @@ public class MassShape
         float combinedMass = closestA.Mass + closestB.Mass;
         float impulseMag = -(1f + _context._globalRestitutionCoeff) * Vector2.Dot(relVel, pointToClosest) / (1f / combinedMass + 1f / pointMass.Mass);
         Vector2 impulse = impulseMag * pointToClosest;
-        pointMass.Vel += impulse / pointMass.Mass;
-        closestA.Vel += -impulse / (combinedMass - closestB.Mass);
-        closestB.Vel += -impulse / (combinedMass - closestA.Mass);
+        pointMass.Vel = preVel + impulse / pointMass.Mass;
+        closestA.Vel = closestApreVel -impulse / (combinedMass - closestB.Mass);
+        closestB.Vel = closestBpreVel -impulse / (combinedMass - closestA.Mass);
         // Apply friction
         pointMass.ApplyFriction(-pointToClosest);
     }
@@ -458,13 +486,15 @@ public class MassShape
         ImGui.SetWindowPos(Centroid + new Vector2(25f, 0f));
         ImGui.SetWindowSize(new (230f, 130f));
         ImGui.Text(string.Format("Mass: {0} kg", Mass));
+        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel.Length()));
         ImGui.Text(string.Format("Moment of inertia: {0:0} kgm^2", AngularMass));
-        ImGui.Text(string.Format("Angle: {0:0} deg", Angle * RAD2DEG));
         ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel * RAD2DEG));
-        ImGui.Text(string.Format("Rot energy: {0:0.##} kJ", RotEnergy / 1e3));
+        ImGui.Text(string.Format("Angle: {0:0} deg", Angle * RAD2DEG));
+        ImGui.Text(string.Format("Linear energy: {0:0.##} J", LinEnergy));
+        ImGui.Text(string.Format("Rot energy: {0:0.##} kJ", RotEnergy / 1e3f));
         ImGui.End();
-        Vector2 offset = new(-_context._textureManager._centerOfMassIcon.Width / 2f, -_context._textureManager._centerOfMassIcon.Height / 2f);
-        DrawTextureEx(_context._textureManager._centerOfMassIcon, Centroid + 0.5f * offset, 0f, 0.5f, Color.White);
+        Vector2 offset = new(-_context.TextureManager._centerOfMassIcon.Width / 2f, -_context.TextureManager._centerOfMassIcon.Height / 2f);
+        DrawTextureEx(_context.TextureManager._centerOfMassIcon, Centroid + 0.5f * offset, 0f, 0.5f, Color.White);
     }
 
     public static bool operator == (MassShape a, MassShape b)

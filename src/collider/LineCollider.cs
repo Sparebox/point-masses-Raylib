@@ -52,7 +52,7 @@ public class LineCollider
             reflectedNormalVel *= context._globalRestitutionCoeff;
             // Correct penetration
             p.Pos += (p.Radius - distToCollider) * closestToPointNorm;
-            p.Vel =  parallelVel + reflectedNormalVel; 
+            p.Vel = parallelVel + reflectedNormalVel; 
             p.ApplyFriction(closestToPointNorm);
         }
     }

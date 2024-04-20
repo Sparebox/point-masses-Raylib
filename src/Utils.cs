@@ -19,6 +19,16 @@ public static class UnitConversion
     {
         return PixelsPerMeter * meters;
     }
+
+    public static Vector2 PixelsToMeters(Vector2 pixels)
+    {
+        return new Vector2(pixels.X / PixelsPerMeter, pixels.Y / PixelsPerMeter);
+    }
+
+    public static Vector2 MetersToPixels(Vector2 meters)
+    {
+        return new Vector2(meters.X * PixelsPerMeter, meters.Y * PixelsPerMeter);
+    }
 }
 
 public static class Geometry

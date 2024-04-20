@@ -5,6 +5,7 @@ using Raylib_cs;
 using rlImGui_cs;
 using Tools;
 using static Raylib_cs.Raylib;
+using static Tools.Spawn;
 
 namespace Sim;
 
@@ -57,8 +58,8 @@ public class Program
         //context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f + 200f, 200f, 10f, 20, 1000f, context));
         //context.MassShapes.Add(MassShape.Pendulum(WinW / 2f, 30f, 700f, 10f, 10, context));
         //context.MassShapes.Add(MassShape.Particle(200f, 50f, 10f, context));
-        context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f - 300f, 100f, 10f, context));
-        context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f - 100f, 200f, 50f, context));
+        //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f - 300f, 100f, 10f, context));
+        //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f - 100f, 200f, 50f, context));
         //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f - 200f, 60f, 20f, 5e4f, context));
         //context.MassShapes.Add(MassShape.SoftBox(WinW / 2f, WinH / 2f, 100f, 20f, 5e4f, context));
         //context.MassShapes.Add(MassShape.HardBall(500f, 200f, 50f, 20f, 6, context));
@@ -74,17 +75,18 @@ public class Program
     private static void Update()
     {
         _accumulator += GetFrameTime();
-        while (_accumulator >= _context._timeStep)
+        while (_accumulator >= _context.TimeStep)
         {
-            for (int i = 0; i < _context._substeps; i++)
+            for (int i = 0; i < _context.Substeps; i++)
             {
                 foreach (MassShape s in _context.MassShapes)
                 {
                     s.Update();
                 }
+                MassShape.SolveCollisions(_context);
             }
             _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
-            _accumulator -= _context._timeStep;
+            _accumulator -= _context.TimeStep;
         }
     }
 
@@ -174,16 +176,22 @@ public class Program
         ImGui.Text(string.Format("Masses: {0}", _context.MassCount));
         ImGui.Text(string.Format("Constraints: {0}", _context.ConstraintCount));
         ImGui.Text(string.Format("Shapes: {0}", _context.MassShapes.Count));
-        ImGui.Text(string.Format("Substeps: {0}", _context._substeps));
-        ImGui.Text(string.Format("Step: {0:0.0000} ms", _context._timeStep * 1e3f));
-        ImGui.Text(string.Format("Substep: {0:0.0000} ms", _context._subStep * 1e3f));
+        ImGui.Text(string.Format("Substeps: {0}", _context.Substeps));
+        ImGui.Text(string.Format("Step: {0:0.0000} ms", _context.TimeStep * 1e3f));
+        ImGui.Text(string.Format("Substep: {0:0.0000} ms", _context.SubStep * 1e3f));
+        if (_context._drawBodyInfo)
+        {
+            ImGui.Text(string.Format("System energy: {0} kJ", _context.SystemEnergy / 1e3f));
+        }
         ImGui.Checkbox("Gravity", ref _context._gravityEnabled);
         ImGui.Checkbox("Draw forces", ref _context._drawForces);
         ImGui.Checkbox("Draw AABBs", ref _context._drawAABBS);
         ImGui.Checkbox("Draw body info", ref _context._drawBodyInfo);
-        ImGui.InputFloat("Global restitution coeff:", ref _context._globalRestitutionCoeff);
-        ImGui.InputFloat("Global kinetic friction coeff:", ref _context._globalKineticFrictionCoeff);
-        ImGui.InputFloat("Global static friction coeff:", ref _context._globalStaticFrictionCoeff);
+        ImGui.PushItemWidth(50f);
+        ImGui.InputFloat("Global restitution coeff", ref _context._globalRestitutionCoeff);
+        ImGui.InputFloat("Global kinetic friction coeff", ref _context._globalKineticFrictionCoeff);
+        ImGui.InputFloat("Global static friction coeff", ref _context._globalStaticFrictionCoeff);
+        ImGui.PushItemWidth(100f);
         if (ImGui.Combo("Tool", ref _context._selectedToolIndex, Tool.ToolsToComboString()))
         {
             Tool.ChangeToolType(_context);
@@ -191,7 +199,7 @@ public class Program
         if (_context.SelectedTool.GetType().Equals(typeof(Spawn)))
         {
             var spawnTool = (Spawn) _context.SelectedTool;
-            if (ImGui.Combo("Spawn target", ref _context._selectedSpawnTargetIndex, Spawn.TargetsToComboString()))
+            if (ImGui.Combo("Spawn target", ref _context._selectedSpawnTargetIndex, TargetsToComboString()))
             {
                 spawnTool.UpdateSpawnTarget();
             }
@@ -200,23 +208,36 @@ public class Program
                 spawnTool._mass = Math.Abs(spawnTool._mass);
                 spawnTool.UpdateSpawnTarget();
             }
-            if (spawnTool._currentTarget == Spawn.SpawnTarget.Ball || spawnTool._currentTarget == Spawn.SpawnTarget.SoftBall)
+            if (spawnTool._currentTarget == SpawnTarget.Ball || spawnTool._currentTarget == SpawnTarget.SoftBall)
             {
                 if (ImGui.InputInt("Resolution", ref spawnTool._resolution))
                 {
                     spawnTool._resolution = Math.Abs(spawnTool._resolution);
                     spawnTool.UpdateSpawnTarget();
                 }
-                if (ImGui.InputFloat("Gas amount", ref spawnTool._gasAmount))
-                {
-                    spawnTool._gasAmount = Math.Abs(spawnTool._gasAmount);
-                    spawnTool.UpdateSpawnTarget();
-                }
+            }
+            if (spawnTool._currentTarget == SpawnTarget.SoftBox || spawnTool._currentTarget == SpawnTarget.SoftBall)
+            {
                 if (ImGui.InputFloat("Stiffness", ref spawnTool._stiffness))
                 {
                     spawnTool._stiffness = Math.Abs(spawnTool._stiffness);
                     spawnTool.UpdateSpawnTarget();
                 }
+                if (spawnTool._currentTarget == SpawnTarget.SoftBall)
+                {
+                    if (ImGui.InputFloat("Gas amount", ref spawnTool._gasAmount))
+                    {
+                        spawnTool._gasAmount = Math.Abs(spawnTool._gasAmount);
+                        spawnTool.UpdateSpawnTarget();
+                    }
+                }
+            }
+        }
+        if (ImGui.Button("Remove all"))
+        {
+            foreach (var shape in _context.MassShapes)
+            {
+                shape._toBeDeleted = true;
             }
         }
         if (ImGui.IsMouseHoveringRect(ImGui.GetWindowContentRegionMin(), ImGui.GetWindowContentRegionMax()))
