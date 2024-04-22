@@ -197,6 +197,9 @@ public class MassShape
     {
         _context = shape._context;
         _inflated = shape._inflated;
+        _gasAmount = shape._gasAmount;
+        _isRigid = shape._isRigid;
+        _mass = shape._mass;
         _id = _idCounter++;
         _toBeDeleted = false;
         _points = new();

@@ -88,6 +88,7 @@ public class Context
 
     public void LoadState()
     {
+        _simPaused = true;
         LineColliders.Clear();
         MassShapes.Clear();
         foreach (var c in _saveState.LineColliders)
@@ -112,18 +113,18 @@ public class Context
     public void LoadDemoScenario()
     {
         //MassShapes.Add(MassShape.Cloth(x: 300f, y: 50f, width: 700f, height: 700f, mass: 0.7f, res: 42, stiffness: 1e5f, this));
-        //context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f - 200f, 50f, 20f, 20, 1000f, context));
+        MassShapes.Add(MassShape.SoftBall(Program.WinW / 2f - 300f, Program.WinH / 2f - 200f, 50f, 25f, 20, 1000f, 10f, this));
         //context.MassShapes.Add(MassShape.SoftBall(WinW / 2f + 300f, WinH / 2f - 200f, 50f, 20f, 20, 1000f, context));
         //context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f - 100f, 50f, 20f, 20, 1000f, context));
         //context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 100f, WinH / 2f - 100f, 50f, 50f, 20, 1000f, context));
         //context.MassShapes.Add(MassShape.SoftBall(WinW / 2f - 300f, WinH / 2f + 200f, 200f, 10f, 20, 1000f, context));
-        MassShapes.Add(MassShape.Pendulum(Program.WinW / 2f, 30f, 700f, 10f, 10, this));
+        //MassShapes.Add(MassShape.Pendulum(Program.WinW / 2f, 30f, 700f, 10f, 10, this));
         //context.MassShapes.Add(MassShape.Particle(200f, 50f, 10f, context));
-        //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f - 300f, 100f, 10f, context));
+        MassShapes.Add(MassShape.Box(Program.WinW / 2f, Program.WinH / 2f - 300f, 100f, 10f, this));
         //context.MassShapes.Add(MassShape.Box(WinW / 2f, WinH / 2f - 100f, 200f, 50f, context));
-        //MassShapes.Add(MassShape.SoftBox(Program.WinW / 2f, Program.WinH / 2f - 200f, 150f, 20f, 5e4f, this));
+        MassShapes.Add(MassShape.SoftBox(Program.WinW / 2f + 300f, Program.WinH / 2f - 200f, 150f, 20f, 1e4f, this));
         //MassShapes.Add(MassShape.SoftBox(Program.WinW / 2f, Program.WinH / 2f + 200f, 200f, 20f, 5e4f, this));
-        //context.MassShapes.Add(MassShape.HardBall(500f, 200f, 50f, 20f, 6, context));
+        MassShapes.Add(MassShape.HardBall(Program.WinW / 2f + 600f, Program.WinH / 2f - 300f, 50f, 25f, 13, this));
         //context.MassShapes.Add(MassShape.HardBall(700f, 200f, 50f, 20f, 6, context));
         //context.MassShapes.Add(MassShape.HardBall(300f, 200f, 50f, 20f, 6, context));
         //context.MassShapes.Add(MassShape.Particle(WinW / 2f, WinH / 2f, 10f, context));

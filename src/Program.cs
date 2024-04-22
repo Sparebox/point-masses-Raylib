@@ -116,6 +116,10 @@ public class Program
         {
             _context._simPaused = !_context._simPaused;
         }
+        if (IsKeyPressed(KeyboardKey.C))
+        {
+            _context.LineColliders.Add(new(0f, 900f, 1600f, 200f));
+        }
         // if (IsKeyDown(KeyboardKey.Up))
         // {
         //     _context._ramp.Raise(10f * GetFrameTime());
