@@ -154,7 +154,7 @@ public class MassShape
             Vector2 com = CenterOfMass;
             Vector2 pos = _points.First().Pos;
             Vector2 dir = pos - com;
-            return (float) Math.Atan2(dir.Y, dir.X);
+            return MathF.Atan2(dir.Y, dir.X);
         }
     }
 
@@ -537,7 +537,7 @@ public class MassShape
 
     public static MassShape SoftBall(float x, float y, float radius, float mass, int res, float stiffness, float gasAmount, Context context)
     {
-        float angle = (float) Math.PI / 2f;
+        float angle = MathF.PI / 2f;
         MassShape s = new(context, true)
         {
             _points = new(),
@@ -547,10 +547,10 @@ public class MassShape
         // Points
         for (int i = 0; i < res; i++)
         {
-            float x0 = radius * (float) Math.Cos(angle);
-            float y0 = radius * (float) Math.Sin(angle);
+            float x0 = radius * MathF.Cos(angle);
+            float y0 = radius * MathF.Sin(angle);
             s._points.Add(new(x0 + x, y0 + y, mass / res, false, context));
-            angle += 2f * (float) Math.PI / res;
+            angle += 2f * MathF.PI / res;
         }
         // Constraints
         for (int i = 0; i < res; i++)
@@ -562,7 +562,7 @@ public class MassShape
 
     public static MassShape HardBall(float x, float y, float radius, float mass, int res, Context context)
     {
-        float angle = (float) Math.PI / 2f;
+        float angle = MathF.PI / 2f;
         MassShape s = new(context, false)
         {
             _points = new(),
@@ -571,10 +571,10 @@ public class MassShape
         // Points
         for (int i = 0; i < res; i++)
         {
-            float x0 = radius * (float) Math.Cos(angle);
-            float y0 = radius * (float) Math.Sin(angle);
+            float x0 = radius * MathF.Cos(angle);
+            float y0 = radius * MathF.Sin(angle);
             s._points.Add(new(x0 + x, y0 + y, mass / res, false, context));
-            angle += 2f * (float) Math.PI / res;
+            angle += 2f * MathF.PI / res;
         }
         // Constraints
         List<int> visitedPoints = new();

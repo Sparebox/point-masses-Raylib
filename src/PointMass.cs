@@ -24,6 +24,7 @@ public class PointMass
         set { PrevPos = Pos - value; }
     }
     public float Mass { get; }
+    public float InvMass { get { return 1f / Mass; }}
     public float Radius { get; init; }
     
     private readonly Context _context;
@@ -88,7 +89,7 @@ public class PointMass
     {
         foreach (LineCollider c in _context.LineColliders)
         {
-            c.SolveCollision(this, _context);
+            c.SolvePointCollision(this, _context);
         }
         //_context._ramp.SolveStaticCollision(this);
     }
@@ -97,16 +98,17 @@ public class PointMass
     {   
         Vector2 normal = otherPoint.Pos - Pos;
         float dist = normal.LengthSquared();
-        if (dist <= Math.Pow(Radius + otherPoint.Radius, 2f))
+        if (dist <= MathF.Pow(Radius + otherPoint.Radius, 2f))
         {
             // Do expensive square root here
-            dist = (float) Math.Sqrt(dist);
+            dist = MathF.Sqrt(dist);
             if (dist == 0f)
             {
                 return;
             }
             normal.X /= dist;
             normal.Y /= dist;
+            // Save pre-collision velocities
             Vector2 thisPreVel = Vel;
             Vector2 otherPreVel = otherPoint.Vel;
             Vector2 relVel = otherPreVel - thisPreVel;
@@ -115,10 +117,10 @@ public class PointMass
             Pos += -offsetVector;
             otherPoint.Pos += offsetVector;
             // Apply impulse
-            float impulseMag = -(1f + _context._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / Mass + 1f / otherPoint.Mass);
+            float impulseMag = -(1f + _context._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (InvMass + otherPoint.InvMass);
             Vector2 impulse = impulseMag * normal;
-            Vel = thisPreVel -impulse / Mass;
-            otherPoint.Vel = otherPreVel + impulse / otherPoint.Mass;
+            Vel = thisPreVel -impulse * InvMass;
+            otherPoint.Vel = otherPreVel + impulse * otherPoint.InvMass;
         }
     }
 
@@ -140,10 +142,11 @@ public class PointMass
             // The total force is not towards the normal
             return;
         }
-        if (PrevForce.LengthSquared() < Math.Pow(_context._globalStaticFrictionCoeff * -normalForce, 2f))
+        if (PrevForce.LengthSquared() < MathF.Pow(_context._globalStaticFrictionCoeff * -normalForce, 2f))
         {
             // Apply static friction
             Vel += -dir;
+            Vel = Vector2.Zero;
             return;
         }
         // Apply kinetic friction

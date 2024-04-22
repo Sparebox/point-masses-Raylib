@@ -109,12 +109,12 @@ public static class Graphics
             return;
         }
         dir = Vector2.Normalize(dir);
-        float dirAngle = (float) Math.Atan2(dir.Y, dir.X);
+        float dirAngle = MathF.Atan2(dir.Y, dir.X);
         float radians = DEG2RAD * ArrowAngle;
         float angle1 = dirAngle + radians;
         float angle2 = dirAngle - radians;
-        Vector2 branchA = new(ArrowBranchLength * (float) Math.Cos(angle1), ArrowBranchLength * (float) Math.Sin(angle1));
-        Vector2 branchB = new(ArrowBranchLength * (float) Math.Cos(angle2), ArrowBranchLength * (float) Math.Sin(angle2));
+        Vector2 branchA = new(ArrowBranchLength * MathF.Cos(angle1), ArrowBranchLength * MathF.Sin(angle1));
+        Vector2 branchB = new(ArrowBranchLength * MathF.Cos(angle2), ArrowBranchLength * MathF.Sin(angle2));
         DrawLine((int) start.X, (int) start.Y, (int) end.X, (int) end.Y, color);
         DrawLine((int) end.X, (int) end.Y, (int) (end.X + branchA.X), (int) (end.Y + branchA.Y), color);
         DrawLine((int) end.X, (int) end.Y, (int) (end.X + branchB.X), (int) (end.Y + branchB.Y), color);

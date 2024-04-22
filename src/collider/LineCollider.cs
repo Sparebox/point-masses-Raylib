@@ -34,7 +34,7 @@ public class LineCollider
         DrawLine((int) StartPos.X, (int) StartPos.Y, (int) EndPos.X, (int) EndPos.Y, Color.White);
     }
 
-    public void SolveCollision(PointMass p, Context context)
+    public void SolvePointCollision(PointMass p, Context context)
     {
         Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(StartPos, EndPos, p.Pos);
         Vector2 closestToPoint = p.Pos - closestPoint;
@@ -42,11 +42,11 @@ public class LineCollider
         if (distToCollider <= p.Radius * p.Radius)
         {
             // Do expensive square root here
-            distToCollider = (float) Math.Sqrt(distToCollider);
+            distToCollider = MathF.Sqrt(distToCollider);
             // Collision
             Vector2 closestToPointNorm = Vector2.Normalize(closestToPoint);
             Vector2 reflectedVel = Vector2.Reflect(p.Vel, closestToPointNorm);
-            // Reduce only normal aligned velocity
+            // Affect only velocity parallel to the normal
             Vector2 reflectedNormalVel = Vector2.Dot(reflectedVel, closestToPointNorm) * closestToPointNorm;
             Vector2 parallelVel = reflectedVel - reflectedNormalVel;
             reflectedNormalVel *= context._globalRestitutionCoeff;

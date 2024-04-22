@@ -55,9 +55,9 @@ public abstract class Tool
         {
             return;
         }
-        float currentAngle = (float) Math.Atan2(Direction.Y, Direction.X);
+        float currentAngle = MathF.Atan2(Direction.Y, Direction.X);
         float newAngle = currentAngle + angleChange;
-        Vector2 newDirection = new((float) Math.Cos(newAngle), (float) Math.Sin(newAngle));
+        Vector2 newDirection = new(MathF.Cos(newAngle), MathF.Sin(newAngle));
         Direction = newDirection;
     }
 
@@ -156,7 +156,7 @@ public class Spawn : Tool
 
     public override void Use() 
     {
-        if (!IsMouseButtonPressed(MouseButton.Left) || !_context._toolEnabled)
+        if (!IsMouseButtonPressed(MouseButton.Left))
         {
             return;
         }
@@ -230,7 +230,7 @@ public class Delete : Tool
 
     public override void Use()
     {
-        if (!IsMouseButtonDown(MouseButton.Left) || !_context._toolEnabled)
+        if (!IsMouseButtonDown(MouseButton.Left))
         {
             return;
         }
@@ -268,7 +268,7 @@ public class PullCom : Tool
 
     public override void Use()
     {
-        if (!IsMouseButtonDown(MouseButton.Left) || !_context._toolEnabled)
+        if (!IsMouseButtonDown(MouseButton.Left))
         {
             return;
         }
@@ -311,7 +311,7 @@ public class Pull : Tool
 
     public override void Use()
     {
-        if (!IsMouseButtonDown(MouseButton.Left) || !_context._toolEnabled)
+        if (!IsMouseButtonDown(MouseButton.Left))
         {
             return;
         }
@@ -359,7 +359,7 @@ public class Wind : Tool
 
     public override void Use()
     {
-        if (!IsMouseButtonDown(MouseButton.Left) || !_context._toolEnabled)
+        if (!IsMouseButtonDown(MouseButton.Left))
         {
             return;
         }
@@ -391,7 +391,7 @@ public class Rotate : Tool
 
     public override void Use()
     {
-        if (!IsMouseButtonDown(MouseButton.Left) || !_context._toolEnabled)
+        if (!IsMouseButtonDown(MouseButton.Left))
         {
             return;
         }
