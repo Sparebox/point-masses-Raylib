@@ -3,6 +3,7 @@ using Physics;
 using Raylib_cs;
 using Sim;
 using static Raylib_cs.Raylib;
+using static Utils.Entities;
 
 namespace Collision;
 
@@ -34,38 +35,38 @@ public class LineCollider
         DrawLine((int) StartPos.X, (int) StartPos.Y, (int) EndPos.X, (int) EndPos.Y, Color.White);
     }
 
-    public void SolvePointCollision(PointMass p, Context context)
+    public static void SolvePointCollision(CollisionData colData, Context context)
     {
-        Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(StartPos, EndPos, p.Pos);
-        Vector2 closestToPoint = p.Pos - closestPoint;
-        float distToCollider = closestToPoint.LengthSquared();
-        if (distToCollider <= p.Radius * p.Radius)
-        {
-            // Do expensive square root here
-            distToCollider = MathF.Sqrt(distToCollider);
-            // Collision
-            Vector2 closestToPointNorm = Vector2.Normalize(closestToPoint);
-            Vector2 reflectedVel = Vector2.Reflect(p.Vel, closestToPointNorm);
-            // Affect only velocity parallel to the normal
-            Vector2 reflectedNormalVel = Vector2.Dot(reflectedVel, closestToPointNorm) * closestToPointNorm;
-            Vector2 parallelVel = reflectedVel - reflectedNormalVel;
-            reflectedNormalVel *= context._globalRestitutionCoeff;
-            // Correct penetration
-            p.Pos += (p.Radius - distToCollider) * closestToPointNorm;
-            p.Vel = parallelVel + reflectedNormalVel; 
-            p.ApplyFriction(closestToPointNorm);
-        }
+        PointMass p = colData.PointMassA;
+        // Collision
+        Vector2 reflectedVel = Vector2.Reflect(p.Vel, colData.Normal);
+        // Affect only velocity parallel to the normal
+        Vector2 reflectedNormalVel = Vector2.Dot(reflectedVel, colData.Normal) * colData.Normal;
+        Vector2 parallelVel = reflectedVel - reflectedNormalVel;
+        reflectedNormalVel *= context._globalRestitutionCoeff;
+        // Correct penetration
+        p.Pos += colData.Separation * colData.Normal;
+        p.Vel = parallelVel + reflectedNormalVel; 
+        p.ApplyFriction(colData.Normal);
+        
     }
 
-    public bool CheckCollision(PointMass p)
+    public CollisionData? CheckCollision(PointMass p)
     {
         Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(StartPos, EndPos, p.Pos);
         Vector2 closestToPoint = p.Pos - closestPoint;
         float distToCollider = closestToPoint.LengthSquared();
         if (distToCollider <= p.Radius * p.Radius)
         {
-            return true;
+            distToCollider = MathF.Sqrt(distToCollider);
+            CollisionData result = new () 
+            { 
+                PointMassA = p,
+                Separation = p.Radius - distToCollider,
+                Normal = new Vector2(closestToPoint.X / distToCollider, closestToPoint.Y / distToCollider)
+            };
+            return result;
         }
-        return false;
+        return null;
     }
 }

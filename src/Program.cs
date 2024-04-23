@@ -49,7 +49,7 @@ public class Program
             //new(0f, 900f, 1600f, 200f)
             }
         };
-        context.LoadDemoScenario();
+        //context.LoadDemoScenario();
         context.SelectedTool = new PullCom(context);
         context.SaveState();
         return context;

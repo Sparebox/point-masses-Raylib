@@ -3,6 +3,7 @@ using Collision;
 using Raylib_cs;
 using Sim;
 using static Raylib_cs.Raylib;
+using static Utils.Entities;
 
 namespace Physics;
 
@@ -89,7 +90,11 @@ public class PointMass
     {
         foreach (LineCollider c in _context.LineColliders)
         {
-            c.SolvePointCollision(this, _context);
+            CollisionData? collisionResult = c.CheckCollision(this);
+            if (collisionResult.HasValue)
+            {
+                LineCollider.SolvePointCollision(collisionResult.Value, _context);
+            }
         }
         //_context._ramp.SolveStaticCollision(this);
     }

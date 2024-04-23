@@ -53,6 +53,14 @@ public static class Geometry
 
 public static class Entities
 {
+    public readonly struct CollisionData
+    {
+        public PointMass PointMassA { get; init; }
+        public PointMass PointMassB { get; init; }
+        public Vector2 Normal { get; init; }
+        public float Separation { get; init; }
+    }
+
     public static List<PointMass> QueryAreaForPoints(float centerX, float centerY, float radius, Context context)
     {
         Vector2 center = new(centerX, centerY);
