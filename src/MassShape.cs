@@ -61,7 +61,7 @@ public class MassShape
         get
         {
             Vector2 vel = (CenterOfMass - _lastCenterOfMass) / _context.SubStep;
-            return Utils.UnitConversion.PixelsToMeters(vel);
+            return vel;
         }
     }
 
@@ -87,6 +87,22 @@ public class MassShape
             return angularMass;
         }
         set => _angularMass = value;
+    }
+
+    public Vector2 Momentum
+    {
+        get
+        {
+            return Mass * Vel;
+        }
+    }
+
+    public float AngularMomentum
+    {
+        get
+        {
+            return AngularMass * AngVel;
+        }
     }
 
     public bool IsRigid
@@ -123,7 +139,7 @@ public class MassShape
     {
         get
         {
-            return 0.5f * Mass * Vel.LengthSquared();
+            return 0.5f * Mass * Utils.UnitConversion.PixelsToMeters(Vel.LengthSquared());
         }
     }
     
@@ -147,7 +163,7 @@ public class MassShape
     {
         get
         {
-            if (!_points.Any())
+            if (!_points.Any() || _points.Count == 1)
             {
                 return 0f;
             }
@@ -162,6 +178,10 @@ public class MassShape
     {
         get
         {
+            if (_points.Count == 1)
+            {
+                return 0f;
+            }
             return (Angle - _lastAngle) / _context.SubStep;
         }
     }
@@ -407,6 +427,21 @@ public class MassShape
         }
     }
 
+    private void HandlePointOnPointCollisions(MassShape otherShape, Context context)
+    {
+        foreach (var pointMassA in _points)
+        {
+            foreach (var pointMassB in otherShape._points)
+            {
+                var collisionResult = pointMassA.CheckPointToPointCollision(pointMassB);
+                if (collisionResult.HasValue)
+                {
+                    PointMass.SolvePointToPointCollision(collisionResult.Value, context);
+                }
+            }
+        }
+    }
+
     public static void SolveCollisions(Context context)
     {
         foreach (var shapeA in context.MassShapes)
@@ -417,13 +452,7 @@ public class MassShape
                 {
                     continue;
                 }
-                foreach (var pointMassA in shapeA._points)
-                {
-                    foreach (var pointMassB in shapeB._points)
-                    {
-                        pointMassA.SolvePointToPointCollision(pointMassB);
-                    }
-                }
+                shapeA.HandlePointOnPointCollisions(shapeB, context);
                 shapeA.HandleLineCollisions(shapeB);
             }
         }
@@ -431,24 +460,7 @@ public class MassShape
 
     private void HandleCollision(PointMass pointMass)
     {
-        PointMass closestA = null;
-        PointMass closestB = null;
-        float closestDistSq = float.MaxValue;
-        Vector2 closestPoint = new();
-        for (int i = 0; i < _points.Count; i++)
-        {
-            PointMass lineStart = _points[i];
-            PointMass lineEnd = _points[(i + 1) % _points.Count];
-            Vector2 pointOnLine = Utils.Geometry.ClosestPointOnLine(lineStart.Pos, lineEnd.Pos, pointMass.Pos);
-            float distSq = Vector2.DistanceSquared(pointOnLine, pointMass.Pos);
-            if (distSq < closestDistSq)
-            {
-                closestA = lineStart;
-                closestB = lineEnd;
-                closestDistSq = distSq;
-                closestPoint = pointOnLine;
-            }
-        }
+        (PointMass closestA, PointMass closestB, Vector2 closestPoint) = FindClosestPoints(pointMass.Pos);
         Vector2 pointToClosest = closestPoint - pointMass.Pos;
         float totalOffset = pointMass.Radius - pointToClosest.Length();
         if (totalOffset == 0f)
@@ -463,33 +475,58 @@ public class MassShape
         float distToB = Vector2.Distance(closestPoint, closestB.Pos);
         float aOffset = distToB / lineLen * totalOffset;
         float bOffset = totalOffset - aOffset;
-        pointToClosest = Vector2.Normalize(pointToClosest);
+        var normal = Vector2.Normalize(pointToClosest);
         Vector2 avgVel = (closestA.Vel + closestB.Vel) / 2f;
         Vector2 preVel = pointMass.Vel;
         Vector2 closestApreVel = closestA.Vel;
         Vector2 closestBpreVel = closestB.Vel;
         Vector2 relVel = preVel - avgVel;
-        pointMass.Pos += totalOffset * -pointToClosest;
-        closestA.Pos += aOffset * pointToClosest;
-        closestB.Pos += bOffset * pointToClosest;
+        pointMass.Pos += totalOffset * -normal;
+        closestA.Pos += aOffset * normal;
+        closestB.Pos += bOffset * normal;
         // Apply impulse
         float combinedMass = closestA.Mass + closestB.Mass;
-        float impulseMag = -(1f + _context._globalRestitutionCoeff) * Vector2.Dot(relVel, pointToClosest) / (1f / combinedMass + 1f / pointMass.Mass);
-        Vector2 impulse = impulseMag * pointToClosest;
-        pointMass.Vel = preVel + impulse / pointMass.Mass;
-        closestA.Vel = closestApreVel -impulse / (combinedMass - closestB.Mass);
-        closestB.Vel = closestBpreVel -impulse / (combinedMass - closestA.Mass);
+        float impulseMag = -(1f + _context._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / combinedMass + pointMass.InvMass);
+        Vector2 impulse = impulseMag * normal;
+        pointMass.Vel = preVel + impulse * pointMass.InvMass;
+        closestA.Vel = closestApreVel - impulse / (combinedMass - closestB.Mass);
+        closestB.Vel = closestBpreVel - impulse / (combinedMass - closestA.Mass);
         // Apply friction
-        pointMass.ApplyFriction(-pointToClosest);
+        pointMass.ApplyFriction(-normal);
+    }
+
+    private (PointMass, PointMass, Vector2) FindClosestPoints(Vector2 pos)
+    {
+        float closestDistSq = float.MaxValue;
+        PointMass closestA = null;
+        PointMass closestB = null;
+        Vector2 closestPoint = new();
+        for (int i = 0; i < _points.Count; i++)
+        {
+            PointMass lineStart = _points[i];
+            PointMass lineEnd = _points[(i + 1) % _points.Count];
+            Vector2 pointOnLine = Utils.Geometry.ClosestPointOnLine(lineStart.Pos, lineEnd.Pos, pos);
+            float distSq = Vector2.DistanceSquared(pointOnLine, pos);
+            if (distSq < closestDistSq)
+            {
+                closestA = lineStart;
+                closestB = lineEnd;
+                closestDistSq = distSq;
+                closestPoint = pointOnLine;
+            }
+        }
+        return (closestA, closestB, closestPoint);
     }
 
     private void DrawInfo()
     {
         ImGui.Begin(string.Format("Body {0} info", _id), ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
         ImGui.SetWindowPos(Centroid + new Vector2(25f, 0f));
-        ImGui.SetWindowSize(new (230f, 130f));
+        ImGui.SetWindowSize(new (250f, 130f));
         ImGui.Text(string.Format("Mass: {0} kg", Mass));
-        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel.Length()));
+        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Utils.UnitConversion.PixelsToMeters(Vel)));
+        ImGui.Text(string.Format("Momentum: {0:0.0} kgm/s", Utils.UnitConversion.PixelsToMeters(Momentum)));
+        ImGui.Text(string.Format("Angular momentum: {0:0.0} Js", AngularMomentum));
         ImGui.Text(string.Format("Moment of inertia: {0:0} kgm^2", AngularMass));
         ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel * RAD2DEG));
         ImGui.Text(string.Format("Angle: {0:0} deg", Angle * RAD2DEG));

@@ -39,7 +39,7 @@ public class Program
     {
         InitWindow(WinW, WinH, "Point-masses");
         SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
-        Context context = new(timeStep: 1f / 60f, 13, gravity: new(0f, Utils.UnitConversion.MetersToPixels(6f)))
+        Context context = new(timeStep: 1f / 60f, 13, gravity: new(0f, Utils.UnitConversion.MetersToPixels(9.81f)))
         {
             LineColliders = {
             new(0f, 0f, WinW, 0f),

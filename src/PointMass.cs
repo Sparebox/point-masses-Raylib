@@ -99,34 +99,44 @@ public class PointMass
         //_context._ramp.SolveStaticCollision(this);
     }
 
-    public void SolvePointToPointCollision(PointMass otherPoint)
-    {   
+    public CollisionData? CheckPointToPointCollision(PointMass otherPoint)
+    {
         Vector2 normal = otherPoint.Pos - Pos;
         float dist = normal.LengthSquared();
         if (dist <= MathF.Pow(Radius + otherPoint.Radius, 2f))
         {
-            // Do expensive square root here
             dist = MathF.Sqrt(dist);
             if (dist == 0f)
             {
-                return;
+                return null;
             }
-            normal.X /= dist;
-            normal.Y /= dist;
-            // Save pre-collision velocities
-            Vector2 thisPreVel = Vel;
-            Vector2 otherPreVel = otherPoint.Vel;
-            Vector2 relVel = otherPreVel - thisPreVel;
-            // Correct penetration
-            Vector2 offsetVector = 0.5f * (Radius + otherPoint.Radius - dist) * normal;
-            Pos += -offsetVector;
-            otherPoint.Pos += offsetVector;
-            // Apply impulse
-            float impulseMag = -(1f + _context._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (InvMass + otherPoint.InvMass);
-            Vector2 impulse = impulseMag * normal;
-            Vel = thisPreVel -impulse * InvMass;
-            otherPoint.Vel = otherPreVel + impulse * otherPoint.InvMass;
+            var result = new CollisionData()
+            {
+                PointMassA = this,
+                PointMassB = otherPoint,
+                Normal = new(normal.X / dist, normal.Y / dist),
+                Separation = Radius + otherPoint.Radius - dist,
+            };
+            return result;
         }
+        return null;
+    }
+
+    public static void SolvePointToPointCollision(in CollisionData colData, Context context)
+    {   
+        // Save pre-collision velocities
+        Vector2 thisPreVel = colData.PointMassA.Vel;
+        Vector2 otherPreVel = colData.PointMassB.Vel;
+        Vector2 relVel = otherPreVel - thisPreVel;
+        // Correct penetration
+        Vector2 offsetVector = 0.5f * colData.Separation * colData.Normal;
+        colData.PointMassA.Pos += -offsetVector;
+        colData.PointMassB.Pos += offsetVector;
+        // Apply impulse
+        float impulseMag = -(1f + context._globalRestitutionCoeff) * Vector2.Dot(relVel, colData.Normal) / (colData.PointMassA.InvMass + colData.PointMassB.InvMass);
+        Vector2 impulse = impulseMag * colData.Normal;
+        colData.PointMassA.Vel = thisPreVel -impulse * colData.PointMassA.InvMass;
+        colData.PointMassB.Vel = otherPreVel + impulse * colData.PointMassB.InvMass;
     }
 
     public void ApplyFriction(in Vector2 normal)
