@@ -96,7 +96,6 @@ public class PointMass
                 LineCollider.SolvePointCollision(collisionResult.Value, _context);
             }
         }
-        //_context._ramp.SolveStaticCollision(this);
     }
 
     public CollisionData? CheckPointToPointCollision(PointMass otherPoint)

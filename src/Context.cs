@@ -17,7 +17,6 @@ public class Context
     public readonly TextureManager TextureManager;
 
     private State _saveState;
-    public RotatingCollider _ramp;
     public bool _gravityEnabled;
     public bool _drawForces;
     public bool _drawAABBS;
@@ -82,7 +81,6 @@ public class Context
         {
             _saveState.MassShapes.Add(new MassShape(s));
         }
-        //_saveState.Ramp = new RotatingCollider(_ramp);
         Console.WriteLine("Saved state");
     }
 
@@ -99,7 +97,6 @@ public class Context
         {
             MassShapes.Add(new MassShape(s));
         }
-        //_ramp = new RotatingCollider(_saveState.Ramp);
         Console.WriteLine("Loaded state");
     }
 
@@ -107,7 +104,6 @@ public class Context
     {
         public HashSet<LineCollider> LineColliders { get; set; }
         public HashSet<MassShape> MassShapes { get; set; }
-        public RotatingCollider Ramp { get; set; }
     }
 
     // public void LoadDemoScenario()

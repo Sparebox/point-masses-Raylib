@@ -489,8 +489,8 @@ public class MassShape
         float impulseMag = -(1f + _context._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / combinedMass + pointMass.InvMass);
         Vector2 impulse = impulseMag * normal;
         pointMass.Vel = preVel + impulse * pointMass.InvMass;
-        closestA.Vel = closestApreVel - impulse / (combinedMass - closestB.Mass);
-        closestB.Vel = closestBpreVel - impulse / (combinedMass - closestA.Mass);
+        closestA.Vel = closestApreVel - impulse / 2f / (combinedMass - closestB.Mass);
+        closestB.Vel = closestBpreVel - impulse / 2f / (combinedMass - closestA.Mass);
         // Apply friction
         pointMass.ApplyFriction(-normal);
     }

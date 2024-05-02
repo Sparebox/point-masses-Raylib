@@ -49,7 +49,8 @@ public class Program
             //new(0f, 900f, 1600f, 200f)
             }
         };
-        //context.LoadDemoScenario();
+        //context.MassShapes.Add(MassShape.Chain(WinW / 2f - 100f, WinH / 2f, WinW / 2f + 100f, WinH / 2f, 10f, 2, (false, false), context));
+        //context.MassShapes.Add(MassShape.Particle(WinW / 2f, WinH / 2f - 100f, 10f, context));
         context.SelectedTool = new PullCom(context);
         context.SaveState();
         return context;
@@ -120,14 +121,6 @@ public class Program
         {
             _context.LineColliders.Add(new(0f, 900f, 1600f, 200f));
         }
-        // if (IsKeyDown(KeyboardKey.Up))
-        // {
-        //     _context._ramp.Raise(10f * GetFrameTime());
-        // }
-        // if (IsKeyDown(KeyboardKey.Down))
-        // {
-        //     _context._ramp.Lower(10f * GetFrameTime());
-        // }
         if (_context._toolEnabled)
         {
             _context.SelectedTool.Use();
