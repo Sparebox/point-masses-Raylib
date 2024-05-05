@@ -60,45 +60,6 @@ public static class Entities
         public Vector2 Normal { get; init; }
         public float Separation { get; init; }
     }
-
-    public static List<PointMass> QueryAreaForPoints(float centerX, float centerY, float radius, Context context)
-    {
-        Vector2 center = new(centerX, centerY);
-        List<PointMass> foundPoints = new();
-        foreach (MassShape s in context.MassShapes)
-        {
-            foreach (PointMass p in s._points)
-            {
-                float distSq = Vector2.DistanceSquared(center, p.Pos);
-                if (distSq < radius * radius)
-                {
-                    foundPoints.Add(p);
-                }
-            }
-        }
-        return foundPoints;
-    }
-
-    public static List<MassShape> QueryAreaForShapes(float centerX, float centerY, float radius, Context context)
-    {
-        Vector2 center = new(centerX, centerY);
-        List<MassShape> foundShapes = new();
-        foreach (MassShape s in context.MassShapes)
-        {
-            BoundingBox boundingBox = s.GetAABB();
-            Rectangle AABB = new() {
-                X = boundingBox.Min.X,
-                Y = boundingBox.Min.Y,
-                Width = boundingBox.Max.X - boundingBox.Min.X,
-                Height = boundingBox.Max.Y - boundingBox.Min.Y
-            };
-            if (CheckCollisionCircleRec(center, radius, AABB))
-            {
-                foundShapes.Add(s);
-            }
-        }
-        return foundShapes;
-    }
 }
 
 public static class Graphics

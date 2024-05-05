@@ -187,10 +187,11 @@ public class MassShape
     }
     
     public const float GasAmountMult = 1e6f;
-    public readonly int _id;
     private readonly Context _context;
     private readonly bool _inflated;
+    private static int _idCounter;
 
+    public int Id { get; init; }
     public List<Constraint> _constraints;
     public List<PointMass> _points;
     public bool _toBeDeleted;
@@ -201,14 +202,13 @@ public class MassShape
     private float? _angularMass;
     private float _gasAmount;
     private bool? _isRigid;
-    private static int _idCounter;
     private const float SpringDamping = 5e4f;
 
     public MassShape(Context context, bool inflated) 
     {
         _context = context;
         _inflated = inflated;
-        _id = _idCounter++;
+        Id = _idCounter++;
         _toBeDeleted = false;
     }
 
@@ -220,7 +220,7 @@ public class MassShape
         _gasAmount = shape._gasAmount;
         _isRigid = shape._isRigid;
         _mass = shape._mass;
-        _id = _idCounter++;
+        Id = _idCounter++;
         _toBeDeleted = false;
         _points = new();
         _constraints = new();
@@ -394,6 +394,43 @@ public class MassShape
         };
     }
 
+    public void DeletePoints(List<int> ids)
+    {
+        foreach (var id in ids)
+        {
+            DeletePoint(id);
+        }
+    }
+
+    public void DeletePoint(int id)
+    {
+        List<int> constraintsToDelete = new();
+        int? pointToDelete = null;
+        foreach (var p in _points)
+        {
+            if (p.Id != id)
+            {
+                continue;
+            }
+            // Delete constraint that has this point
+            foreach (var c in _constraints)
+            {
+                if (c.PointA.Id == id || c.PointB.Id == id)
+                {
+                    constraintsToDelete.Add(c.Id);
+                }
+            }
+            pointToDelete = p.Id;
+            break;
+        }
+        if (!pointToDelete.HasValue)
+        {
+            return;
+        }
+        _constraints.RemoveAll(c => constraintsToDelete.Contains(c.Id));
+        _points.RemoveAll(p => p.Id == pointToDelete.Value);
+    }
+
     private bool CheckPointMassCollision(PointMass otherPoint, MassShape otherShape)
     {
         BoundingBox selfAABB = GetAABB();
@@ -446,7 +483,8 @@ public class MassShape
     {
         foreach (var shapeA in context.MassShapes)
         {
-            foreach (var shapeB in context.MassShapes)
+            var nearShapes = context.QuadTree.QueryAreaForShapes(shapeA.GetAABB());
+            foreach (var shapeB in nearShapes)
             {
                 if (shapeA.Equals(shapeB))
                 {
@@ -520,7 +558,7 @@ public class MassShape
 
     private void DrawInfo()
     {
-        ImGui.Begin(string.Format("Body {0} info", _id), ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
+        ImGui.Begin(string.Format("Body {0} info", Id), ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
         ImGui.SetWindowPos(Centroid + new Vector2(25f, 0f));
         ImGui.SetWindowSize(new (250f, 130f));
         ImGui.Text(string.Format("Mass: {0} kg", Mass));
@@ -539,12 +577,12 @@ public class MassShape
 
     public static bool operator == (MassShape a, MassShape b)
     {
-        return a._id == b._id;
+        return a.Id == b.Id;
     }
 
     public static bool operator != (MassShape a, MassShape b)
     {
-        return a._id != b._id;
+        return a.Id != b.Id;
     }
 
     public override bool Equals(object obj)
@@ -553,7 +591,7 @@ public class MassShape
         {
             return false;
         }
-        return _id == ((MassShape) obj)._id;
+        return Id == ((MassShape) obj).Id;
     }
 
     public override int GetHashCode()

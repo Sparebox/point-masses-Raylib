@@ -13,6 +13,7 @@ public class RigidConstraint : Constraint
         PointA = a;
         PointB = b;
         Length = Vector2.Distance(PointA.Pos, PointB.Pos);
+        Id = _idCounter++;
     }
 
     public RigidConstraint(in RigidConstraint c)
@@ -20,6 +21,7 @@ public class RigidConstraint : Constraint
         PointA = c.PointA;
         PointB = c.PointB;
         Length = c.Length;
+        Id = _idCounter++;
     }
 
     public override void Update()

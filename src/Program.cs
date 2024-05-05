@@ -49,9 +49,10 @@ public class Program
             //new(0f, 900f, 1600f, 200f)
             }
         };
-        //context.MassShapes.Add(MassShape.Chain(WinW / 2f - 100f, WinH / 2f, WinW / 2f + 100f, WinH / 2f, 10f, 2, (false, false), context));
-        //context.MassShapes.Add(MassShape.Particle(WinW / 2f, WinH / 2f - 100f, 10f, context));
+        //context.LoadDemoScenario();
         context.SelectedTool = new PullCom(context);
+        context.QuadTree = new Entities.QuadTree(new Vector2(WinW / 2f, WinH / 2f), new Vector2(WinW, WinH));
+
         context.SaveState();
         return context;
     }
@@ -61,6 +62,7 @@ public class Program
         _accumulator += GetFrameTime();
         while (_accumulator >= _context.TimeStep)
         {
+            _context.QuadTree.Update(_context);
             for (int i = 0; i < _context.Substeps; i++)
             {
                 foreach (MassShape s in _context.MassShapes)
@@ -88,6 +90,10 @@ public class Program
         {
             l.Draw();
         }
+        if (_context._drawQuadTree)
+        {
+            _context.QuadTree.Draw();
+        }
         _context.SelectedTool.Draw();
         DrawInfo(); // GUI
         rlImGui.End();
@@ -108,6 +114,10 @@ public class Program
         if (IsKeyPressed(KeyboardKey.B))
         {
             _context._drawAABBS = !_context._drawAABBS;
+        }
+        if (IsKeyPressed(KeyboardKey.Q))
+        {
+            _context._drawQuadTree = !_context._drawQuadTree;
         }
         if (IsKeyPressed(KeyboardKey.R))
         {
@@ -169,6 +179,7 @@ public class Program
         ImGui.Checkbox("Gravity", ref _context._gravityEnabled);
         ImGui.Checkbox("Draw forces", ref _context._drawForces);
         ImGui.Checkbox("Draw AABBs", ref _context._drawAABBS);
+        ImGui.Checkbox("Draw quadtree", ref _context._drawQuadTree);
         ImGui.Checkbox("Draw body info", ref _context._drawBodyInfo);
         ImGui.PushItemWidth(50f);
         ImGui.InputFloat("Global restitution coeff", ref _context._globalRestitutionCoeff);

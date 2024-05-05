@@ -12,7 +12,7 @@ public class PointMass
     private static int _idCounter;
     public const float RadiusToMassRatio = 2f;
 
-    public readonly int _id;
+    public int Id { get; init; }
     public readonly bool _pinned;
     public Vector2 _visForce; // For force visualization
     public Vector2 Pos { get; set; }
@@ -37,7 +37,7 @@ public class PointMass
         Force = Vector2.Zero;
         Mass = mass;
         Radius = mass * RadiusToMassRatio;
-        _id = _idCounter++;
+        Id = _idCounter++;
         _pinned = pinned;
         _context = context;
     }
@@ -50,7 +50,7 @@ public class PointMass
         Force = Vector2.Zero;
         Mass = p.Mass;
         Radius = p.Radius;
-        _id = p._id;
+        Id = p.Id;
         _pinned = p._pinned;
         _context = p._context;
     }
@@ -176,7 +176,7 @@ public class PointMass
         {
             return false;
         }
-        return _id == ((PointMass) obj)._id;
+        return Id == ((PointMass) obj).Id;
     }
 
     public override int GetHashCode()

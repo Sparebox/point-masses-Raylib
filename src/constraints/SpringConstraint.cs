@@ -17,6 +17,7 @@ public class SpringConstraint : Constraint
         SpringConstant = stiffness;
         RestLength = Vector2.Distance(PointA.Pos, PointB.Pos);
         DampingCoeff = damping;
+        Id = _idCounter++;
     }
 
     public SpringConstraint(in SpringConstraint c)
@@ -26,6 +27,7 @@ public class SpringConstraint : Constraint
         SpringConstant = c.SpringConstant;
         RestLength = c.RestLength;
         DampingCoeff = c.DampingCoeff;
+        Id = _idCounter++;
     }
 
     public override void Update()

@@ -102,7 +102,7 @@ public abstract class Tool
         return sb.ToString();
     }
 
-    protected static MassShape FindClosestShape(in Vector2 pos, List<MassShape> shapes)
+    protected static MassShape FindClosestShape(in Vector2 pos, HashSet<MassShape> shapes)
     {
         MassShape closest = null;
         float closestDistSq = float.MaxValue;
@@ -121,10 +121,10 @@ public abstract class Tool
 
 public class Spawn : Tool
 {
-    private const float DefaultMass = 10f;
+    private const float DefaultMass = 30f;
     private const int DefaultRes = 15;
-    private const float DefaultStiffness = 1e5f;
-    private const float DefaultGasAmt = 10f;
+    private const float DefaultStiffness = 1e6f;
+    private const float DefaultGasAmt = 50f;
 
     public SpawnTarget _currentTarget;
     public float _mass;
@@ -165,6 +165,7 @@ public class Spawn : Tool
             return;
         }
         _context.MassShapes.Add(_shapeToSpawn);
+        _context.QuadTree.Insert(_shapeToSpawn);
         _shapeToSpawn = new MassShape(_shapeToSpawn);
     }
 
@@ -235,17 +236,26 @@ public class Delete : Tool
             return;
         }
         Vector2 mousePos = GetMousePosition();
-        var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
+        BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
+        var shapes = _context.QuadTree.QueryAreaForShapes(area);
         if (!shapes.Any())
         {
             return;
         }
-        var shape = shapes.First();
-        shape._constraints.RemoveAll(c => {
-            return Vector2.DistanceSquared(mousePos, c.PointA.Pos) < Radius * Radius ||
-            Vector2.DistanceSquared(mousePos, c.PointB.Pos) < Radius * Radius;
-        });
-        shape._points.RemoveAll(p => Vector2.DistanceSquared(mousePos, p.Pos) < Radius * Radius);
+        shapes.RemoveWhere(s => !CheckCollisionBoxes(area, s.GetAABB()));
+        List<int> pointsToDelete = new();
+        foreach (var shape in shapes)
+        {
+            foreach (var p in shape._points)
+            {
+                if (CheckCollisionCircles(mousePos, Radius, p.Pos, p.Radius))
+                {
+                    pointsToDelete.Add(p.Id);
+                }
+            }
+            shape.DeletePoints(pointsToDelete);
+            pointsToDelete.Clear();
+        }
     }
 
     public override void Draw()
@@ -273,12 +283,17 @@ public class PullCom : Tool
             return;
         }
         Vector2 mousePos = GetMousePosition();
-        var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
+        BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
+        var shapes = _context.QuadTree.QueryAreaForShapes(area);
         if (!shapes.Any())
         {
             return;
         }
         MassShape closest = FindClosestShape(mousePos, shapes);
+        if (!CheckCollisionBoxes(area, closest.GetAABB()))
+        {
+            return;
+        }
         _centerOfMass = closest.CenterOfMass;
         Vector2 force = PullForceCoeff * (mousePos - _centerOfMass);
         closest.ApplyForceCOM(force);
@@ -316,7 +331,8 @@ public class Pull : Tool
             return;
         }
         Vector2 mousePos = GetMousePosition();
-        var points = Utils.Entities.QueryAreaForPoints(mousePos.X, mousePos.Y, Radius, _context);
+        BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
+        var points = _context.QuadTree.QueryAreaForPoints(area);
         if (!points.Any())
         {
             return;
@@ -324,6 +340,10 @@ public class Pull : Tool
         _positions.Clear();
         foreach (var p in points)
         {
+            if (!CheckCollisionPointCircle(p.Pos, mousePos, Radius))
+            {
+                continue;
+            }
             Vector2 force = PullForceCoeff * (mousePos - p.Pos);
             p.ApplyForce(force);
             _positions.Add(p.Pos);
@@ -396,7 +416,8 @@ public class Rotate : Tool
             return;
         }
         Vector2 mousePos = GetMousePosition();
-        var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
+        var shapes = _context.QuadTree.QueryAreaForShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
+        //var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
         if (!shapes.Any())
         {
             return;
