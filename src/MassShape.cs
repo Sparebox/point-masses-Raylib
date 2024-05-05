@@ -185,6 +185,41 @@ public class MassShape
             return (Angle - _lastAngle) / _context.SubStep;
         }
     }
+
+    public BoundingBox AABB
+    {
+        get
+        {
+            float minX = float.MaxValue;
+            float minY = float.MaxValue;
+            float maxX = 0f;
+            float maxY = 0f;
+            foreach (var p in _points)
+            {
+                if (p.Pos.X - p.Radius <= minX)
+                {
+                    minX = p.Pos.X - p.Radius;
+                }
+                if (p.Pos.Y - p.Radius <= minY)
+                {
+                    minY = p.Pos.Y - p.Radius;
+                }
+                if (p.Pos.X + p.Radius >= maxX)
+                {
+                    maxX = p.Pos.X + p.Radius;
+                }
+                if (p.Pos.Y + p.Radius >= maxY)
+                {
+                    maxY = p.Pos.Y + p.Radius;
+                }
+            }
+            return new BoundingBox()
+            {
+                Max = new(maxX, maxY, 0f),
+                Min = new(minX, minY, 0f)
+            };
+        }
+    }
     
     public const float GasAmountMult = 1e6f;
     private readonly Context _context;
@@ -283,8 +318,8 @@ public class MassShape
         }
         if (_context._drawAABBS)
         {
-            BoundingBox AABB = GetAABB();
-            DrawRectangleLines((int) AABB.Min.X, (int) AABB.Min.Y, (int) (AABB.Max.X - AABB.Min.X), (int) (AABB.Max.Y - AABB.Min.Y), Color.Red);
+            BoundingBox aabb = AABB;
+            DrawRectangleLines((int) aabb.Min.X, (int) aabb.Min.Y, (int) (aabb.Max.X - aabb.Min.X), (int) (aabb.Max.Y - aabb.Min.Y), Color.Red);
         }
         if (_context._drawForces)
         {
@@ -362,38 +397,6 @@ public class MassShape
         }
     }
 
-    public BoundingBox GetAABB()
-    {
-        float minX = float.MaxValue;
-        float minY = float.MaxValue;
-        float maxX = 0f;
-        float maxY = 0f;
-        foreach (var p in _points)
-        {
-            if (p.Pos.X - p.Radius <= minX)
-            {
-                minX = p.Pos.X - p.Radius;
-            }
-            if (p.Pos.Y - p.Radius <= minY)
-            {
-                minY = p.Pos.Y - p.Radius;
-            }
-            if (p.Pos.X + p.Radius >= maxX)
-            {
-                maxX = p.Pos.X + p.Radius;
-            }
-            if (p.Pos.Y + p.Radius >= maxY)
-            {
-                maxY = p.Pos.Y + p.Radius;
-            }
-        }
-        return new BoundingBox()
-        {
-            Max = new(maxX, maxY, 0f),
-            Min = new(minX, minY, 0f)
-        };
-    }
-
     public void DeletePoints(List<int> ids)
     {
         foreach (var id in ids)
@@ -431,14 +434,8 @@ public class MassShape
         _points.RemoveAll(p => p.Id == pointToDelete.Value);
     }
 
-    private bool CheckPointMassCollision(PointMass otherPoint, MassShape otherShape)
+    private bool CheckPointMassCollision(PointMass otherPoint)
     {
-        BoundingBox selfAABB = GetAABB();
-        BoundingBox otherAABB = otherShape.GetAABB();
-        if (!CheckCollisionBoxes(selfAABB, otherAABB))
-        {
-            return false;
-        }
         for (int i = 0; i < _points.Count; i++)
         {
             Vector2 startPos = _points[i].Pos;
@@ -457,23 +454,31 @@ public class MassShape
     {
         foreach (var point in otherShape._points)
         {
-            if (CheckPointMassCollision(point, otherShape))
+            if (!CheckCollisionBoxes(point.AABB, AABB))
+            {
+                continue;
+            }
+            if (CheckPointMassCollision(point))
             {
                 HandleCollision(point);
             }
         }
     }
 
-    private void HandlePointOnPointCollisions(MassShape otherShape, Context context)
+    private void HandlePointOnPointCollisions(MassShape otherShape)
     {
         foreach (var pointMassA in _points)
         {
+            if (!CheckCollisionBoxes(pointMassA.AABB, otherShape.AABB))
+            {
+                continue;
+            }
             foreach (var pointMassB in otherShape._points)
             {
                 var collisionResult = pointMassA.CheckPointToPointCollision(pointMassB);
                 if (collisionResult.HasValue)
                 {
-                    PointMass.SolvePointToPointCollision(collisionResult.Value, context);
+                    PointMass.SolvePointToPointCollision(collisionResult.Value, _context);
                 }
             }
         }
@@ -483,14 +488,18 @@ public class MassShape
     {
         foreach (var shapeA in context.MassShapes)
         {
-            var nearShapes = context.QuadTree.QueryAreaForShapes(shapeA.GetAABB());
+            var nearShapes = context.QuadTree.QueryShapes(shapeA.AABB);
             foreach (var shapeB in nearShapes)
             {
                 if (shapeA.Equals(shapeB))
                 {
                     continue;
                 }
-                shapeA.HandlePointOnPointCollisions(shapeB, context);
+                if (!CheckCollisionBoxes(shapeA.AABB, shapeB.AABB))
+                {
+                    continue;
+                }
+                shapeA.HandlePointOnPointCollisions(shapeB);
                 shapeA.HandleLineCollisions(shapeB);
             }
         }

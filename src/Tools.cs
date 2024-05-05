@@ -237,12 +237,12 @@ public class Delete : Tool
         }
         Vector2 mousePos = GetMousePosition();
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-        var shapes = _context.QuadTree.QueryAreaForShapes(area);
+        var shapes = _context.QuadTree.QueryShapes(area);
         if (!shapes.Any())
         {
             return;
         }
-        shapes.RemoveWhere(s => !CheckCollisionBoxes(area, s.GetAABB()));
+        shapes.RemoveWhere(s => !CheckCollisionBoxes(area, s.AABB));
         List<int> pointsToDelete = new();
         foreach (var shape in shapes)
         {
@@ -284,13 +284,13 @@ public class PullCom : Tool
         }
         Vector2 mousePos = GetMousePosition();
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-        var shapes = _context.QuadTree.QueryAreaForShapes(area);
+        var shapes = _context.QuadTree.QueryShapes(area);
         if (!shapes.Any())
         {
             return;
         }
         MassShape closest = FindClosestShape(mousePos, shapes);
-        if (!CheckCollisionBoxes(area, closest.GetAABB()))
+        if (!CheckCollisionBoxes(area, closest.AABB))
         {
             return;
         }
@@ -332,7 +332,7 @@ public class Pull : Tool
         }
         Vector2 mousePos = GetMousePosition();
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-        var points = _context.QuadTree.QueryAreaForPoints(area);
+        var points = _context.QuadTree.QueryPoints(area);
         if (!points.Any())
         {
             return;
@@ -416,7 +416,7 @@ public class Rotate : Tool
             return;
         }
         Vector2 mousePos = GetMousePosition();
-        var shapes = _context.QuadTree.QueryAreaForShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
+        var shapes = _context.QuadTree.QueryShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
         //var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
         if (!shapes.Any())
         {

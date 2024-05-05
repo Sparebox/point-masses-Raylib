@@ -10,6 +10,7 @@ namespace Physics;
 public class PointMass
 {
     private static int _idCounter;
+    private readonly Context _context;
     public const float RadiusToMassRatio = 2f;
 
     public int Id { get; init; }
@@ -27,8 +28,16 @@ public class PointMass
     public float Mass { get; }
     public float InvMass { get { return 1f / Mass; }}
     public float Radius { get; init; }
+    public BoundingBox AABB 
+    {
+        get
+        {
+            Vector3 min = new(Pos.X - Radius, Pos.Y - Radius, 0f);
+            Vector3 max = new(Pos.X + Radius, Pos.Y + Radius, 0f);
+            return new BoundingBox(min, max);
+        }
+    }
     
-    private readonly Context _context;
 
     public PointMass(float x, float y, float mass, bool pinned, Context context)
     {
