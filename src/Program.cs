@@ -70,7 +70,6 @@ public class Program
         }
         while (_accumulator >= _context.TimeStep)
         {
-            //_context.QuadTree.Update(_context);
             for (int i = 0; i < _context.Substeps; i++)
             {
                 foreach (MassShape s in _context.MassShapes)
