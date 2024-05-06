@@ -16,6 +16,7 @@ public class QuadTree
     private readonly Vector2 _center;
     private readonly Vector2 _size;
     private readonly HashSet<MassShape> _massShapes;
+    private bool _subdivided;
     private QuadTree _northEast;
     private QuadTree _southEast;
     private QuadTree _southWest;
@@ -27,12 +28,12 @@ public class QuadTree
         _size = size;
         _boundary = new BoundingBox(new(_center.X - _size.X / 2f, _center.Y - _size.Y / 2f, 0f), new(_center.X + _size.X / 2f, _center.Y + _size.Y / 2f, 0f));
         _massShapes = new();
+        _subdivided  = false;
     }
 
     public void Update(Context context)
     {
         Clear();
-        DeleteEmptyQuads();
         _subdivisions = 0;
         foreach (var shape in context.MassShapes)
         {
@@ -46,7 +47,7 @@ public class QuadTree
         {
             return;
         }
-        if (_northEast is not null) // If there are child quads
+        if (_subdivided)
         {
             // Insert into children
             _northEast.Insert(shape);
@@ -82,46 +83,26 @@ public class QuadTree
     private void Subdivide()
     {
         Vector2 newSize = _size / 2f;
-        _northEast = new QuadTree(new(_center.X + newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize);
-        _southEast = new QuadTree(new(_center.X + newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize);
-        _southWest = new QuadTree(new(_center.X - newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize);
-        _northWest = new QuadTree(new(_center.X - newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize);
+        _northEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize);
+        _southEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize);
+        _southWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize);
+        _northWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize);
+        _subdivided = true;
         _subdivisions++;
-    }
-
-    private bool ChildrenAreEmpty()
-    {
-        if (_northEast is null)
-        {
-            return true;
-        }
-        return !_northEast._massShapes.Any() && !_southEast._massShapes.Any() && !_southWest._massShapes.Any() && !_northWest._massShapes.Any();
     }
 
     private void Clear()
     {
-        if (_northEast is null)
+        if (!_subdivided)
         {
             _massShapes.Clear();
+            return;
         }
-        else
-        {
-            _northEast.Clear();
-            _southEast.Clear();
-            _southWest.Clear();
-            _northWest.Clear();
-        }
-    }
-
-    private void DeleteEmptyQuads()
-    {
-        if (ChildrenAreEmpty())
-        {
-            _northEast = null;
-            _southEast = null;
-            _southWest = null;
-            _northWest = null;
-        }
+        _subdivided = false;
+        _northEast.Clear();
+        _southEast.Clear();
+        _southWest.Clear();
+        _northWest.Clear();
     }
 
     public HashSet<MassShape> QueryShapes(BoundingBox area, HashSet<MassShape> found = null)
@@ -131,7 +112,7 @@ public class QuadTree
         {
             return found;
         }
-        if (_northEast is null)
+        if (!_subdivided)
         {
             foreach (var shape in _massShapes)
             {
@@ -155,7 +136,7 @@ public class QuadTree
         {
             return found;
         }
-        if (_northEast is null)
+        if (!_subdivided)
         {
             foreach (var shape in _massShapes)
             {
@@ -179,9 +160,12 @@ public class QuadTree
     {
         DrawRectangleLines((int) (_center.X - _size.X / 2f), (int) (_center.Y - _size.Y / 2f), (int) _size.X, (int) _size.Y, Color.Red);
         DrawText("Shapes: " + _massShapes.Count, (int) (_center.X - _size.X / 2f), (int) (_center.Y - _size.Y / 2f), 10, Color.Yellow);
-        _northEast?.Draw();
-        _southEast?.Draw();
-        _southWest?.Draw();
-        _northWest?.Draw();
+        if (_subdivided)
+        {
+            _northEast.Draw();
+            _southEast.Draw();
+            _southWest.Draw();
+            _northWest.Draw();
+        }
     }
 }
