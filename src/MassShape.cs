@@ -452,9 +452,10 @@ public class MassShape
 
     private void HandleLineCollisions(MassShape otherShape)
     {
+        var thisAABB = AABB;
         foreach (var point in otherShape._points)
         {
-            if (!CheckCollisionBoxes(point.AABB, AABB))
+            if (!CheckCollisionBoxes(point.AABB, thisAABB))
             {
                 continue;
             }
@@ -465,16 +466,20 @@ public class MassShape
         }
     }
 
-    private void HandlePointOnPointCollisions(MassShape otherShape)
+    private void HandlePointOnPointCollisions(MassShape otherShape, BoundingBox thisAABB, BoundingBox otherAABB)
     {
         foreach (var pointMassA in _points)
         {
-            if (!CheckCollisionBoxes(pointMassA.AABB, otherShape.AABB))
+            if (!CheckCollisionBoxes(pointMassA.AABB, otherAABB))
             {
                 continue;
             }
             foreach (var pointMassB in otherShape._points)
             {
+                if (!CheckCollisionBoxes(pointMassB.AABB, thisAABB))
+                {
+                    continue;
+                }
                 var collisionResult = pointMassA.CheckPointToPointCollision(pointMassB);
                 if (collisionResult.HasValue)
                 {
@@ -488,18 +493,20 @@ public class MassShape
     {
         foreach (var shapeA in context.MassShapes)
         {
-            var nearShapes = context.QuadTree.QueryShapes(shapeA.AABB);
+            var AABBshapeA = shapeA.AABB;
+            var nearShapes = context.QuadTree.QueryShapes(AABBshapeA);
             foreach (var shapeB in nearShapes)
             {
                 if (shapeA.Equals(shapeB))
                 {
                     continue;
                 }
-                if (!CheckCollisionBoxes(shapeA.AABB, shapeB.AABB))
+                var AABBshapeB = shapeB.AABB;
+                if (!CheckCollisionBoxes(AABBshapeA, AABBshapeB))
                 {
                     continue;
                 }
-                shapeA.HandlePointOnPointCollisions(shapeB);
+                shapeA.HandlePointOnPointCollisions(shapeB, AABBshapeA, AABBshapeB);
                 shapeA.HandleLineCollisions(shapeB);
             }
         }
