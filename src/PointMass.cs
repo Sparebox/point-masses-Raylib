@@ -130,7 +130,7 @@ public class PointMass
         return null;
     }
 
-    public static void SolvePointToPointCollision(in CollisionData colData, Context context)
+    public static void HandlePointToPointCollision(in CollisionData colData, Context context)
     {   
         // Save pre-collision velocities
         Vector2 thisPreVel = colData.PointMassA.Vel;

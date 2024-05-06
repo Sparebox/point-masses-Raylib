@@ -434,7 +434,7 @@ public class MassShape
         _points.RemoveAll(p => p.Id == pointToDelete.Value);
     }
 
-    private bool CheckPointMassCollision(PointMass otherPoint)
+    private bool CheckLineCollision(PointMass otherPoint)
     {
         for (int i = 0; i < _points.Count; i++)
         {
@@ -458,9 +458,9 @@ public class MassShape
             {
                 continue;
             }
-            if (CheckPointMassCollision(point))
+            if (CheckLineCollision(point))
             {
-                HandleCollision(point);
+                HandleLineCollision(point);
             }
         }
     }
@@ -478,13 +478,13 @@ public class MassShape
                 var collisionResult = pointMassA.CheckPointToPointCollision(pointMassB);
                 if (collisionResult.HasValue)
                 {
-                    PointMass.SolvePointToPointCollision(collisionResult.Value, _context);
+                    PointMass.HandlePointToPointCollision(collisionResult.Value, _context);
                 }
             }
         }
     }
 
-    public static void SolveCollisions(Context context)
+    public static void HandleCollisions(Context context)
     {
         foreach (var shapeA in context.MassShapes)
         {
@@ -505,7 +505,7 @@ public class MassShape
         }
     }
 
-    private void HandleCollision(PointMass pointMass)
+    private void HandleLineCollision(PointMass pointMass)
     {
         (PointMass closestA, PointMass closestB, Vector2 closestPoint) = FindClosestPoints(pointMass.Pos);
         Vector2 pointToClosest = closestPoint - pointMass.Pos;

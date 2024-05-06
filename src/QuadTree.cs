@@ -8,8 +8,8 @@ namespace Entities;
 
 public class QuadTree
 {
-    public const int QuadCapacity = 5;
-    public const int MaxSubdivisions = 20;
+    public const int QuadCapacity = 3;
+    public const int MaxSubdivisions = 100;
 
     private static int _subdivisions;
     private readonly BoundingBox _boundary;

@@ -14,8 +14,10 @@ public class Program
     public const int WinW = 1600;
     public const int WinH = 900;
     public const int TargetFPS = 165;
+    public const float QuadTreeUpdateSeconds = 0.1f;
 
     private static float _accumulator;
+    private static float _quadTreeAccumulator;
     private static Context _context;
 
     public static void Main() 
@@ -60,16 +62,22 @@ public class Program
     private static void Update()
     {
         _accumulator += GetFrameTime();
-        while (_accumulator >= _context.TimeStep)
+        _quadTreeAccumulator += GetFrameTime();
+        while (_quadTreeAccumulator >= QuadTreeUpdateSeconds)
         {
             _context.QuadTree.Update(_context);
+            _quadTreeAccumulator -= QuadTreeUpdateSeconds;
+        }
+        while (_accumulator >= _context.TimeStep)
+        {
+            //_context.QuadTree.Update(_context);
             for (int i = 0; i < _context.Substeps; i++)
             {
                 foreach (MassShape s in _context.MassShapes)
                 {
                     s.Update();
                 }
-                MassShape.SolveCollisions(_context);
+                MassShape.HandleCollisions(_context);
             }
             _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
             _accumulator -= _context.TimeStep;
