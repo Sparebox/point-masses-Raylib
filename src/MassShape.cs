@@ -466,21 +466,17 @@ public class MassShape
         }
     }
 
-    private void HandlePointOnPointCollisions(MassShape otherShape, BoundingBox thisAABB, BoundingBox otherAABB)
+    private void HandlePointOnPointCollisions(MassShape otherShape, BoundingBox otherAABB)
     {
-        foreach (var pointMassA in _points)
+        foreach (var pointA in _points)
         {
-            if (!CheckCollisionBoxes(pointMassA.AABB, otherAABB))
+            if (!CheckCollisionBoxes(pointA.AABB, otherAABB))
             {
                 continue;
             }
-            foreach (var pointMassB in otherShape._points)
+            foreach (var pointB in otherShape._points)
             {
-                if (!CheckCollisionBoxes(pointMassB.AABB, thisAABB))
-                {
-                    continue;
-                }
-                var collisionResult = pointMassA.CheckPointToPointCollision(pointMassB);
+                var collisionResult = pointA.CheckPointToPointCollision(pointB);
                 if (collisionResult.HasValue)
                 {
                     PointMass.HandlePointToPointCollision(collisionResult.Value, _context);
@@ -501,12 +497,7 @@ public class MassShape
                 {
                     continue;
                 }
-                var AABBshapeB = shapeB.AABB;
-                if (!CheckCollisionBoxes(AABBshapeA, AABBshapeB))
-                {
-                    continue;
-                }
-                shapeA.HandlePointOnPointCollisions(shapeB, AABBshapeA, AABBshapeB);
+                shapeA.HandlePointOnPointCollisions(shapeB, shapeB.AABB);
                 shapeA.HandleLineCollisions(shapeB);
             }
         }

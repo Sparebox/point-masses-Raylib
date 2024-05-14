@@ -38,7 +38,6 @@ public class PointMass
         }
     }
     
-
     public PointMass(float x, float y, float mass, bool pinned, Context context)
     {
         Pos = new(x, y);

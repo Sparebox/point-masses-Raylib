@@ -116,7 +116,10 @@ public class QuadTree
         {
             foreach (var shape in _massShapes)
             {
-                found.Add(shape);
+                if (CheckCollisionBoxes(area, shape.AABB))
+                {
+                    found.Add(shape);
+                }
             }
         }
         else
@@ -142,7 +145,10 @@ public class QuadTree
             {
                 foreach (var point in shape._points)
                 {
-                    found.Add(point);
+                    if (CheckCollisionBoxes(area, point.AABB))
+                    {
+                        found.Add(point);
+                    }
                 }
             }
         }
