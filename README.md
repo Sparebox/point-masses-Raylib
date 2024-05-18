@@ -8,6 +8,6 @@ Current features:
 - Interactive simulation tools
 - Gas inflated shapes
 
-Used libraries:
+Libraries:
 - raylib C# binding
 - Dear ImGui C# binding
