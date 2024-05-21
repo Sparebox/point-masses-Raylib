@@ -142,6 +142,15 @@ public class Program
         {
             _context.SelectedTool.Use();
         }
+        // Temporary demo keys
+        if (IsKeyPressed(KeyboardKey.One))
+        {
+            _context.LoadDemoScenarioOne();
+        }
+        if (IsKeyPressed(KeyboardKey.Two))
+        {
+            _context.LoadDemoScenarioTwo();
+        }
         // Mouse
         if (GetMouseWheelMoveV().Y > 0f)
         {

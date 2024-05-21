@@ -27,7 +27,7 @@ public class Context
     public bool _toolEnabled;
     public float _globalRestitutionCoeff = 0.3f;
     public float _globalKineticFrictionCoeff = 1f;
-    public float _globalStaticFrictionCoeff = 1f;
+    public float _globalStaticFrictionCoeff = 1.1f;
     public QuadTree QuadTree { get; set; }
     public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; set; }
@@ -109,14 +109,19 @@ public class Context
         public HashSet<MassShape> MassShapes { get; set; }
     }
 
-    public void LoadDemoScenario()
+    public void LoadDemoScenarioOne()
     {
-        MassShapes.Add(MassShape.Chain(Program.WinW / 2f - 100f, Program.WinH / 2f, Program.WinW / 2f + 100f, Program.WinH / 2f, 10f, 2, (false, false), this));
-        MassShapes.Add(MassShape.Particle(Program.WinW / 2f, Program.WinH / 2f - 100f, 10f, this));
+        //MassShapes.Add(MassShape.Chain(Program.WinW / 2f - 100f, Program.WinH / 2f, Program.WinW / 2f + 100f, Program.WinH / 2f, 10f, 2, (false, false), this));
+        //assShapes.Add(MassShape.Particle(Program.WinW / 2f, Program.WinH / 2f - 100f, 10f, this));
         // MassShapes.Add(MassShape.Cloth(x: 300f, y: 10f, width: 500f, height: 500f, mass: 0.7f, res: 42, stiffness: 1e5f, this));
-        // MassShapes.Add(MassShape.SoftBall(Program.WinW / 2f - 300f, Program.WinH / 2f - 200f, 50f, 25f, 20, 1000f, 10f, this));
-        // MassShapes.Add(MassShape.Box(Program.WinW / 2f, Program.WinH / 2f - 300f, 100f, 10f, this));
-        // MassShapes.Add(MassShape.SoftBox(Program.WinW / 2f + 300f, Program.WinH / 2f - 200f, 150f, 20f, 1e4f, this));
-        // MassShapes.Add(MassShape.HardBall(Program.WinW / 2f + 600f, Program.WinH / 2f - 300f, 50f, 25f, 13, this));
+        MassShapes.Add(MassShape.SoftBall(Program.WinW / 2f - 300f, Program.WinH / 2f - 200f, 50f, 50f, 20, 1000f, 10f, this));
+        MassShapes.Add(MassShape.Box(Program.WinW / 2f, Program.WinH / 2f - 300f, 100f, 10f, this));
+        MassShapes.Add(MassShape.SoftBox(Program.WinW / 2f + 300f, Program.WinH / 2f - 200f, 150f, 20f, 1e4f, this));
+        MassShapes.Add(MassShape.HardBall(Program.WinW / 2f + 600f, Program.WinH / 2f - 300f, 50f, 35f, 13, this));
+    }
+
+    public void LoadDemoScenarioTwo()
+    {
+        MassShapes.Add(MassShape.Cloth(x: 300f, y: 10f, width: 500f, height: 500f, mass: 0.7f, res: 42, stiffness: 1e5f, this));
     }
 }

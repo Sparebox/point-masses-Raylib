@@ -75,7 +75,7 @@ public class PointMass
         }
         SolveLineCollisions();
         Vector2 acc = Force / Mass;
-        Vector2 vel = Vel;
+        Vector2 vel = Vel; // Save the velocity before previous position is reset
         PrevPos = Pos;
         Pos += vel + acc * _context.SubStep * _context.SubStep;
         _visForce = Force;

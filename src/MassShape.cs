@@ -489,8 +489,7 @@ public class MassShape
     {
         foreach (var shapeA in context.MassShapes)
         {
-            var AABBshapeA = shapeA.AABB;
-            var nearShapes = context.QuadTree.QueryShapes(AABBshapeA);
+            var nearShapes = context.QuadTree.QueryShapes(shapeA.AABB);
             foreach (var shapeB in nearShapes)
             {
                 if (shapeA.Equals(shapeB))
