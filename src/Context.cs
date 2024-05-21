@@ -122,6 +122,6 @@ public class Context
 
     public void LoadDemoScenarioTwo()
     {
-        MassShapes.Add(MassShape.Cloth(x: 300f, y: 10f, width: 500f, height: 500f, mass: 0.7f, res: 42, stiffness: 1e5f, this));
+        MassShapes.Add(MassShape.Cloth(x: 500f, y: 10f, width: 500f, height: 500f, mass: 0.7f, res: 42, stiffness: 1e5f, this));
     }
 }

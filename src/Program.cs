@@ -51,7 +51,6 @@ public class Program
             //new(0f, 900f, 1600f, 200f)
             }
         };
-        //context.LoadDemoScenario();
         context.SelectedTool = new PullCom(context);
         context.QuadTree = new Entities.QuadTree(new Vector2(WinW / 2f, WinH / 2f), new Vector2(WinW, WinH));
 
