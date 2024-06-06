@@ -16,6 +16,7 @@ public class QuadTree
     private readonly Vector2 _center;
     private readonly Vector2 _size;
     private readonly HashSet<MassShape> _massShapes;
+    // TODO: add points
     private bool _subdivided;
     private QuadTree _northEast;
     private QuadTree _southEast;

@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Editing;
 using ImGuiNET;
 using Physics;
 using Raylib_cs;
@@ -19,10 +20,12 @@ public class Program
     private static float _accumulator;
     private static float _quadTreeAccumulator;
     private static Context _context;
+    private static Editor _editor;
 
     public static void Main() 
     {
         _context = Init();
+        _editor = new Editor(_context);
         rlImGui.Setup(true);
         while (!WindowShouldClose())
         {
@@ -54,7 +57,7 @@ public class Program
         context.SelectedTool = new PullCom(context);
         context.QuadTree = new Entities.QuadTree(new Vector2(WinW / 2f, WinH / 2f), new Vector2(WinW, WinH));
 
-        context.SaveState();
+        context.SaveCurrentState();
         return context;
     }
 
@@ -101,7 +104,9 @@ public class Program
             _context.QuadTree.Draw();
         }
         _context.SelectedTool.Draw();
+        _editor.Draw();
         DrawInfo(); // GUI
+        
         rlImGui.End();
         EndDrawing(); // raylib
     }

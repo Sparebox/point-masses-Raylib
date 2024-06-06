@@ -1,7 +1,5 @@
-using System.Data;
 using System.Numerics;
 using Collision;
-using Entity;
 using Physics;
 using Entities;
 using Textures;
@@ -17,7 +15,7 @@ public class Context
     public readonly Vector2 Gravity;
     public readonly TextureManager TextureManager;
 
-    private State _saveState;
+    private SaveState _saveState;
     public bool _gravityEnabled;
     public bool _drawForces;
     public bool _drawAABBS;
@@ -72,7 +70,7 @@ public class Context
         LineColliders = new();
     }
 
-    public void SaveState()
+    public void SaveCurrentState()
     {
         _saveState.LineColliders = new();
         _saveState.MassShapes = new();
@@ -103,7 +101,7 @@ public class Context
         Console.WriteLine("Loaded state");
     }
 
-    private struct State
+    private struct SaveState
     {
         public HashSet<LineCollider> LineColliders { get; set; }
         public HashSet<MassShape> MassShapes { get; set; }
