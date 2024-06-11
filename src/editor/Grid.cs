@@ -21,8 +21,8 @@ public class Grid
     {
         _pointsPerMeter = pointsPerMeter;
         _editor = editor;
-        _pointsX = (uint) float.Ceiling(UnitConversion.PixelsToMeters(Program.WinW) * pointsPerMeter);
-        _pointsY = (uint) float.Ceiling(UnitConversion.PixelsToMeters(Program.WinH) * pointsPerMeter);
+        _pointsX = (uint) float.Ceiling(UnitConv.PixelsToMeters(Program.WinW) * pointsPerMeter);
+        _pointsY = (uint) float.Ceiling(UnitConv.PixelsToMeters(Program.WinH) * pointsPerMeter);
 
         GridPoints = new GridPoint[_pointsX * _pointsY];
 
@@ -41,9 +41,9 @@ public class Grid
         foreach (var point in GridPoints)
         {
             DrawCircleLines(
-                (int) UnitConversion.MetersToPixels(point.Pos.X),
-                (int) UnitConversion.MetersToPixels(point.Pos.Y),
-                point.IsSelected ? _editor.CursorSize : PointSize,
+                UnitConv.MetersToPixels(point.Pos.X),
+                UnitConv.MetersToPixels(point.Pos.Y),
+                point.IsSelected ? _editor.CursorRadius : PointSize,
                 Color.White
             );
         }
@@ -57,15 +57,15 @@ public class Grid
         }
     }
 
-    public ref GridPoint FindClosestGridPoint(uint pixelX, uint pixelY)
+    public ref GridPoint GetClosestGridPoint(uint xPixels, uint yPixels)
     {
-        return ref GridPoints[GetIndexFromPixel(pixelX, pixelY)];
+        return ref GridPoints[GetIndexFromPixel(xPixels, yPixels)];
     }
 
     private uint[] GetClosestPoint(uint xPixels, uint yPixels)
     {
-        float xPoint = UnitConversion.PixelsToMeters(xPixels) * _pointsPerMeter;
-        float yPoint = UnitConversion.PixelsToMeters(yPixels) * _pointsPerMeter;
+        float xPoint = UnitConv.PixelsToMeters(xPixels) * _pointsPerMeter;
+        float yPoint = UnitConv.PixelsToMeters(yPixels) * _pointsPerMeter;
         float xPointFrac = xPoint - float.Floor(xPoint);
         float yPointFrac = yPoint - float.Floor(yPoint);
         uint xPointInt;
@@ -89,9 +89,9 @@ public class Grid
         return new uint[] { xPointInt, yPointInt };
     }
 
-    private uint GetIndexFromPoint(uint xPoint, uint yPoint)
+    private uint GetIndexFromPoint(uint xPoints, uint yPoints)
     {
-        return xPoint + yPoint * _pointsX;
+        return xPoints + yPoints * _pointsX;
     }
 
     public uint GetIndexFromPixel(uint xPixels, uint yPixels)

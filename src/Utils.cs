@@ -6,7 +6,7 @@ using static Raylib_cs.Raylib;
 
 namespace Utils;
 
-public static class UnitConversion
+public static class UnitConv
 {
     public const float PixelsPerMeter = 300f;
 
@@ -15,9 +15,9 @@ public static class UnitConversion
         return pixels / PixelsPerMeter;
     }
 
-    public static float MetersToPixels(float meters)
+    public static int MetersToPixels(float meters)
     {
-        return PixelsPerMeter * meters;
+        return (int) (PixelsPerMeter * meters);
     }
 
     public static Vector2 PixelsToMeters(Vector2 pixels)

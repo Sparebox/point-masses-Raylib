@@ -2,6 +2,7 @@
 using Physics;
 using Raylib_cs;
 using Sim;
+using Utils;
 using static Raylib_cs.Raylib;
 
 namespace Entities;
@@ -165,8 +166,20 @@ public class QuadTree
 
     public void Draw()
     {
-        DrawRectangleLines((int) (_center.X - _size.X / 2f), (int) (_center.Y - _size.Y / 2f), (int) _size.X, (int) _size.Y, Color.Red);
-        DrawText("Shapes: " + _massShapes.Count, (int) (_center.X - _size.X / 2f), (int) (_center.Y - _size.Y / 2f), 10, Color.Yellow);
+        DrawRectangleLines(
+            UnitConv.MetersToPixels(_center.X - _size.X / 2f),
+            UnitConv.MetersToPixels(_center.Y - _size.Y / 2f),
+            UnitConv.MetersToPixels(_size.X),
+            UnitConv.MetersToPixels(_size.Y),
+            Color.Red
+        );
+        DrawText(
+            $"Shapes: {_massShapes.Count}",
+            UnitConv.MetersToPixels(_center.X - _size.X / 2f),
+            UnitConv.MetersToPixels(_center.Y - _size.Y / 2f),
+            10,
+            Color.Yellow
+        );
         if (_subdivided)
         {
             _northEast.Draw();

@@ -2,6 +2,7 @@ using System.Numerics;
 using ImGuiNET;
 using Raylib_cs;
 using Sim;
+using Utils;
 using static Raylib_cs.Raylib;
 
 namespace Physics;
@@ -78,7 +79,7 @@ public class MassShape
             foreach (var p in _points)
             {
                 float distSq = Vector2.DistanceSquared(COM, p.Pos);
-                angularMass += p.Mass * Utils.UnitConversion.PixelsToMeters(distSq);
+                angularMass += p.Mass * distSq;
             }
             if (IsRigid)
             {
@@ -139,7 +140,7 @@ public class MassShape
     {
         get
         {
-            return 0.5f * Mass * Utils.UnitConversion.PixelsToMeters(Vel.LengthSquared());
+            return 0.5f * Mass * Vel.LengthSquared();
         }
     }
     
@@ -221,7 +222,7 @@ public class MassShape
         }
     }
     
-    public const float GasAmountMult = 1e6f;
+    public const float GasAmountMult = 1f;
     private readonly Context _context;
     private readonly bool _inflated;
     private static int _idCounter;
@@ -319,7 +320,13 @@ public class MassShape
         if (_context._drawAABBS)
         {
             BoundingBox aabb = AABB;
-            DrawRectangleLines((int) aabb.Min.X, (int) aabb.Min.Y, (int) (aabb.Max.X - aabb.Min.X), (int) (aabb.Max.Y - aabb.Min.Y), Color.Red);
+            DrawRectangleLines(
+                UnitConv.MetersToPixels(aabb.Min.X),
+                UnitConv.MetersToPixels(aabb.Min.Y),
+                UnitConv.MetersToPixels(aabb.Max.X - aabb.Min.X),
+                UnitConv.MetersToPixels(aabb.Max.Y - aabb.Min.Y),
+                Color.Red
+            );
         }
         if (_context._drawForces)
         {
@@ -328,12 +335,12 @@ public class MassShape
                 // Draw pressure forces acting on normals
                 foreach (VisLine line in _pressureVis._lines)
                 {
-                    Utils.Graphics.DrawArrow(line._start, line._end, Color.Magenta);
+                    Graphics.DrawArrow(line._start, line._end, Color.Magenta);
                 }
             }
             Vector2 COM = CenterOfMass;
             Vector2 totalVisForce = TotalVisForce;
-            Utils.Graphics.DrawArrow(COM, COM + totalVisForce * 1e-2f, Color.Magenta);
+            Graphics.DrawArrow(COM, COM + totalVisForce * 1e-2f, Color.Magenta);
         }
         if (_context._drawBodyInfo)
         {
@@ -440,7 +447,7 @@ public class MassShape
         {
             Vector2 startPos = _points[i].Pos;
             Vector2 endPos = _points[(i + 1) % _points.Count].Pos;
-            Vector2 towardsClosestPoint = Utils.Geometry.ClosestPointOnLine(startPos, endPos, otherPoint.Pos) - otherPoint.Pos;
+            Vector2 towardsClosestPoint = Geometry.ClosestPointOnLine(startPos, endPos, otherPoint.Pos) - otherPoint.Pos;
             float distSq = towardsClosestPoint.LengthSquared();
             if (distSq <= otherPoint.Radius * otherPoint.Radius)
             {
@@ -565,20 +572,20 @@ public class MassShape
     private void DrawInfo()
     {
         ImGui.Begin(string.Format("Body {0} info", Id), ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
-        ImGui.SetWindowPos(Centroid + new Vector2(25f, 0f));
+        ImGui.SetWindowPos(UnitConv.MetersToPixels(Centroid) + new Vector2(25f, 0f));
         ImGui.SetWindowSize(new (250f, 130f));
         ImGui.Text(string.Format("Mass: {0} kg", Mass));
-        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Utils.UnitConversion.PixelsToMeters(Vel)));
-        ImGui.Text(string.Format("Momentum: {0:0.0} kgm/s", Utils.UnitConversion.PixelsToMeters(Momentum)));
+        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel));
+        ImGui.Text(string.Format("Momentum: {0:0.0} kgm/s", Momentum));
         ImGui.Text(string.Format("Angular momentum: {0:0.0} Js", AngularMomentum));
         ImGui.Text(string.Format("Moment of inertia: {0:0} kgm^2", AngularMass));
         ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel * RAD2DEG));
         ImGui.Text(string.Format("Angle: {0:0} deg", Angle * RAD2DEG));
         ImGui.Text(string.Format("Linear energy: {0:0.##} J", LinEnergy));
-        ImGui.Text(string.Format("Rot energy: {0:0.##} kJ", RotEnergy / 1e3f));
+        ImGui.Text(string.Format("Rot energy: {0:0.##} J", RotEnergy));
         ImGui.End();
         Vector2 offset = new(-_context.TextureManager._centerOfMassIcon.Width / 2f, -_context.TextureManager._centerOfMassIcon.Height / 2f);
-        DrawTextureEx(_context.TextureManager._centerOfMassIcon, Centroid + 0.5f * offset, 0f, 0.5f, Color.White);
+        DrawTextureEx(_context.TextureManager._centerOfMassIcon, UnitConv.MetersToPixels(Centroid) + 0.5f * offset, 0f, 0.5f, Color.White);
     }
 
     public static bool operator == (MassShape a, MassShape b)
@@ -717,8 +724,8 @@ public class MassShape
 
     public static MassShape Cloth(float x, float y, float width, float height, float mass, int res, float stiffness, Context context)
     {
-        float pixelsPerConstraintW = width / res;
-        float pixelsPerConstraintH = height / res;
+        float metersPerConstraintW = width / res;
+        float metersPerConstraintH = height / res;
         MassShape c = new(context, false)
         {
             _points = new(),
@@ -730,7 +737,7 @@ public class MassShape
             for (int row = 0; row < res; row++)
             {
                 bool pinned = (col == 0 || col == res - 1) && row == 0;
-                c._points.Add(new(x + col * pixelsPerConstraintW, y + row * pixelsPerConstraintH, mass, pinned, context));
+                c._points.Add(new(x + col * metersPerConstraintW, y + row * metersPerConstraintH, mass, pinned, context));
             }
         }
         // Constraints

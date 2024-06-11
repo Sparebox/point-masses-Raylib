@@ -1,7 +1,9 @@
+using System.Data;
 using System.Numerics;
 using Collision;
 using Raylib_cs;
 using Sim;
+using Utils;
 using static Raylib_cs.Raylib;
 using static Utils.Entities;
 
@@ -11,7 +13,7 @@ public class PointMass
 {
     private static int _idCounter;
     private readonly Context _context;
-    public const float RadiusToMassRatio = 2f;
+    public const float RadiusPerMassRatio = 0.01f;
 
     public int Id { get; init; }
     public readonly bool _pinned;
@@ -44,7 +46,7 @@ public class PointMass
         PrevPos = Pos;
         Force = Vector2.Zero;
         Mass = mass;
-        Radius = mass * RadiusToMassRatio;
+        Radius = MassToRadius(mass);
         Id = _idCounter++;
         _pinned = pinned;
         _context = context;
@@ -85,7 +87,7 @@ public class PointMass
 
     public void Draw()
     {
-        DrawCircleLines((int) Pos.X, (int) Pos.Y, Radius, Color.White);
+        DrawCircleLines(UnitConv.MetersToPixels(Pos.X), UnitConv.MetersToPixels(Pos.Y), UnitConv.MetersToPixels(Radius), Color.White);
     }
 
     public void ApplyForce(in Vector2 force)
@@ -144,6 +146,16 @@ public class PointMass
         Vector2 impulse = impulseMag * colData.Normal;
         colData.PointMassA.Vel = thisPreVel -impulse * colData.PointMassA.InvMass;
         colData.PointMassB.Vel = otherPreVel + impulse * colData.PointMassB.InvMass;
+    }
+
+    public static float RadiusToMass(float radius)
+    {
+        return radius / RadiusPerMassRatio;
+    }
+
+    public static float MassToRadius(float mass)
+    {
+        return mass * RadiusPerMassRatio;
     }
 
     public void ApplyFriction(in Vector2 normal)

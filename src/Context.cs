@@ -4,16 +4,17 @@ using Physics;
 using Entities;
 using Textures;
 using Tools;
+using Utils;
 
 namespace Sim;
 
 public class Context
 {
-    public readonly float TimeStep;
-    public readonly float SubStep;
-    public readonly int Substeps;
-    public readonly Vector2 Gravity;
-    public readonly TextureManager TextureManager;
+    public float TimeStep { get; init; }
+    public float SubStep { get; init; }
+    public int Substeps { get; init; }
+    public Vector2 Gravity { get; init; }
+    public TextureManager TextureManager { get; init; }
 
     private SaveState _saveState;
     public bool _gravityEnabled;
@@ -70,6 +71,19 @@ public class Context
         LineColliders = new();
     }
 
+    public void AddMassShape(MassShape shape)
+    {
+        MassShapes.Add(shape);
+    }
+
+    public void AddMassShapes(IEnumerable<MassShape> shapes)
+    {
+        foreach (var shape in shapes)
+        {
+            MassShapes.Add(shape);
+        }
+    }
+
     public void SaveCurrentState()
     {
         _saveState.LineColliders = new();
@@ -94,10 +108,7 @@ public class Context
         {
             LineColliders.Add(new LineCollider(c));
         }
-        foreach (var s in _saveState.MassShapes)
-        {
-            MassShapes.Add(new MassShape(s));
-        }
+        AddMassShapes(_saveState.MassShapes);
         Console.WriteLine("Loaded state");
     }
 
@@ -112,14 +123,23 @@ public class Context
         //MassShapes.Add(MassShape.Chain(Program.WinW / 2f - 100f, Program.WinH / 2f, Program.WinW / 2f + 100f, Program.WinH / 2f, 10f, 2, (false, false), this));
         //assShapes.Add(MassShape.Particle(Program.WinW / 2f, Program.WinH / 2f - 100f, 10f, this));
         // MassShapes.Add(MassShape.Cloth(x: 300f, y: 10f, width: 500f, height: 500f, mass: 0.7f, res: 42, stiffness: 1e5f, this));
-        MassShapes.Add(MassShape.SoftBall(Program.WinW / 2f - 300f, Program.WinH / 2f - 200f, 50f, 50f, 20, 1000f, 10f, this));
-        MassShapes.Add(MassShape.Box(Program.WinW / 2f, Program.WinH / 2f - 300f, 100f, 10f, this));
-        MassShapes.Add(MassShape.SoftBox(Program.WinW / 2f + 300f, Program.WinH / 2f - 200f, 150f, 20f, 1e4f, this));
-        MassShapes.Add(MassShape.HardBall(Program.WinW / 2f + 600f, Program.WinH / 2f - 300f, 50f, 35f, 13, this));
+        AddMassShape(MassShape.SoftBall(Program.WinW / 2f - 300f, Program.WinH / 2f - 200f, 50f, 50f, 20, 1000f, 10f, this));
+        AddMassShape(MassShape.Box(Program.WinW / 2f, Program.WinH / 2f - 300f, 100f, 10f, this));
+        AddMassShape(MassShape.SoftBox(Program.WinW / 2f + 300f, Program.WinH / 2f - 200f, 150f, 20f, 1e4f, this));
+        AddMassShape(MassShape.HardBall(Program.WinW / 2f + 600f, Program.WinH / 2f - 300f, 50f, 35f, 13, this));
     }
 
     public void LoadDemoScenarioTwo()
     {
-        MassShapes.Add(MassShape.Cloth(x: 500f, y: 10f, width: 500f, height: 500f, mass: 0.7f, res: 42, stiffness: 1e5f, this));
+        AddMassShape(MassShape.Cloth(
+            x: UnitConv.PixelsToMeters(500f),
+            y: UnitConv.PixelsToMeters(10f),
+            width: UnitConv.PixelsToMeters(500f),
+            height: UnitConv.PixelsToMeters(500f),
+            mass: 0.7f,
+            res: 42,
+            stiffness: 1e5f,
+            this
+        ));
     }
 }

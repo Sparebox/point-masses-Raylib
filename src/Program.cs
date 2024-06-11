@@ -5,6 +5,7 @@ using Physics;
 using Raylib_cs;
 using rlImGui_cs;
 using Tools;
+using Utils;
 using static Raylib_cs.Raylib;
 using static Tools.Spawn;
 
@@ -12,8 +13,8 @@ namespace Sim;
 
 public class Program 
 {   
-    public const int WinW = 800;
-    public const int WinH = 450;
+    public const int WinW = 1600;
+    public const int WinH = 900;
     public const int TargetFPS = 165;
     public const float QuadTreeUpdateSeconds = 0.1f;
 
@@ -44,18 +45,22 @@ public class Program
     {
         InitWindow(WinW, WinH, "Point-masses");
         SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
-        Context context = new(timeStep: 1f / 60f, 13, gravity: new(0f, Utils.UnitConversion.MetersToPixels(9.81f)))
+        float winWidthMeters = UnitConv.PixelsToMeters(WinW);
+        float winHeightMeters = UnitConv.PixelsToMeters(WinH);
+        Context context = new(timeStep: 1f / 60f, 13, gravity: new(0f, 9.81f))
         {
             LineColliders = {
-            new(0f, 0f, WinW, 0f),
-            new(0f, 0f, 0f, WinH),
-            new(WinW, 0f, WinW, WinH),
-            new(0f, WinH, WinW, WinH),
-            //new(0f, 900f, 1600f, 200f)
+            new(0f, 0f, winWidthMeters, 0f),
+            new(0f, 0f, 0f, winHeightMeters),
+            new(winWidthMeters, 0f, winWidthMeters, winHeightMeters),
+            new(0f, winHeightMeters, winWidthMeters, winHeightMeters),
             }
         };
         context.SelectedTool = new PullCom(context);
-        context.QuadTree = new Entities.QuadTree(new Vector2(WinW / 2f, WinH / 2f), new Vector2(WinW, WinH));
+        context.QuadTree = new Entities.QuadTree(
+            UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
+            UnitConv.PixelsToMeters(new Vector2(WinW, WinH))
+        );
 
         context.SaveCurrentState();
         return context;
@@ -81,7 +86,7 @@ public class Program
                 MassShape.HandleCollisions(_context);
             }
             _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
-            _editor.Update();
+            //_editor.Update();
             _accumulator -= _context.TimeStep;
         }
     }
@@ -105,7 +110,7 @@ public class Program
             _context.QuadTree.Draw();
         }
         _context.SelectedTool.Draw();
-        _editor.Draw();
+        //_editor.Draw();
         DrawInfo(); // GUI
         
         rlImGui.End();

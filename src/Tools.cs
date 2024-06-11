@@ -3,6 +3,7 @@ using System.Text;
 using Physics;
 using Raylib_cs;
 using Sim;
+using Utils;
 using static Raylib_cs.Raylib;
 
 namespace Tools;
@@ -20,7 +21,7 @@ public enum ToolType
 
 public abstract class Tool
 {
-    public const float BaseRadiusChange = 10f;
+    public const float BaseRadiusChange = 0.1f;
     public const float RadiusChangeMult = 5f;
     public const float BaseAngleChange = 10f;
 
@@ -123,7 +124,7 @@ public class Spawn : Tool
 {
     private const float DefaultMass = 30f;
     private const int DefaultRes = 15;
-    private const float DefaultStiffness = 1e6f;
+    private const float DefaultStiffness = 1e2f;
     private const float DefaultGasAmt = 50f;
 
     public SpawnTarget _currentTarget;
@@ -150,7 +151,7 @@ public class Spawn : Tool
         _resolution = DefaultRes;
         _stiffness = DefaultStiffness;
         _gasAmount = DefaultGasAmt;
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, _mass, _context);
     }
 
@@ -164,7 +165,7 @@ public class Spawn : Tool
         {
             return;
         }
-        _context.MassShapes.Add(_shapeToSpawn);
+        _context.AddMassShape(_shapeToSpawn);
         _context.QuadTree.Insert(_shapeToSpawn);
         _shapeToSpawn = new MassShape(_shapeToSpawn);
     }
@@ -175,7 +176,7 @@ public class Spawn : Tool
         {
             return;
         }
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         Vector2 translation = mousePos - _shapeToSpawn.Centroid;
         _shapeToSpawn.Move(translation);
         _shapeToSpawn.Draw();
@@ -189,7 +190,7 @@ public class Spawn : Tool
         {
             return;
         }
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         switch (_currentTarget)
         {
             case SpawnTarget.Box:
@@ -235,7 +236,7 @@ public class Delete : Tool
         {
             return;
         }
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
         var shapes = _context.QuadTree.QueryShapes(area);
         if (!shapes.Any())
@@ -261,7 +262,7 @@ public class Delete : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, Radius, Color.Yellow);
+        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
     }
 }
 
@@ -282,7 +283,7 @@ public class PullCom : Tool
         {
             return;
         }
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
         var shapes = _context.QuadTree.QueryShapes(area);
         if (!shapes.Any())
@@ -303,11 +304,11 @@ public class PullCom : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, Radius, Color.Yellow);
+        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
         if (_shouldVisualize)
         {
             _shouldVisualize = false;
-            DrawLine((int) _centerOfMass.X, (int) _centerOfMass.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
+            DrawLine(UnitConv.MetersToPixels(_centerOfMass.X), UnitConv.MetersToPixels(_centerOfMass.Y), (int) mousePos.X, (int) mousePos.Y, Color.Red);
         }
     }
 }
@@ -330,7 +331,7 @@ public class Pull : Tool
         {
             return;
         }
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
         var points = _context.QuadTree.QueryPoints(area);
         if (!points.Any())
@@ -354,13 +355,13 @@ public class Pull : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, Radius, Color.Yellow);
+        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
         if (_shouldVisualize)
         {
             _shouldVisualize = false;
             foreach (var pos in _positions)
             {
-               DrawLine((int) pos.X, (int) pos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
+               DrawLine(UnitConv.MetersToPixels(pos.X), UnitConv.MetersToPixels(pos.Y), (int) mousePos.X, (int) mousePos.Y, Color.Red);
             }
         }
     }
@@ -368,8 +369,8 @@ public class Pull : Tool
 
 public class Wind : Tool
 {
-    private const int MinForce = (int) 5e2;
-    private const int MaxForce = (int) 5e3; 
+    private const int MinForce = (int) 1e1;
+    private const int MaxForce = (int) 1e2; 
 
     public Wind(Context context)
     {
@@ -396,13 +397,13 @@ public class Wind : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        Utils.Graphics.DrawArrow(mousePos.X, mousePos.Y, mousePos.X + (int) (100f * Direction.X), mousePos.Y + (int) (100f * Direction.Y), Color.Yellow);
+        Graphics.DrawArrow(mousePos.X, mousePos.Y, mousePos.X + (int) (100f * Direction.X), mousePos.Y + (int) (100f * Direction.Y), Color.Yellow);
     }
 }
 
 public class Rotate : Tool
 {
-    private const float ForceAmount = 1e4f;
+    private const float ForceAmount = 1e2f;
 
     public Rotate(Context context)
     {
@@ -415,9 +416,8 @@ public class Rotate : Tool
         {
             return;
         }
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         var shapes = _context.QuadTree.QueryShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
-        //var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
         if (!shapes.Any())
         {
             return;
@@ -441,7 +441,7 @@ public class Rotate : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, Radius, Color.Yellow);
+        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
     }
 }
 
@@ -462,7 +462,7 @@ public class Ruler : Tool
             return;
         }
         Vector2 mousePos = GetMousePosition();
-        float len = Utils.UnitConversion.PixelsToMeters(Vector2.Distance(_startPos, mousePos));
+        float len = UnitConv.PixelsToMeters(Vector2.Distance(_startPos, mousePos));
         DrawText(string.Format("{0:0.00} m", len), (int) mousePos.X, (int) mousePos.Y + 20, 30, Color.Yellow);
         DrawLine((int) _startPos.X, (int) _startPos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Yellow);
     }

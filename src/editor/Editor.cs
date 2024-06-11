@@ -8,7 +8,7 @@ namespace Editing;
 
 public class Editor
 {
-    public float CursorSize { get; set; }
+    public float CursorRadius { get; set; }
 
     private readonly Context _context;
     private readonly Grid _grid;
@@ -19,7 +19,7 @@ public class Editor
         _context = context;
         _grid = new Grid(5, this);
         _selectedPointIndices = new();
-        CursorSize = 10f;
+        CursorRadius = 10f;
     }
 
     public void Draw()
@@ -33,7 +33,7 @@ public class Editor
         {
             try {
                 var mousePos = GetMousePosition();
-                ref var closestGridPoint = ref _grid.FindClosestGridPoint((uint) mousePos.X, (uint) mousePos.Y);
+                ref var closestGridPoint = ref _grid.GetClosestGridPoint((uint) mousePos.X, (uint) mousePos.Y);
                 closestGridPoint.IsSelected = true;
                 uint gridIndex = _grid.GetIndexFromPixel((uint) mousePos.X, (uint) mousePos.Y);
                 if (!_selectedPointIndices.Contains(gridIndex))
@@ -53,24 +53,21 @@ public class Editor
         if (IsMouseButtonReleased(MouseButton.Left)) // Execute editor action
         {
             var particles = CreateParticlesFromIndices();
-            foreach (var particle in particles)
-            {
-                _context.MassShapes.Add(particle);
-            }
+            _context.AddMassShapes(particles);
             _selectedPointIndices.Clear();
         }
     }
 
     private MassShape[] CreateParticlesFromIndices()
     {
-        var particles = new List<MassShape>();
+        var particles = new List<MassShape>(_selectedPointIndices.Count);
         foreach (var index in _selectedPointIndices)
         {
             var gridPoint = _grid.GridPoints[index];
             particles.Add(MassShape.Particle(
-                UnitConversion.MetersToPixels(gridPoint.Pos.X),
-                UnitConversion.MetersToPixels(gridPoint.Pos.Y),
-                CursorSize,
+                UnitConv.MetersToPixels(gridPoint.Pos.X),
+                UnitConv.MetersToPixels(gridPoint.Pos.Y),
+                PointMass.RadiusToMass(CursorRadius),
                 _context
             ));
         }
