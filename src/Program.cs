@@ -12,8 +12,8 @@ namespace Sim;
 
 public class Program 
 {   
-    public const int WinW = 1600;
-    public const int WinH = 900;
+    public const int WinW = 800;
+    public const int WinH = 450;
     public const int TargetFPS = 165;
     public const float QuadTreeUpdateSeconds = 0.1f;
 
@@ -81,6 +81,7 @@ public class Program
                 MassShape.HandleCollisions(_context);
             }
             _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
+            _editor.Update();
             _accumulator -= _context.TimeStep;
         }
     }
