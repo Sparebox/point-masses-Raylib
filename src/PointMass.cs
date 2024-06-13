@@ -11,11 +11,11 @@ namespace Physics;
 
 public class PointMass
 {
-    private static int _idCounter;
+    private static uint _idCounter;
     private readonly Context _context;
     public const float RadiusPerMassRatio = 0.01f;
 
-    public int Id { get; init; }
+    public uint Id { get; init; }
     public readonly bool _pinned;
     public Vector2 _visForce; // For force visualization
     public Vector2 Pos { get; set; }

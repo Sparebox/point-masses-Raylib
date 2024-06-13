@@ -240,12 +240,14 @@ public class MassShape
     private bool? _isRigid;
     private const float SpringDamping = 5e4f;
 
-    public MassShape(Context context, bool inflated) 
+    public MassShape(Context context, bool inflated = false) 
     {
         _context = context;
         _inflated = inflated;
         Id = _idCounter++;
         _toBeDeleted = false;
+        _points = new();
+        _constraints = new();
     }
 
     // Copy constructor
@@ -404,7 +406,7 @@ public class MassShape
         }
     }
 
-    public void DeletePoints(List<int> ids)
+    public void DeletePoints(List<uint> ids)
     {
         foreach (var id in ids)
         {
@@ -412,10 +414,10 @@ public class MassShape
         }
     }
 
-    public void DeletePoint(int id)
+    public void DeletePoint(uint id)
     {
-        List<int> constraintsToDelete = new();
-        int? pointToDelete = null;
+        List<uint> constraintsToDelete = new();
+        uint? pointToDelete = null;
         foreach (var p in _points)
         {
             if (p.Id != id)
@@ -631,8 +633,6 @@ public class MassShape
         float angle = MathF.PI / 2f;
         MassShape s = new(context, true)
         {
-            _points = new(),
-            _constraints = new(),
             _gasAmount = gasAmount
         };
         // Points
@@ -654,11 +654,7 @@ public class MassShape
     public static MassShape HardBall(float x, float y, float radius, float mass, int res, Context context)
     {
         float angle = MathF.PI / 2f;
-        MassShape s = new(context, false)
-        {
-            _points = new(),
-            _constraints = new()
-        };
+        MassShape s = new(context, false);
         // Points
         for (int i = 0; i < res; i++)
         {
@@ -685,11 +681,7 @@ public class MassShape
 
     public static MassShape Chain(float x0, float y0, float x1, float y1, float mass, int res, (bool, bool) pins, Context context)
     {
-        MassShape c = new(context, false)
-        {
-            _points = new(),
-            _constraints = new()
-        };
+        MassShape c = new(context, false);
         Vector2 start = new(x0, y0);
         Vector2 end = new(x1, y1);
         float len = Vector2.Distance(start, end);
@@ -726,11 +718,7 @@ public class MassShape
     {
         float metersPerConstraintW = width / res;
         float metersPerConstraintH = height / res;
-        MassShape c = new(context, false)
-        {
-            _points = new(),
-            _constraints = new()
-        };
+        MassShape c = new(context, false);
         // Points
         for (int col = 0; col < res; col++)
         {
@@ -776,12 +764,7 @@ public class MassShape
         {
             return null;
         }
-        MassShape c = new(context, false)
-        {
-            _points = new(),
-            _constraints = new()
-        };
-
+        MassShape c = new(context, false);
         // Points
         for (int i = 0; i < order + 1; i++)
         {
@@ -821,14 +804,13 @@ public class MassShape
     {
         MassShape c = new(context, false)
         {
-            _points = new() 
+            _points =  
             {
                 new(x - size / 2f, y - size / 2f, mass / 4f, false, context),
                 new(x - size / 2f, y + size / 2f, mass / 4f, false, context),
                 new(x + size / 2f, y + size / 2f, mass / 4f, false, context),
                 new(x + size / 2f, y - size / 2f, mass / 4f, false, context)
-            },
-            _constraints = new()
+            }
         };
         c._constraints.Add(new SpringConstraint(c._points[0], c._points[1], stiffness, SpringDamping));
         c._constraints.Add(new SpringConstraint(c._points[1], c._points[2], stiffness, SpringDamping));
@@ -842,8 +824,7 @@ public class MassShape
     {
         MassShape c = new(context, false)
         {
-            _points = new() { new(x, y, mass, false, context) },
-            _constraints = new()
+            _points = { new(x, y, mass, false, context) }
         };
         return c;
     }

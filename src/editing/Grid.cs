@@ -11,13 +11,25 @@ public class Grid
     public bool SnappingEnabled { get; set; }
     public GridPoint[] GridPoints { get; init; }
 
+    public struct GridPoint
+    {
+        public Vector2 Pos;
+        public bool IsSelected;
+
+        public GridPoint()
+        {
+            Pos = new Vector2();
+            IsSelected = false;
+        }
+    }
+
     private const float PointSize = 1f;
     private readonly Editor _editor;
     private readonly uint _pointsX;
     private readonly uint _pointsY;
-    private readonly int _pointsPerMeter;
+    private readonly uint _pointsPerMeter;
 
-    public Grid(int pointsPerMeter, Editor editor)
+    public Grid(uint pointsPerMeter, Editor editor)
     {
         _pointsPerMeter = pointsPerMeter;
         _editor = editor;
@@ -49,7 +61,7 @@ public class Grid
         }
     }
 
-    public void ResetSelectedPoints()
+    public void ClearSelectedPoints()
     {
         for (int i = 0; i < GridPoints.Length; i++)
         {
@@ -99,16 +111,5 @@ public class Grid
         var closestPoint = GetClosestPoint(xPixels, yPixels);
         return GetIndexFromPoint(closestPoint[0], closestPoint[1]);
     }
-
-    public struct GridPoint
-    {
-        public Vector2 Pos;
-        public bool IsSelected;
-
-        public GridPoint()
-        {
-            Pos = new Vector2();
-            IsSelected = false;
-        }
-    }
+    
 }

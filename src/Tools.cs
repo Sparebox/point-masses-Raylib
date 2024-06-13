@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Text;
+using Editing;
 using Physics;
 using Raylib_cs;
 using Sim;
@@ -17,6 +18,7 @@ public enum ToolType
     Spawn,
     Ruler,
     Delete,
+    Editor,
 }
 
 public abstract class Tool
@@ -30,7 +32,7 @@ public abstract class Tool
 
     protected Context _context;
 
-    abstract public void Use();
+    abstract public void Update();
     abstract public void Draw();
 
     public void ChangeRadius(float change)
@@ -88,6 +90,9 @@ public abstract class Tool
                 break;
             case ToolType.Delete :
                 context.SelectedTool = new Delete(context);
+                break;
+            case ToolType.Editor :
+                context.SelectedTool = context.Editor;
                 break;
         }
     }
@@ -155,7 +160,7 @@ public class Spawn : Tool
         _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, _mass, _context);
     }
 
-    public override void Use() 
+    public override void Update() 
     {
         if (!IsMouseButtonPressed(MouseButton.Left))
         {
@@ -230,7 +235,7 @@ public class Delete : Tool
         _context = context;
     }
 
-    public override void Use()
+    public override void Update()
     {
         if (!IsMouseButtonDown(MouseButton.Left))
         {
@@ -244,7 +249,7 @@ public class Delete : Tool
             return;
         }
         shapes.RemoveWhere(s => !CheckCollisionBoxes(area, s.AABB));
-        List<int> pointsToDelete = new();
+        List<uint> pointsToDelete = new();
         foreach (var shape in shapes)
         {
             foreach (var p in shape._points)
@@ -277,7 +282,7 @@ public class PullCom : Tool
         _context = context;
     }
 
-    public override void Use()
+    public override void Update()
     {
         if (!IsMouseButtonDown(MouseButton.Left))
         {
@@ -325,7 +330,7 @@ public class Pull : Tool
         _positions = new();
     }
 
-    public override void Use()
+    public override void Update()
     {
         if (!IsMouseButtonDown(MouseButton.Left))
         {
@@ -378,7 +383,7 @@ public class Wind : Tool
         Direction = new(1f, 0f);
     }
 
-    public override void Use()
+    public override void Update()
     {
         if (!IsMouseButtonDown(MouseButton.Left))
         {
@@ -410,7 +415,7 @@ public class Rotate : Tool
         _context = context;
     }
 
-    public override void Use()
+    public override void Update()
     {
         if (!IsMouseButtonDown(MouseButton.Left))
         {
@@ -467,7 +472,7 @@ public class Ruler : Tool
         DrawLine((int) _startPos.X, (int) _startPos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Yellow);
     }
 
-    public override void Use()
+    public override void Update()
     {
         _shouldVisualize = IsMouseButtonDown(MouseButton.Left) && _context._toolEnabled;
         if (IsMouseButtonReleased(MouseButton.Left) || IsMouseButtonPressed(MouseButton.Left))

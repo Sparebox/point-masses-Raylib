@@ -5,6 +5,7 @@ using Entities;
 using Textures;
 using Tools;
 using Utils;
+using Editing;
 
 namespace Sim;
 
@@ -15,6 +16,7 @@ public class Context
     public int Substeps { get; init; }
     public Vector2 Gravity { get; init; }
     public TextureManager TextureManager { get; init; }
+    public Editor Editor { get; init; }
 
     private SaveState _saveState;
     public bool _gravityEnabled;
@@ -69,6 +71,7 @@ public class Context
         _simPaused = true;
         MassShapes = new();
         LineColliders = new();
+        Editor = new(this);
     }
 
     public void AddMassShape(MassShape shape)

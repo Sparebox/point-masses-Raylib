@@ -1,16 +1,17 @@
+using System.Numerics;
 using Physics;
 using Raylib_cs;
 using Sim;
+using Tools;
 using Utils;
 using static Raylib_cs.Raylib;
 
 namespace Editing;
 
-public class Editor
+public class Editor : Tool
 {
     public float CursorRadius { get; set; }
 
-    private readonly Context _context;
     private readonly Grid _grid;
     private readonly LinkedList<uint> _selectedPointIndices;
 
@@ -22,12 +23,12 @@ public class Editor
         CursorRadius = 10f;
     }
 
-    public void Draw()
+    public override void Draw()
     {
         _grid.Draw();
     }
 
-    public void Update()
+    public override void Update()
     {
         if (IsMouseButtonDown(MouseButton.Left))
         {
@@ -48,12 +49,12 @@ public class Editor
         }
         else
         {
-            _grid.ResetSelectedPoints();
+            _grid.ClearSelectedPoints();
         }
         if (IsMouseButtonReleased(MouseButton.Left)) // Execute editor action
         {
-            var particles = CreateParticlesFromIndices();
-            _context.AddMassShapes(particles);
+            var loop = CreateLoopFromIndices(5f);
+            _context.AddMassShape(loop);
             _selectedPointIndices.Clear();
         }
     }
@@ -65,13 +66,29 @@ public class Editor
         {
             var gridPoint = _grid.GridPoints[index];
             particles.Add(MassShape.Particle(
-                UnitConv.MetersToPixels(gridPoint.Pos.X),
-                UnitConv.MetersToPixels(gridPoint.Pos.Y),
-                PointMass.RadiusToMass(CursorRadius),
+                gridPoint.Pos.X,
+                gridPoint.Pos.Y,
+                PointMass.RadiusToMass(UnitConv.PixelsToMeters(CursorRadius)),
                 _context
             ));
         }
         return particles.ToArray();   
     }
 
+    private MassShape CreateLoopFromIndices(float mass)
+    {
+        MassShape loop = new(_context);
+        // Points
+        foreach (var index in _selectedPointIndices)
+        {
+            Vector2 pos = _grid.GridPoints[index].Pos;
+            loop._points.Add(new(pos.X, pos.Y, mass, false, _context));
+        }
+        // Constraints
+        for (int i = 0; i < loop._points.Count; i++)
+        {
+            loop._constraints.Add(new RigidConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count]));
+        }
+        return loop;
+    }
 }

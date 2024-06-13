@@ -21,12 +21,11 @@ public class Program
     private static float _accumulator;
     private static float _quadTreeAccumulator;
     private static Context _context;
-    private static Editor _editor;
+
 
     public static void Main() 
     {
         _context = Init();
-        _editor = new Editor(_context);
         rlImGui.Setup(true);
         while (!WindowShouldClose())
         {
@@ -86,7 +85,6 @@ public class Program
                 MassShape.HandleCollisions(_context);
             }
             _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
-            //_editor.Update();
             _accumulator -= _context.TimeStep;
         }
     }
@@ -110,7 +108,6 @@ public class Program
             _context.QuadTree.Draw();
         }
         _context.SelectedTool.Draw();
-        //_editor.Draw();
         DrawInfo(); // GUI
         
         rlImGui.End();
@@ -144,13 +141,9 @@ public class Program
         {
             _context._simPaused = !_context._simPaused;
         }
-        if (IsKeyPressed(KeyboardKey.C))
-        {
-            _context.LineColliders.Add(new(0f, 900f, 1600f, 200f));
-        }
         if (_context._toolEnabled)
         {
-            _context.SelectedTool.Use();
+            _context.SelectedTool.Update();
         }
         // Temporary demo keys
         if (IsKeyPressed(KeyboardKey.One))
