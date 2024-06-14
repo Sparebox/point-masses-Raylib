@@ -1,11 +1,12 @@
-﻿#pragma warning disable IDE0130 // Namespace does not match folder structure
-using System.Numerics;
+﻿using System.Numerics;
+using Editing;
 using ImGuiNET;
 using Sim;
 using Tools;
 using static Raylib_cs.Raylib;
 using static Tools.Spawn;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace UI;
 #pragma warning restore IDE0130 // Namespace does not match folder structure
 
@@ -39,46 +40,18 @@ public class Gui
         ImGui.InputFloat("Global kinetic friction coeff", ref context._globalKineticFrictionCoeff);
         ImGui.InputFloat("Global static friction coeff", ref context._globalStaticFrictionCoeff);
         ImGui.PushItemWidth(100f);
-        if (ImGui.Combo("Tool", ref context._selectedToolIndex, Tool.ToolsToComboString()))
+        if (ImGui.Combo("Tool", ref context._selectedToolIndex, Tool.ToolComboString))
         {
             Tool.ChangeToolType(context);
         }
-        if (context.SelectedTool.GetType().Equals(typeof(Spawn)))
+        switch (context.SelectedTool)
         {
-            var spawnTool = (Spawn) context.SelectedTool;
-            if (ImGui.Combo("Spawn target", ref context._selectedSpawnTargetIndex, TargetsToComboString()))
-            {
-                spawnTool.UpdateSpawnTarget();
-            }
-            if (ImGui.InputFloat("Mass", ref spawnTool._mass))
-            {
-                spawnTool._mass = MathF.Abs(spawnTool._mass);
-                spawnTool.UpdateSpawnTarget();
-            }
-            if (spawnTool._currentTarget == SpawnTarget.Ball || spawnTool._currentTarget == SpawnTarget.SoftBall)
-            {
-                if (ImGui.InputInt("Resolution", ref spawnTool._resolution))
-                {
-                    spawnTool._resolution = Math.Abs(spawnTool._resolution);
-                    spawnTool.UpdateSpawnTarget();
-                }
-            }
-            if (spawnTool._currentTarget == SpawnTarget.SoftBox || spawnTool._currentTarget == SpawnTarget.SoftBall)
-            {
-                if (ImGui.InputFloat("Stiffness", ref spawnTool._stiffness))
-                {
-                    spawnTool._stiffness = MathF.Abs(spawnTool._stiffness);
-                    spawnTool.UpdateSpawnTarget();
-                }
-                if (spawnTool._currentTarget == SpawnTarget.SoftBall)
-                {
-                    if (ImGui.InputFloat("Gas amount", ref spawnTool._gasAmount))
-                    {
-                        spawnTool._gasAmount = MathF.Abs(spawnTool._gasAmount);
-                        spawnTool.UpdateSpawnTarget();
-                    }
-                }
-            }
+            case Spawn:
+                ShowSpawnToolOptions(context);
+                break;
+            case Editor:
+                ShowEditorOptions(context);
+                break;
         }
         if (ImGui.Button("Delete all"))
         {
@@ -96,5 +69,49 @@ public class Gui
             context._toolEnabled = true;
         }
         ImGui.End();
+    }
+
+    private static void ShowSpawnToolOptions(Context context)
+    {
+        var spawnTool = (Spawn) context.SelectedTool;
+        if (ImGui.Combo("Spawn target", ref context._selectedSpawnTargetIndex, TargetsToComboString()))
+        {
+            spawnTool.UpdateSpawnTarget();
+        }
+        if (ImGui.InputFloat("Mass", ref spawnTool._mass))
+        {
+            spawnTool._mass = MathF.Abs(spawnTool._mass);
+            spawnTool.UpdateSpawnTarget();
+        }
+        if (spawnTool._currentTarget == SpawnTarget.Ball || spawnTool._currentTarget == SpawnTarget.SoftBall)
+        {
+            if (ImGui.InputInt("Resolution", ref spawnTool._resolution))
+            {
+                spawnTool._resolution = Math.Abs(spawnTool._resolution);
+                spawnTool.UpdateSpawnTarget();
+            }
+        }
+        if (spawnTool._currentTarget == SpawnTarget.SoftBox || spawnTool._currentTarget == SpawnTarget.SoftBall)
+        {
+            if (ImGui.InputFloat("Stiffness", ref spawnTool._stiffness))
+            {
+                spawnTool._stiffness = MathF.Abs(spawnTool._stiffness);
+                spawnTool.UpdateSpawnTarget();
+            }
+            if (spawnTool._currentTarget == SpawnTarget.SoftBall)
+            {
+                if (ImGui.InputFloat("Gas amount", ref spawnTool._gasAmount))
+                {
+                    spawnTool._gasAmount = MathF.Abs(spawnTool._gasAmount);
+                    spawnTool.UpdateSpawnTarget();
+                }
+            }
+        }
+    }
+
+    private static void ShowEditorOptions(Context context)
+    {
+        var editor = (Editor) context.SelectedTool;
+        ImGui.Combo("Editor action", ref editor._selectedActionIndex, editor.ActionComboString);
     }
 }

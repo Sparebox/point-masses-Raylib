@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Text;
 using Physics;
 using Raylib_cs;
 using Sim;
@@ -12,14 +13,31 @@ namespace Editing;
 
 public class Editor : Tool
 {
+    public int _selectedActionIndex;
+    public EditorAction SelectedAction { 
+        get 
+        {
+            EditorAction[] actions = (EditorAction[]) Enum.GetValues(typeof(EditorAction));
+            return actions[_selectedActionIndex];
+        } 
+    }
+    public string ActionComboString { get; init; }
     private readonly Grid _grid;
     private readonly LinkedList<uint> _selectedPointIndices;
+
+    public enum EditorAction
+    {
+        CreateParticles,
+        CreateLoop
+    }
 
     public Editor(Context context)
     {
         _context = context;
         _grid = new Grid(5);
         _selectedPointIndices = new();
+        ActionComboString = GetActionComboString();
+        _selectedActionIndex = 0;
     }
 
     public override void Draw()
@@ -54,13 +72,20 @@ public class Editor : Tool
         }
         if (IsMouseButtonReleased(MouseButton.Left)) // Execute editor action
         {
-            var loop = CreateLoopFromIndices(5f);
-            _context.AddMassShape(loop);
+            switch (SelectedAction)
+            {
+                case EditorAction.CreateParticles:
+                    CreateParticlesFromIndices();
+                    break;
+                case EditorAction.CreateLoop:
+                    CreateLoopFromIndices(PointMass.RadiusToMass(Radius));
+                    break;
+            }
             _selectedPointIndices.Clear();
         }
     }
 
-    private MassShape[] CreateParticlesFromIndices()
+    private void CreateParticlesFromIndices()
     {
         var particles = new List<MassShape>(_selectedPointIndices.Count);
         foreach (var index in _selectedPointIndices)
@@ -69,14 +94,14 @@ public class Editor : Tool
             particles.Add(MassShape.Particle(
                 gridPoint.Pos.X,
                 gridPoint.Pos.Y,
-                PointMass.RadiusToMass(UnitConv.MetersToPixels(Radius)),
+                PointMass.RadiusToMass(Radius),
                 _context
             ));
         }
-        return particles.ToArray();   
+        _context.AddMassShapes(particles);  
     }
 
-    private MassShape CreateLoopFromIndices(float mass)
+    private void CreateLoopFromIndices(float mass)
     {
         MassShape loop = new(_context);
         // Points
@@ -90,6 +115,17 @@ public class Editor : Tool
         {
             loop._constraints.Add(new RigidConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count]));
         }
-        return loop;
+        _context.AddMassShape(loop);
+    }
+
+    private static string GetActionComboString()
+    {
+        StringBuilder sb = new();
+        EditorAction[] actions = (EditorAction[]) Enum.GetValues(typeof(EditorAction));
+        foreach (var action in actions)
+        {
+            sb.Append(action.ToString() + "\0");
+        }
+        return sb.ToString();
     }
 }

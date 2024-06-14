@@ -313,8 +313,8 @@ public class MassShape
                     Graphics.DrawArrow(line._start, line._end, Color.Magenta);
                 }
             }
-            Vector2 COM = CenterOfMass;
-            Vector2 totalVisForce = TotalVisForce;
+            Vector2 COM = UnitConv.MetersToPixels(CenterOfMass);
+            Vector2 totalVisForce = UnitConv.MetersToPixels(TotalVisForce);
             Graphics.DrawArrow(COM, COM + totalVisForce * 1e-2f, Color.Magenta);
         }
         if (_context._drawBodyInfo)
@@ -374,6 +374,8 @@ public class MassShape
                 line._start.Y = p1.Pos.Y + 0.5f * P1ToP2.Y;
                 line._end.X = p1.Pos.X + 0.5f * P1ToP2.X + force.X * PressureVis.VisForceMult;
                 line._end.Y = p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y * PressureVis.VisForceMult;
+                line._start = UnitConv.MetersToPixels(line._start);
+                line._end = UnitConv.MetersToPixels(line._end);
                 _pressureVis._lines[i] = line;
             }
         }

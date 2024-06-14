@@ -1,6 +1,5 @@
 using System.Numerics;
 using System.Text;
-using Editing;
 using Physics;
 using Raylib_cs;
 using Sim;
@@ -26,11 +25,15 @@ public enum ToolType
 public abstract class Tool
 {
     public const float BaseRadiusChange = 0.1f;
-    public const float RadiusChangeMult = 5f;
+    public const float RadiusChangeMultShift = 2f;
+    public const float RadiusChangeMultCtrl = 0.1f;
     public const float BaseAngleChange = 10f;
+    public const float DefaultRadius = 0.1f;
 
-    public static float Radius { get; set; }
+    public static ToolType[] ToolTypes => (ToolType[]) Enum.GetValues(typeof(ToolType));
+    public static float Radius { get; set; } = DefaultRadius;
     public static Vector2 Direction { get; set; } = new(1f, 0f);
+    public static string ToolComboString { get; } = ToolsToComboString();
 
     protected Context _context;
 
@@ -45,7 +48,11 @@ public abstract class Tool
         }
         if (IsKeyDown(KeyboardKey.LeftShift))
         {
-            change *= RadiusChangeMult;
+            change *= RadiusChangeMultShift;
+        }
+        else if (IsKeyDown(KeyboardKey.LeftControl))
+        {
+            change *= RadiusChangeMultCtrl;
         }
         Radius += change;
         if (Radius < 0f)
@@ -68,38 +75,36 @@ public abstract class Tool
 
     public static void ChangeToolType(Context context)
     {
-        ToolType[] toolTypes = (ToolType[]) Enum.GetValues(typeof(ToolType));
-        ToolType newTool = toolTypes[context._selectedToolIndex];
-        switch (newTool)
+        switch (ToolTypes[context._selectedToolIndex])
         {
             case ToolType.PullCom :
-                context.SelectedTool = new PullCom(context);
+                context.SelectedTool = context.Tools[(int) ToolType.PullCom];
                 break;
             case ToolType.Pull :
-                context.SelectedTool = new Pull(context);
+                context.SelectedTool = context.Tools[(int) ToolType.Pull];
                 break;
             case ToolType.Wind :
-                context.SelectedTool = new Wind(context);
+                context.SelectedTool = context.Tools[(int) ToolType.Wind];
                 break;
             case ToolType.Rotate :
-                context.SelectedTool = new Rotate(context);
+                context.SelectedTool = context.Tools[(int) ToolType.Rotate];
                 break;
             case ToolType.Spawn :
-                context.SelectedTool = new Spawn(context);
+                context.SelectedTool = context.Tools[(int) ToolType.Spawn];
                 break;
             case ToolType.Ruler :
-                context.SelectedTool = new Ruler(context);
+                context.SelectedTool = context.Tools[(int) ToolType.Ruler];
                 break;
             case ToolType.Delete :
-                context.SelectedTool = new Delete(context);
+                context.SelectedTool = context.Tools[(int) ToolType.Delete];
                 break;
             case ToolType.Editor :
-                context.SelectedTool = context.Editor;
+                context.SelectedTool = context.Tools[(int) ToolType.Editor];
                 break;
         }
     }
 
-    public static string ToolsToComboString()
+    private static string ToolsToComboString()
     {
         StringBuilder sb = new();
         ToolType[] toolTypes = (ToolType[]) Enum.GetValues(typeof(ToolType));

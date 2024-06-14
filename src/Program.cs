@@ -1,6 +1,4 @@
 ﻿using System.Numerics;
-using Editing;
-using ImGuiNET;
 using Physics;
 using Raylib_cs;
 using rlImGui_cs;
@@ -8,7 +6,6 @@ using Tools;
 using UI;
 using Utils;
 using static Raylib_cs.Raylib;
-using static Tools.Spawn;
 
 #pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Sim;
@@ -149,13 +146,9 @@ public class Program
             _context.SelectedTool.Update();
         }
         // Temporary demo keys
-        if (IsKeyPressed(KeyboardKey.One))
+        if (IsKeyPressed(KeyboardKey.C))
         {
-            _context.LoadDemoScenarioOne();
-        }
-        if (IsKeyPressed(KeyboardKey.Two))
-        {
-            _context.LoadDemoScenarioTwo();
+            _context.LoadClothScenario();
         }
         // Mouse
         if (GetMouseWheelMoveV().Y > 0f)
