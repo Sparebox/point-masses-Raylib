@@ -5,7 +5,9 @@ using Sim;
 using Utils;
 using static Raylib_cs.Raylib;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Physics;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class MassShape
 {
@@ -70,20 +72,12 @@ public class MassShape
     {
         get
         {
-            if (IsRigid && _angularMass.HasValue) 
-            {
-                return (float) _angularMass;
-            }
             Vector2 COM = CenterOfMass;
             float angularMass = 0f;
             foreach (var p in _points)
             {
                 float distSq = Vector2.DistanceSquared(COM, p.Pos);
                 angularMass += p.Mass * distSq;
-            }
-            if (IsRigid)
-            {
-                _angularMass = angularMass;
             }
             return angularMass;
         }
@@ -103,27 +97,6 @@ public class MassShape
         get
         {
             return AngularMass * AngVel;
-        }
-    }
-
-    public bool IsRigid
-    {
-        get
-        {
-            if (_isRigid.HasValue) 
-            {
-                return _isRigid.Value;
-            }
-            foreach (var c in _constraints)
-            {
-                if (c.GetType() == typeof(SpringConstraint))
-                {
-                    _isRigid = false;
-                    return _isRigid.Value;
-                }
-            }
-            _isRigid = true;
-            return _isRigid.Value;
         }
     }
 

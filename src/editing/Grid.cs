@@ -1,10 +1,13 @@
 using System.Numerics;
 using Raylib_cs;
 using Sim;
+using Tools;
 using Utils;
 using static Raylib_cs.Raylib;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Editing;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class Grid
 {
@@ -24,15 +27,13 @@ public class Grid
     }
 
     private const float PointSize = 1f;
-    private readonly Editor _editor;
     private readonly uint _pointsX;
     private readonly uint _pointsY;
     private readonly uint _pointsPerMeter;
 
-    public Grid(uint pointsPerMeter, Editor editor)
+    public Grid(uint pointsPerMeter)
     {
         _pointsPerMeter = pointsPerMeter;
-        _editor = editor;
         _pointsX = (uint) float.Ceiling(UnitConv.PixelsToMeters(Program.WinW) * pointsPerMeter);
         _pointsY = (uint) float.Ceiling(UnitConv.PixelsToMeters(Program.WinH) * pointsPerMeter);
 
@@ -55,7 +56,7 @@ public class Grid
             DrawCircleLines(
                 UnitConv.MetersToPixels(point.Pos.X),
                 UnitConv.MetersToPixels(point.Pos.Y),
-                point.IsSelected ? _editor.CursorRadius : PointSize,
+                point.IsSelected ? 5f * PointSize : PointSize,
                 Color.White
             );
         }

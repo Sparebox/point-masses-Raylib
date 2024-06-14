@@ -6,26 +6,27 @@ using Tools;
 using Utils;
 using static Raylib_cs.Raylib;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Editing;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class Editor : Tool
 {
-    public float CursorRadius { get; set; }
-
     private readonly Grid _grid;
     private readonly LinkedList<uint> _selectedPointIndices;
 
     public Editor(Context context)
     {
         _context = context;
-        _grid = new Grid(5, this);
+        _grid = new Grid(5);
         _selectedPointIndices = new();
-        CursorRadius = 10f;
     }
 
     public override void Draw()
     {
         _grid.Draw();
+        Vector2 mousePos = GetMousePosition();
+        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
     }
 
     public override void Update()
@@ -68,7 +69,7 @@ public class Editor : Tool
             particles.Add(MassShape.Particle(
                 gridPoint.Pos.X,
                 gridPoint.Pos.Y,
-                PointMass.RadiusToMass(UnitConv.PixelsToMeters(CursorRadius)),
+                PointMass.RadiusToMass(UnitConv.MetersToPixels(Radius)),
                 _context
             ));
         }
