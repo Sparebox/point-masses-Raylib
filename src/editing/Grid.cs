@@ -12,7 +12,7 @@ namespace Editing;
 public class Grid
 {
     public bool SnappingEnabled { get; set; }
-    public GridPoint[] GridPoints { get; init; }
+    public GridPoint[] GridPoints { get; set; }
 
     public struct GridPoint
     {
@@ -26,16 +26,32 @@ public class Grid
         }
     }
 
-    private const float PointSize = 1f;
-    private readonly uint _pointsX;
-    private readonly uint _pointsY;
-    private readonly uint _pointsPerMeter;
+    public int _pointsPerMeter;
+    private const int PointSize = 1;
+    private uint _pointsX;
+    private uint _pointsY;
 
-    public Grid(uint pointsPerMeter)
+    public Grid(int pointsPerMeter) => SetGridScale(pointsPerMeter);
+
+    public void Draw()
+    {
+        foreach (var point in GridPoints)
+        {
+            int pointSize = point.IsSelected ? 5 * PointSize : PointSize;
+            DrawCircleLines(
+                UnitConv.MetersToPixels(point.Pos.X),
+                UnitConv.MetersToPixels(point.Pos.Y),
+                pointSize,
+                Color.White
+            );
+        }
+    }
+
+    public void SetGridScale(int pointsPerMeter)
     {
         _pointsPerMeter = pointsPerMeter;
-        _pointsX = (uint) float.Ceiling(UnitConv.PixelsToMeters(Program.WinW) * pointsPerMeter);
-        _pointsY = (uint) float.Ceiling(UnitConv.PixelsToMeters(Program.WinH) * pointsPerMeter);
+        _pointsX = (uint) float.Ceiling(UnitConv.PixelsToMeters(Program.WinW) * _pointsPerMeter);
+        _pointsY = (uint) float.Ceiling(UnitConv.PixelsToMeters(Program.WinH) * _pointsPerMeter);
 
         GridPoints = new GridPoint[_pointsX * _pointsY];
 
@@ -43,22 +59,9 @@ public class Grid
         {
             for (uint x = 0; x < _pointsX; x++)
             {
-                GridPoints[GetIndexFromPoint(x, y)].Pos.X = (float) x / pointsPerMeter;
-                GridPoints[GetIndexFromPoint(x, y)].Pos.Y = (float) y / pointsPerMeter;
+                GridPoints[GetIndexFromPoint(x, y)].Pos.X = (float) x / _pointsPerMeter;
+                GridPoints[GetIndexFromPoint(x, y)].Pos.Y = (float) y / _pointsPerMeter;
             }
-        }
-    }
-
-    public void Draw()
-    {
-        foreach (var point in GridPoints)
-        {
-            DrawCircleLines(
-                UnitConv.MetersToPixels(point.Pos.X),
-                UnitConv.MetersToPixels(point.Pos.Y),
-                point.IsSelected ? 5f * PointSize : PointSize,
-                Color.White
-            );
         }
     }
 

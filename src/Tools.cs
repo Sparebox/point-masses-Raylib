@@ -24,11 +24,11 @@ public enum ToolType
 
 public abstract class Tool
 {
-    public const float BaseRadiusChange = 0.1f;
+    public const float BaseRadiusChange = 0.01f;
     public const float RadiusChangeMultShift = 2f;
     public const float RadiusChangeMultCtrl = 0.1f;
     public const float BaseAngleChange = 10f;
-    public const float DefaultRadius = 0.1f;
+    public const float DefaultRadius = 0.05f;
 
     public static ToolType[] ToolTypes => (ToolType[]) Enum.GetValues(typeof(ToolType));
     public static float Radius { get; set; } = DefaultRadius;
@@ -134,10 +134,10 @@ public abstract class Tool
 
 public class Spawn : Tool
 {
+    public const float DefaultStiffness = 1e2f;
+    public const float DefaultGasAmt = 100f;
     private const float DefaultMass = 30f;
     private const int DefaultRes = 15;
-    private const float DefaultStiffness = 1e2f;
-    private const float DefaultGasAmt = 50f;
 
     public SpawnTarget _currentTarget;
     public float _mass;
@@ -178,7 +178,6 @@ public class Spawn : Tool
             return;
         }
         _context.AddMassShape(_shapeToSpawn);
-        _context.QuadTree.Insert(_shapeToSpawn);
         _shapeToSpawn = new MassShape(_shapeToSpawn);
     }
 
@@ -267,6 +266,7 @@ public class Delete : Tool
                 }
             }
             shape.DeletePoints(pointsToDelete);
+            shape._inflated = false;
             pointsToDelete.Clear();
         }
     }

@@ -22,7 +22,10 @@ public class Editor : Tool
         } 
     }
     public string ActionComboString { get; init; }
-    private readonly Grid _grid;
+    public bool _connectLoop;
+    public bool _inflateLoop;
+    public float _gasAmount = Spawn.DefaultGasAmt;
+    public readonly Grid _grid;
     private readonly LinkedList<uint> _selectedPointIndices;
 
     public enum EditorAction
@@ -103,7 +106,10 @@ public class Editor : Tool
 
     private void CreateLoopFromIndices(float mass)
     {
-        MassShape loop = new(_context);
+        MassShape loop = new(_context, _inflateLoop)
+        {
+            _gasAmount = _gasAmount
+        };
         // Points
         foreach (var index in _selectedPointIndices)
         {
@@ -111,7 +117,7 @@ public class Editor : Tool
             loop._points.Add(new(pos.X, pos.Y, mass, false, _context));
         }
         // Constraints
-        for (int i = 0; i < loop._points.Count; i++)
+        for (int i = 0; i < (_connectLoop ? loop._points.Count : loop._points.Count - 1); i++)
         {
             loop._constraints.Add(new RigidConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count]));
         }

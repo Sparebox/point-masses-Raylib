@@ -112,6 +112,23 @@ public class Gui
     private static void ShowEditorOptions(Context context)
     {
         var editor = (Editor) context.SelectedTool;
+        if (ImGui.InputInt("Points per meter", ref editor._grid._pointsPerMeter))
+        {
+            editor._grid._pointsPerMeter = Math.Max(editor._grid._pointsPerMeter, 1);
+            editor._grid.SetGridScale(editor._grid._pointsPerMeter);
+        }
         ImGui.Combo("Editor action", ref editor._selectedActionIndex, editor.ActionComboString);
+        if (editor.SelectedAction == Editor.EditorAction.CreateLoop)
+        {
+            ImGui.Checkbox("Connect ends", ref editor._connectLoop);
+            if (editor._connectLoop)
+            {
+                ImGui.Checkbox("Inflate", ref editor._inflateLoop);
+                if (editor._inflateLoop)
+                {
+                    ImGui.InputFloat("Gas amount", ref editor._gasAmount);
+                }
+            }
+        }
     }
 }

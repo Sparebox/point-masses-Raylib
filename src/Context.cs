@@ -30,13 +30,13 @@ public class Context
     public float _globalRestitutionCoeff = 0.3f;
     public float _globalKineticFrictionCoeff = 1f;
     public float _globalStaticFrictionCoeff = 1.1f;
-    public QuadTree QuadTree { get; set; }
-    public HashSet<LineCollider> LineColliders { get; set; }
-    public HashSet<MassShape> MassShapes { get; set; }
-    public Tools.Tool SelectedTool { get; set; }
+    public QuadTree QuadTree { get; init; }
+    public HashSet<LineCollider> LineColliders { get; init; }
+    public HashSet<MassShape> MassShapes { get; init; }
+    public Tool SelectedTool { get; set; }
     public int _selectedToolIndex;
     public int _selectedSpawnTargetIndex;
-    public Tools.Tool[] Tools { get; set; }
+    public Tool[] Tools { get; init; }
     public int MassCount 
     {
         get 
@@ -73,7 +73,7 @@ public class Context
         _simPaused = true;
         MassShapes = new();
         LineColliders = new();
-        CreateTools();
+        Tools = CreateTools();
     }
 
     public void AddMassShape(MassShape shape)
@@ -117,7 +117,7 @@ public class Context
         Console.WriteLine("Loaded state");
     }
 
-    private void CreateTools()
+    private Tool[] CreateTools()
     {
         var tools = new Tool[Tool.ToolTypes.Length];
         tools[(int) ToolType.PullCom] = new PullCom(this);
@@ -128,7 +128,7 @@ public class Context
         tools[(int) ToolType.Ruler] = new Ruler(this);
         tools[(int) ToolType.Delete] = new Delete(this);
         tools[(int) ToolType.Editor] = new Editor(this);
-        Tools = tools;
+        return tools;
     }
     private struct SaveState
     {

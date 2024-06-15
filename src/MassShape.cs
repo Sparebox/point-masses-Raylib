@@ -81,7 +81,6 @@ public class MassShape
             }
             return angularMass;
         }
-        set => _angularMass = value;
     }
 
     public Vector2 Momentum
@@ -129,7 +128,7 @@ public class MassShape
                 PointMass p2 = _points[(i + 1) % _points.Count];
                 area += (p1.Pos.Y + p2.Pos.Y) * (p1.Pos.X - p2.Pos.X);
             }
-            return area / 2f;
+            return area * 0.5f;
         }
     }
 
@@ -197,20 +196,18 @@ public class MassShape
     
     public const float GasAmountMult = 1f;
     private readonly Context _context;
-    private readonly bool _inflated;
     private static int _idCounter;
 
     public int Id { get; init; }
     public List<Constraint> _constraints;
     public List<PointMass> _points;
     public bool _toBeDeleted;
+    public float _gasAmount;
+    public bool _inflated;
     private Vector2 _lastCenterOfMass;
     private float _lastAngle;
     private PressureVis _pressureVis;
     private float? _mass;
-    private float? _angularMass;
-    private float _gasAmount;
-    private bool? _isRigid;
     private const float SpringDamping = 5e4f;
 
     public MassShape(Context context, bool inflated = false) 
@@ -229,7 +226,6 @@ public class MassShape
         _context = shape._context;
         _inflated = shape._inflated;
         _gasAmount = shape._gasAmount;
-        _isRigid = shape._isRigid;
         _mass = shape._mass;
         Id = _idCounter++;
         _toBeDeleted = false;

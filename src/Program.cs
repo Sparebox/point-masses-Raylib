@@ -49,18 +49,17 @@ public class Program
         Context context = new(timeStep: 1f / 60f, 13, gravity: new(0f, 9.81f))
         {
             LineColliders = {
-            new(0f, 0f, winWidthMeters, 0f),
-            new(0f, 0f, 0f, winHeightMeters),
-            new(winWidthMeters, 0f, winWidthMeters, winHeightMeters),
-            new(0f, winHeightMeters, winWidthMeters, winHeightMeters),
-            }
+                new(0f, 0f, winWidthMeters, 0f),
+                new(0f, 0f, 0f, winHeightMeters),
+                new(winWidthMeters, 0f, winWidthMeters, winHeightMeters),
+                new(0f, winHeightMeters, winWidthMeters, winHeightMeters),
+            },
+            QuadTree = new Entities.QuadTree(
+                UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
+                UnitConv.PixelsToMeters(new Vector2(WinW, WinH))
+            )
         };
         context.SelectedTool = new PullCom(context);
-        context.QuadTree = new Entities.QuadTree(
-            UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
-            UnitConv.PixelsToMeters(new Vector2(WinW, WinH))
-        );
-
         context.SaveCurrentState();
         return context;
     }
