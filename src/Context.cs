@@ -1,23 +1,25 @@
-using System.Data;
 using System.Numerics;
 using Collision;
-using Entity;
 using Physics;
 using Entities;
 using Textures;
+using Utils;
 using Tools;
+using Editing;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Sim;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class Context
 {
-    public readonly float TimeStep;
-    public readonly float SubStep;
-    public readonly int Substeps;
-    public readonly Vector2 Gravity;
-    public readonly TextureManager TextureManager;
+    public float TimeStep { get; init; }
+    public float SubStep { get; init; }
+    public int Substeps { get; init; }
+    public Vector2 Gravity { get; init; }
+    public TextureManager TextureManager { get; init; }
 
-    private State _saveState;
+    private SaveState _saveState;
     public bool _gravityEnabled;
     public bool _drawForces;
     public bool _drawAABBS;
@@ -27,13 +29,14 @@ public class Context
     public bool _toolEnabled;
     public float _globalRestitutionCoeff = 0.3f;
     public float _globalKineticFrictionCoeff = 1f;
-    public float _globalStaticFrictionCoeff = 1f;
-    public QuadTree QuadTree { get; set; }
-    public HashSet<LineCollider> LineColliders { get; set; }
-    public HashSet<MassShape> MassShapes { get; set; }
+    public float _globalStaticFrictionCoeff = 1.1f;
+    public QuadTree QuadTree { get; init; }
+    public HashSet<LineCollider> LineColliders { get; init; }
+    public HashSet<MassShape> MassShapes { get; init; }
     public Tool SelectedTool { get; set; }
     public int _selectedToolIndex;
     public int _selectedSpawnTargetIndex;
+    public Tool[] Tools { get; init; }
     public int MassCount 
     {
         get 
@@ -70,9 +73,23 @@ public class Context
         _simPaused = true;
         MassShapes = new();
         LineColliders = new();
+        Tools = CreateTools();
     }
 
-    public void SaveState()
+    public void AddMassShape(MassShape shape)
+    {
+        MassShapes.Add(shape);
+    }
+
+    public void AddMassShapes(IEnumerable<MassShape> shapes)
+    {
+        foreach (var shape in shapes)
+        {
+            MassShapes.Add(shape);
+        }
+    }
+
+    public void SaveCurrentState()
     {
         _saveState.LineColliders = new();
         _saveState.MassShapes = new();
@@ -96,27 +113,40 @@ public class Context
         {
             LineColliders.Add(new LineCollider(c));
         }
-        foreach (var s in _saveState.MassShapes)
-        {
-            MassShapes.Add(new MassShape(s));
-        }
+        AddMassShapes(_saveState.MassShapes);
         Console.WriteLine("Loaded state");
     }
 
-    private struct State
+    private Tool[] CreateTools()
+    {
+        var tools = new Tool[Tool.ToolTypes.Length];
+        tools[(int) ToolType.PullCom] = new PullCom(this);
+        tools[(int) ToolType.Pull] = new Pull(this);
+        tools[(int) ToolType.Wind] = new Wind(this);
+        tools[(int) ToolType.Rotate] = new Rotate(this);
+        tools[(int) ToolType.Spawn] = new Spawn(this);
+        tools[(int) ToolType.Ruler] = new Ruler(this);
+        tools[(int) ToolType.Delete] = new Delete(this);
+        tools[(int) ToolType.Editor] = new Editor(this);
+        return tools;
+    }
+    private struct SaveState
     {
         public HashSet<LineCollider> LineColliders { get; set; }
         public HashSet<MassShape> MassShapes { get; set; }
     }
 
-    public void LoadDemoScenario()
+    public void LoadClothScenario()
     {
-        MassShapes.Add(MassShape.Chain(Program.WinW / 2f - 100f, Program.WinH / 2f, Program.WinW / 2f + 100f, Program.WinH / 2f, 10f, 2, (false, false), this));
-        MassShapes.Add(MassShape.Particle(Program.WinW / 2f, Program.WinH / 2f - 100f, 10f, this));
-        // MassShapes.Add(MassShape.Cloth(x: 300f, y: 10f, width: 500f, height: 500f, mass: 0.7f, res: 42, stiffness: 1e5f, this));
-        // MassShapes.Add(MassShape.SoftBall(Program.WinW / 2f - 300f, Program.WinH / 2f - 200f, 50f, 25f, 20, 1000f, 10f, this));
-        // MassShapes.Add(MassShape.Box(Program.WinW / 2f, Program.WinH / 2f - 300f, 100f, 10f, this));
-        // MassShapes.Add(MassShape.SoftBox(Program.WinW / 2f + 300f, Program.WinH / 2f - 200f, 150f, 20f, 1e4f, this));
-        // MassShapes.Add(MassShape.HardBall(Program.WinW / 2f + 600f, Program.WinH / 2f - 300f, 50f, 25f, 13, this));
+        AddMassShape(MassShape.Cloth(
+            x: UnitConv.PixelsToMeters(500f),
+            y: UnitConv.PixelsToMeters(10f),
+            width: UnitConv.PixelsToMeters(500f),
+            height: UnitConv.PixelsToMeters(500f),
+            mass: 0.7f,
+            res: 42,
+            stiffness: 1e5f,
+            this
+        ));
     }
 }

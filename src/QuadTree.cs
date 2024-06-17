@@ -2,9 +2,12 @@
 using Physics;
 using Raylib_cs;
 using Sim;
+using Utils;
 using static Raylib_cs.Raylib;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Entities;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class QuadTree
 {
@@ -16,6 +19,7 @@ public class QuadTree
     private readonly Vector2 _center;
     private readonly Vector2 _size;
     private readonly HashSet<MassShape> _massShapes;
+    // TODO: add points
     private bool _subdivided;
     private QuadTree _northEast;
     private QuadTree _southEast;
@@ -164,8 +168,20 @@ public class QuadTree
 
     public void Draw()
     {
-        DrawRectangleLines((int) (_center.X - _size.X / 2f), (int) (_center.Y - _size.Y / 2f), (int) _size.X, (int) _size.Y, Color.Red);
-        DrawText("Shapes: " + _massShapes.Count, (int) (_center.X - _size.X / 2f), (int) (_center.Y - _size.Y / 2f), 10, Color.Yellow);
+        DrawRectangleLines(
+            UnitConv.MetersToPixels(_center.X - _size.X / 2f),
+            UnitConv.MetersToPixels(_center.Y - _size.Y / 2f),
+            UnitConv.MetersToPixels(_size.X),
+            UnitConv.MetersToPixels(_size.Y),
+            Color.Red
+        );
+        DrawText(
+            $"Shapes: {_massShapes.Count}",
+            UnitConv.MetersToPixels(_center.X - _size.X / 2f),
+            UnitConv.MetersToPixels(_center.Y - _size.Y / 2f),
+            10,
+            Color.Yellow
+        );
         if (_subdivided)
         {
             _northEast.Draw();

@@ -2,7 +2,9 @@ using System.Numerics;
 using Collision;
 using static Raylib_cs.Raylib;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Entity;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class RotatingCollider : LineCollider
 {

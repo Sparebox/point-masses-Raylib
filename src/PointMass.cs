@@ -1,19 +1,23 @@
+using System.Data;
 using System.Numerics;
 using Collision;
 using Raylib_cs;
 using Sim;
+using Utils;
 using static Raylib_cs.Raylib;
 using static Utils.Entities;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Physics;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class PointMass
 {
-    private static int _idCounter;
+    private static uint _idCounter;
     private readonly Context _context;
-    public const float RadiusToMassRatio = 2f;
+    public const float RadiusPerMassRatio = 0.01f;
 
-    public int Id { get; init; }
+    public uint Id { get; init; }
     public readonly bool _pinned;
     public Vector2 _visForce; // For force visualization
     public Vector2 Pos { get; set; }
@@ -44,7 +48,7 @@ public class PointMass
         PrevPos = Pos;
         Force = Vector2.Zero;
         Mass = mass;
-        Radius = mass * RadiusToMassRatio;
+        Radius = MassToRadius(mass);
         Id = _idCounter++;
         _pinned = pinned;
         _context = context;
@@ -75,7 +79,7 @@ public class PointMass
         }
         SolveLineCollisions();
         Vector2 acc = Force / Mass;
-        Vector2 vel = Vel;
+        Vector2 vel = Vel; // Save the velocity before previous position is reset
         PrevPos = Pos;
         Pos += vel + acc * _context.SubStep * _context.SubStep;
         _visForce = Force;
@@ -85,7 +89,7 @@ public class PointMass
 
     public void Draw()
     {
-        DrawCircleLines((int) Pos.X, (int) Pos.Y, Radius, Color.White);
+        DrawCircleLines(UnitConv.MetersToPixels(Pos.X), UnitConv.MetersToPixels(Pos.Y), UnitConv.MetersToPixels(Radius), Color.White);
     }
 
     public void ApplyForce(in Vector2 force)
@@ -144,6 +148,16 @@ public class PointMass
         Vector2 impulse = impulseMag * colData.Normal;
         colData.PointMassA.Vel = thisPreVel -impulse * colData.PointMassA.InvMass;
         colData.PointMassB.Vel = otherPreVel + impulse * colData.PointMassB.InvMass;
+    }
+
+    public static float RadiusToMass(float radius)
+    {
+        return radius / RadiusPerMassRatio;
+    }
+
+    public static float MassToRadius(float mass)
+    {
+        return mass * RadiusPerMassRatio;
     }
 
     public void ApplyFriction(in Vector2 normal)

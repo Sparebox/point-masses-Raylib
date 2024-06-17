@@ -1,13 +1,15 @@
 ﻿using System.Numerics;
-using ImGuiNET;
 using Physics;
 using Raylib_cs;
 using rlImGui_cs;
 using Tools;
+using UI;
+using Utils;
 using static Raylib_cs.Raylib;
-using static Tools.Spawn;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Sim;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class Program 
 {   
@@ -41,21 +43,23 @@ public class Program
     {
         InitWindow(WinW, WinH, "Point-masses");
         SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
-        Context context = new(timeStep: 1f / 60f, 13, gravity: new(0f, Utils.UnitConversion.MetersToPixels(9.81f)))
+        float winWidthMeters = UnitConv.PixelsToMeters(WinW);
+        float winHeightMeters = UnitConv.PixelsToMeters(WinH);
+        Context context = new(timeStep: 1f / 60f, 13, gravity: new(0f, 9.81f))
         {
             LineColliders = {
-            new(0f, 0f, WinW, 0f),
-            new(0f, 0f, 0f, WinH),
-            new(WinW, 0f, WinW, WinH),
-            new(0f, WinH, WinW, WinH),
-            //new(0f, 900f, 1600f, 200f)
-            }
+                new(0f, 0f, winWidthMeters, 0f),
+                new(0f, 0f, 0f, winHeightMeters),
+                new(winWidthMeters, 0f, winWidthMeters, winHeightMeters),
+                new(0f, winHeightMeters, winWidthMeters, winHeightMeters),
+            },
+            QuadTree = new Entities.QuadTree(
+                UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
+                UnitConv.PixelsToMeters(new Vector2(WinW, WinH))
+            )
         };
-        //context.LoadDemoScenario();
         context.SelectedTool = new PullCom(context);
-        context.QuadTree = new Entities.QuadTree(new Vector2(WinW / 2f, WinH / 2f), new Vector2(WinW, WinH));
-
-        context.SaveState();
+        context.SaveCurrentState();
         return context;
     }
 
@@ -102,7 +106,8 @@ public class Program
             _context.QuadTree.Draw();
         }
         _context.SelectedTool.Draw();
-        DrawInfo(); // GUI
+        Gui.DrawInfo(_context); // GUI
+        
         rlImGui.End();
         EndDrawing(); // raylib
     }
@@ -134,13 +139,14 @@ public class Program
         {
             _context._simPaused = !_context._simPaused;
         }
-        if (IsKeyPressed(KeyboardKey.C))
-        {
-            _context.LineColliders.Add(new(0f, 900f, 1600f, 200f));
-        }
         if (_context._toolEnabled)
         {
-            _context.SelectedTool.Use();
+            _context.SelectedTool.Update();
+        }
+        // Temporary demo keys
+        if (IsKeyPressed(KeyboardKey.C))
+        {
+            _context.LoadClothScenario();
         }
         // Mouse
         if (GetMouseWheelMoveV().Y > 0f)
@@ -165,90 +171,4 @@ public class Program
         }
     }
 
-    private static void DrawInfo()
-    {
-        ImGui.Begin("Simulation info", ImGuiWindowFlags.NoMove);
-        ImGui.SetWindowPos(Vector2.Zero);
-        ImGui.Text(string.Format("FPS: {0}", GetFPS()));
-        ImGui.PushStyleColor(ImGuiCol.Text, _context._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
-        ImGui.Checkbox(_context._simPaused ? "PAUSE" : "RUNNING", ref _context._simPaused);
-        ImGui.PopStyleColor();
-        ImGui.Text(string.Format("Masses: {0}", _context.MassCount));
-        ImGui.Text(string.Format("Constraints: {0}", _context.ConstraintCount));
-        ImGui.Text(string.Format("Shapes: {0}", _context.MassShapes.Count));
-        ImGui.Text(string.Format("Substeps: {0}", _context.Substeps));
-        ImGui.Text(string.Format("Step: {0:0.0000} ms", _context.TimeStep * 1e3f));
-        ImGui.Text(string.Format("Substep: {0:0.0000} ms", _context.SubStep * 1e3f));
-        if (_context._drawBodyInfo)
-        {
-            ImGui.Text(string.Format("System energy: {0} kJ", _context.SystemEnergy / 1e3f));
-        }
-        ImGui.Checkbox("Gravity", ref _context._gravityEnabled);
-        ImGui.Checkbox("Draw forces", ref _context._drawForces);
-        ImGui.Checkbox("Draw AABBs", ref _context._drawAABBS);
-        ImGui.Checkbox("Draw quadtree", ref _context._drawQuadTree);
-        ImGui.Checkbox("Draw body info", ref _context._drawBodyInfo);
-        ImGui.PushItemWidth(50f);
-        ImGui.InputFloat("Global restitution coeff", ref _context._globalRestitutionCoeff);
-        ImGui.InputFloat("Global kinetic friction coeff", ref _context._globalKineticFrictionCoeff);
-        ImGui.InputFloat("Global static friction coeff", ref _context._globalStaticFrictionCoeff);
-        ImGui.PushItemWidth(100f);
-        if (ImGui.Combo("Tool", ref _context._selectedToolIndex, Tool.ToolsToComboString()))
-        {
-            Tool.ChangeToolType(_context);
-        }
-        if (_context.SelectedTool.GetType().Equals(typeof(Spawn)))
-        {
-            var spawnTool = (Spawn) _context.SelectedTool;
-            if (ImGui.Combo("Spawn target", ref _context._selectedSpawnTargetIndex, TargetsToComboString()))
-            {
-                spawnTool.UpdateSpawnTarget();
-            }
-            if (ImGui.InputFloat("Mass", ref spawnTool._mass))
-            {
-                spawnTool._mass = MathF.Abs(spawnTool._mass);
-                spawnTool.UpdateSpawnTarget();
-            }
-            if (spawnTool._currentTarget == SpawnTarget.Ball || spawnTool._currentTarget == SpawnTarget.SoftBall)
-            {
-                if (ImGui.InputInt("Resolution", ref spawnTool._resolution))
-                {
-                    spawnTool._resolution = Math.Abs(spawnTool._resolution);
-                    spawnTool.UpdateSpawnTarget();
-                }
-            }
-            if (spawnTool._currentTarget == SpawnTarget.SoftBox || spawnTool._currentTarget == SpawnTarget.SoftBall)
-            {
-                if (ImGui.InputFloat("Stiffness", ref spawnTool._stiffness))
-                {
-                    spawnTool._stiffness = MathF.Abs(spawnTool._stiffness);
-                    spawnTool.UpdateSpawnTarget();
-                }
-                if (spawnTool._currentTarget == SpawnTarget.SoftBall)
-                {
-                    if (ImGui.InputFloat("Gas amount", ref spawnTool._gasAmount))
-                    {
-                        spawnTool._gasAmount = MathF.Abs(spawnTool._gasAmount);
-                        spawnTool.UpdateSpawnTarget();
-                    }
-                }
-            }
-        }
-        if (ImGui.Button("Delete all"))
-        {
-            foreach (var shape in _context.MassShapes)
-            {
-                shape._toBeDeleted = true;
-            }
-        }
-        if (ImGui.IsMouseHoveringRect(ImGui.GetWindowContentRegionMin(), ImGui.GetWindowContentRegionMax()))
-        {
-            _context._toolEnabled = false;
-        }
-        else
-        {
-            _context._toolEnabled = true;
-        }
-        ImGui.End();
-    }
 }

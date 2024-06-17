@@ -2,10 +2,13 @@ using System.Numerics;
 using Physics;
 using Raylib_cs;
 using Sim;
+using Utils;
 using static Raylib_cs.Raylib;
 using static Utils.Entities;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Collision;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class LineCollider
 {
@@ -32,7 +35,13 @@ public class LineCollider
 
     public void Draw()
     {
-        DrawLine((int) StartPos.X, (int) StartPos.Y, (int) EndPos.X, (int) EndPos.Y, Color.White);
+        DrawLine(
+            UnitConv.MetersToPixels(StartPos.X),
+            UnitConv.MetersToPixels(StartPos.Y),
+            UnitConv.MetersToPixels(EndPos.X),
+            UnitConv.MetersToPixels(EndPos.Y),
+            Color.White
+        );
     }
 
     public static void SolvePointCollision(CollisionData colData, Context context)
@@ -53,7 +62,7 @@ public class LineCollider
 
     public CollisionData? CheckCollision(PointMass p)
     {
-        Vector2 closestPoint = Utils.Geometry.ClosestPointOnLine(StartPos, EndPos, p.Pos);
+        Vector2 closestPoint = Geometry.ClosestPointOnLine(StartPos, EndPos, p.Pos);
         Vector2 closestToPoint = p.Pos - closestPoint;
         float distToCollider = closestToPoint.LengthSquared();
         if (distToCollider <= p.Radius * p.Radius)

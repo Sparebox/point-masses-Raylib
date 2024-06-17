@@ -3,9 +3,12 @@ using System.Text;
 using Physics;
 using Raylib_cs;
 using Sim;
+using Utils;
 using static Raylib_cs.Raylib;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Tools;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public enum ToolType
 {
@@ -16,20 +19,25 @@ public enum ToolType
     Spawn,
     Ruler,
     Delete,
+    Editor,
 }
 
 public abstract class Tool
 {
-    public const float BaseRadiusChange = 10f;
-    public const float RadiusChangeMult = 5f;
+    public const float BaseRadiusChange = 0.01f;
+    public const float RadiusChangeMultShift = 5f;
+    public const float RadiusChangeMultCtrl = 0.1f;
     public const float BaseAngleChange = 10f;
+    public const float DefaultRadius = 0.05f;
 
-    public static float Radius { get; set; }
+    public static ToolType[] ToolTypes => (ToolType[]) Enum.GetValues(typeof(ToolType));
+    public static float Radius { get; set; } = DefaultRadius;
     public static Vector2 Direction { get; set; } = new(1f, 0f);
+    public static string ToolComboString { get; } = ToolsToComboString();
 
     protected Context _context;
 
-    abstract public void Use();
+    abstract public void Update();
     abstract public void Draw();
 
     public void ChangeRadius(float change)
@@ -40,7 +48,11 @@ public abstract class Tool
         }
         if (IsKeyDown(KeyboardKey.LeftShift))
         {
-            change *= RadiusChangeMult;
+            change *= RadiusChangeMultShift;
+        }
+        else if (IsKeyDown(KeyboardKey.LeftControl))
+        {
+            change *= RadiusChangeMultCtrl;
         }
         Radius += change;
         if (Radius < 0f)
@@ -63,35 +75,36 @@ public abstract class Tool
 
     public static void ChangeToolType(Context context)
     {
-        ToolType[] toolTypes = (ToolType[]) Enum.GetValues(typeof(ToolType));
-        ToolType newTool = toolTypes[context._selectedToolIndex];
-        switch (newTool)
+        switch (ToolTypes[context._selectedToolIndex])
         {
             case ToolType.PullCom :
-                context.SelectedTool = new PullCom(context);
+                context.SelectedTool = context.Tools[(int) ToolType.PullCom];
                 break;
             case ToolType.Pull :
-                context.SelectedTool = new Pull(context);
+                context.SelectedTool = context.Tools[(int) ToolType.Pull];
                 break;
             case ToolType.Wind :
-                context.SelectedTool = new Wind(context);
+                context.SelectedTool = context.Tools[(int) ToolType.Wind];
                 break;
             case ToolType.Rotate :
-                context.SelectedTool = new Rotate(context);
+                context.SelectedTool = context.Tools[(int) ToolType.Rotate];
                 break;
             case ToolType.Spawn :
-                context.SelectedTool = new Spawn(context);
+                context.SelectedTool = context.Tools[(int) ToolType.Spawn];
                 break;
             case ToolType.Ruler :
-                context.SelectedTool = new Ruler(context);
+                context.SelectedTool = context.Tools[(int) ToolType.Ruler];
                 break;
             case ToolType.Delete :
-                context.SelectedTool = new Delete(context);
+                context.SelectedTool = context.Tools[(int) ToolType.Delete];
+                break;
+            case ToolType.Editor :
+                context.SelectedTool = context.Tools[(int) ToolType.Editor];
                 break;
         }
     }
 
-    public static string ToolsToComboString()
+    private static string ToolsToComboString()
     {
         StringBuilder sb = new();
         ToolType[] toolTypes = (ToolType[]) Enum.GetValues(typeof(ToolType));
@@ -121,10 +134,10 @@ public abstract class Tool
 
 public class Spawn : Tool
 {
+    public const float DefaultStiffness = 1e2f;
+    public const float DefaultGasAmt = 100f;
     private const float DefaultMass = 30f;
     private const int DefaultRes = 15;
-    private const float DefaultStiffness = 1e6f;
-    private const float DefaultGasAmt = 50f;
 
     public SpawnTarget _currentTarget;
     public float _mass;
@@ -150,11 +163,11 @@ public class Spawn : Tool
         _resolution = DefaultRes;
         _stiffness = DefaultStiffness;
         _gasAmount = DefaultGasAmt;
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, _mass, _context);
     }
 
-    public override void Use() 
+    public override void Update() 
     {
         if (!IsMouseButtonPressed(MouseButton.Left))
         {
@@ -164,8 +177,7 @@ public class Spawn : Tool
         {
             return;
         }
-        _context.MassShapes.Add(_shapeToSpawn);
-        _context.QuadTree.Insert(_shapeToSpawn);
+        _context.AddMassShape(_shapeToSpawn);
         _shapeToSpawn = new MassShape(_shapeToSpawn);
     }
 
@@ -175,7 +187,7 @@ public class Spawn : Tool
         {
             return;
         }
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         Vector2 translation = mousePos - _shapeToSpawn.Centroid;
         _shapeToSpawn.Move(translation);
         _shapeToSpawn.Draw();
@@ -189,7 +201,7 @@ public class Spawn : Tool
         {
             return;
         }
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         switch (_currentTarget)
         {
             case SpawnTarget.Box:
@@ -229,13 +241,13 @@ public class Delete : Tool
         _context = context;
     }
 
-    public override void Use()
+    public override void Update()
     {
         if (!IsMouseButtonDown(MouseButton.Left))
         {
             return;
         }
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
         var shapes = _context.QuadTree.QueryShapes(area);
         if (!shapes.Any())
@@ -243,7 +255,7 @@ public class Delete : Tool
             return;
         }
         shapes.RemoveWhere(s => !CheckCollisionBoxes(area, s.AABB));
-        List<int> pointsToDelete = new();
+        List<uint> pointsToDelete = new();
         foreach (var shape in shapes)
         {
             foreach (var p in shape._points)
@@ -254,6 +266,7 @@ public class Delete : Tool
                 }
             }
             shape.DeletePoints(pointsToDelete);
+            shape._inflated = false;
             pointsToDelete.Clear();
         }
     }
@@ -261,13 +274,14 @@ public class Delete : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, Radius, Color.Yellow);
+        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
     }
 }
 
 public class PullCom : Tool
 {
-    private const float PullForceCoeff = 1e2f;
+    public float _forceCoeff = DefaultForceCoeff;
+    private const float DefaultForceCoeff = 1e2f;
     private bool _shouldVisualize = false;
     private Vector2 _centerOfMass;
 
@@ -276,13 +290,13 @@ public class PullCom : Tool
         _context = context;
     }
 
-    public override void Use()
+    public override void Update()
     {
         if (!IsMouseButtonDown(MouseButton.Left))
         {
             return;
         }
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
         var shapes = _context.QuadTree.QueryShapes(area);
         if (!shapes.Any())
@@ -295,7 +309,7 @@ public class PullCom : Tool
             return;
         }
         _centerOfMass = closest.CenterOfMass;
-        Vector2 force = PullForceCoeff * (mousePos - _centerOfMass);
+        Vector2 force = _forceCoeff * (mousePos - _centerOfMass);
         closest.ApplyForceCOM(force);
         _shouldVisualize = true;
     }
@@ -303,18 +317,19 @@ public class PullCom : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, Radius, Color.Yellow);
+        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
         if (_shouldVisualize)
         {
             _shouldVisualize = false;
-            DrawLine((int) _centerOfMass.X, (int) _centerOfMass.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
+            DrawLine(UnitConv.MetersToPixels(_centerOfMass.X), UnitConv.MetersToPixels(_centerOfMass.Y), (int) mousePos.X, (int) mousePos.Y, Color.Red);
         }
     }
 }
 
 public class Pull : Tool
 {
-    private const float PullForceCoeff = 1e3f;
+    public float _forceCoeff = DefaultForceCoeff;
+    private const float DefaultForceCoeff = 1e3f;
     private readonly HashSet<Vector2> _positions;
     private bool _shouldVisualize;
 
@@ -324,13 +339,13 @@ public class Pull : Tool
         _positions = new();
     }
 
-    public override void Use()
+    public override void Update()
     {
         if (!IsMouseButtonDown(MouseButton.Left))
         {
             return;
         }
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
         var points = _context.QuadTree.QueryPoints(area);
         if (!points.Any())
@@ -344,7 +359,7 @@ public class Pull : Tool
             {
                 continue;
             }
-            Vector2 force = PullForceCoeff * (mousePos - p.Pos);
+            Vector2 force = _forceCoeff * (mousePos - p.Pos);
             p.ApplyForce(force);
             _positions.Add(p.Pos);
         }
@@ -354,13 +369,13 @@ public class Pull : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, Radius, Color.Yellow);
+        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
         if (_shouldVisualize)
         {
             _shouldVisualize = false;
             foreach (var pos in _positions)
             {
-               DrawLine((int) pos.X, (int) pos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Red);
+               DrawLine(UnitConv.MetersToPixels(pos.X), UnitConv.MetersToPixels(pos.Y), (int) mousePos.X, (int) mousePos.Y, Color.Red);
             }
         }
     }
@@ -368,8 +383,8 @@ public class Pull : Tool
 
 public class Wind : Tool
 {
-    private const int MinForce = (int) 5e2;
-    private const int MaxForce = (int) 5e3; 
+    private const int MinForce = (int) 1e1;
+    private const int MaxForce = (int) 1e2; 
 
     public Wind(Context context)
     {
@@ -377,7 +392,7 @@ public class Wind : Tool
         Direction = new(1f, 0f);
     }
 
-    public override void Use()
+    public override void Update()
     {
         if (!IsMouseButtonDown(MouseButton.Left))
         {
@@ -396,28 +411,27 @@ public class Wind : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        Utils.Graphics.DrawArrow(mousePos.X, mousePos.Y, mousePos.X + (int) (100f * Direction.X), mousePos.Y + (int) (100f * Direction.Y), Color.Yellow);
+        Graphics.DrawArrow(mousePos.X, mousePos.Y, mousePos.X + (int) (100f * Direction.X), mousePos.Y + (int) (100f * Direction.Y), Color.Yellow);
     }
 }
 
 public class Rotate : Tool
 {
-    private const float ForceAmount = 1e4f;
+    private const float ForceAmount = 1e2f;
 
     public Rotate(Context context)
     {
         _context = context;
     }
 
-    public override void Use()
+    public override void Update()
     {
         if (!IsMouseButtonDown(MouseButton.Left))
         {
             return;
         }
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         var shapes = _context.QuadTree.QueryShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
-        //var shapes = Utils.Entities.QueryAreaForShapes(mousePos.X, mousePos.Y, Radius, _context);
         if (!shapes.Any())
         {
             return;
@@ -441,7 +455,7 @@ public class Rotate : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, Radius, Color.Yellow);
+        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
     }
 }
 
@@ -462,12 +476,12 @@ public class Ruler : Tool
             return;
         }
         Vector2 mousePos = GetMousePosition();
-        float len = Utils.UnitConversion.PixelsToMeters(Vector2.Distance(_startPos, mousePos));
+        float len = UnitConv.PixelsToMeters(Vector2.Distance(_startPos, mousePos));
         DrawText(string.Format("{0:0.00} m", len), (int) mousePos.X, (int) mousePos.Y + 20, 30, Color.Yellow);
         DrawLine((int) _startPos.X, (int) _startPos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Yellow);
     }
 
-    public override void Use()
+    public override void Update()
     {
         _shouldVisualize = IsMouseButtonDown(MouseButton.Left) && _context._toolEnabled;
         if (IsMouseButtonReleased(MouseButton.Left) || IsMouseButtonPressed(MouseButton.Left))
