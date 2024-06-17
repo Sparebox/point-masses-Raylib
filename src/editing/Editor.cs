@@ -50,7 +50,15 @@ public class Editor : Tool
     {
         _grid.Draw();
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
+        if (SelectedAction == EditorAction.Freeform && IsMouseButtonDown(MouseButton.Left) && IsKeyDown(KeyboardKey.LeftAlt))
+        {
+            var startPos = UnitConv.MetersToPixels(_grid.GridPoints[_clickedPointIndices.Item1]._pos);
+            DrawLine((int) startPos.X, (int) startPos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Yellow);
+        }
+        else
+        {
+            DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
+        }
     }
 
     public override void Update()
@@ -81,10 +89,13 @@ public class Editor : Tool
         {
             var mousePos = GetMousePosition();
             try {
-                if (IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint start point
+                if (SelectedAction == EditorAction.Freeform && IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint start point
                 {
                     _clickedPointIndices.Item1 = _grid.GetIndexFromPixel((int) mousePos.X, (int) mousePos.Y);
-                    _grid.GridPoints[_clickedPointIndices.Item1].IsConstrained = true;
+                    if (_grid.GridPoints[_clickedPointIndices.Item1].IsSelected)
+                    {
+                        _grid.GridPoints[_clickedPointIndices.Item1].IsConstrained = true;
+                    }
                 }
             }
             catch (IndexOutOfRangeException e)
@@ -96,10 +107,10 @@ public class Editor : Tool
         {
             try {
                 var mousePos = GetMousePosition();
-                if (IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint end point
+                if (SelectedAction == EditorAction.Freeform && IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint end point
                 {
                     _clickedPointIndices.Item2 = _grid.GetIndexFromPixel((int) mousePos.X, (int) mousePos.Y);
-                    if (_clickedPointIndices.Item1 != _clickedPointIndices.Item2)
+                    if (_clickedPointIndices.Item1 != _clickedPointIndices.Item2 && _grid.GridPoints[_clickedPointIndices.Item2].IsSelected)
                     {
                         _grid.GridPoints[_clickedPointIndices.Item2].IsConstrained = true;
                         _grid.ConstrainedPointIndexPairs.Add(_clickedPointIndices);

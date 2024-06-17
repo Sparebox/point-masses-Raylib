@@ -54,6 +54,12 @@ public class Gui
             case Editor:
                 ShowEditorOptions(context);
                 break;
+            case Pull:
+                ImGui.InputFloat("Force coefficient", ref ((Pull) context.SelectedTool)._forceCoeff);
+                break;
+            case PullCom:
+                ImGui.InputFloat("Force coefficient", ref ((PullCom) context.SelectedTool)._forceCoeff);
+                break;
         }
         ImGui.Spacing();
         ImGui.Separator();
@@ -126,7 +132,10 @@ public class Gui
             editor._grid.SetGridScale(editor._grid._pointsPerMeter);
         }
         ImGui.Combo("Editor action", ref editor._selectedActionIndex, editor.ActionComboString);
-        ImGui.Checkbox("Rigid constraint", ref editor._isRigidConstraint);
+        if (editor.SelectedAction != Editor.EditorAction.CreateParticles)
+        {
+            ImGui.Checkbox("Rigid constraint", ref editor._isRigidConstraint);
+        }
         if (editor.SelectedAction == Editor.EditorAction.CreateLoop)
         {
             ImGui.Checkbox("Connect ends", ref editor._connectLoop);
@@ -138,6 +147,14 @@ public class Gui
                     ImGui.InputFloat("Gas amount", ref editor._gasAmount);
                 }
             }
+        }
+        if (!editor._isRigidConstraint &&
+            (editor.SelectedAction == Editor.EditorAction.CreateLoop || 
+            editor.SelectedAction == Editor.EditorAction.Freeform
+            )
+        )
+        {
+            ImGui.InputFloat("Stiffness", ref editor._stiffness);
         }
         if (ImGui.Button("Clear selected points"))
         {

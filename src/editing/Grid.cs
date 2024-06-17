@@ -63,6 +63,16 @@ public class Grid
                 );
             }
         }
+        foreach (var pair in ConstrainedPointIndexPairs)
+        {
+            DrawLine(
+                UnitConv.MetersToPixels(GridPoints[pair.Item1]._pos.X),
+                UnitConv.MetersToPixels(GridPoints[pair.Item1]._pos.Y),
+                UnitConv.MetersToPixels(GridPoints[pair.Item2]._pos.X),
+                UnitConv.MetersToPixels(GridPoints[pair.Item2]._pos.Y),
+                Color.Purple
+            );
+        }
     }
 
     public void SetGridScale(int pointsPerMeter)

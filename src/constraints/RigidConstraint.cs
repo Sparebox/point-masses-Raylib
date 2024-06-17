@@ -33,7 +33,7 @@ public class RigidConstraint : Constraint
         float dist = AtoB.Length();
         float diff = Length - dist;
         float percentage = diff / dist / 2f;
-        Vector2 offset = percentage * dist * Vector2.Normalize(AtoB);
+        Vector2 offset = percentage * AtoB;
         if (!PointA._pinned) {
             PointA.Pos -= offset;
         }

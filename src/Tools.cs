@@ -280,7 +280,8 @@ public class Delete : Tool
 
 public class PullCom : Tool
 {
-    private const float PullForceCoeff = 1e2f;
+    public float _forceCoeff = DefaultForceCoeff;
+    private const float DefaultForceCoeff = 1e2f;
     private bool _shouldVisualize = false;
     private Vector2 _centerOfMass;
 
@@ -308,7 +309,7 @@ public class PullCom : Tool
             return;
         }
         _centerOfMass = closest.CenterOfMass;
-        Vector2 force = PullForceCoeff * (mousePos - _centerOfMass);
+        Vector2 force = _forceCoeff * (mousePos - _centerOfMass);
         closest.ApplyForceCOM(force);
         _shouldVisualize = true;
     }
@@ -327,7 +328,8 @@ public class PullCom : Tool
 
 public class Pull : Tool
 {
-    private const float PullForceCoeff = 1e3f;
+    public float _forceCoeff = DefaultForceCoeff;
+    private const float DefaultForceCoeff = 1e3f;
     private readonly HashSet<Vector2> _positions;
     private bool _shouldVisualize;
 
@@ -357,7 +359,7 @@ public class Pull : Tool
             {
                 continue;
             }
-            Vector2 force = PullForceCoeff * (mousePos - p.Pos);
+            Vector2 force = _forceCoeff * (mousePos - p.Pos);
             p.ApplyForce(force);
             _positions.Add(p.Pos);
         }
