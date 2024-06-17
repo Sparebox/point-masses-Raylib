@@ -22,7 +22,6 @@ public class Program
     private static float _quadTreeAccumulator;
     private static Context _context;
 
-
     public static void Main() 
     {
         _context = Init();

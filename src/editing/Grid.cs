@@ -13,37 +13,55 @@ public class Grid
 {
     public bool SnappingEnabled { get; set; }
     public GridPoint[] GridPoints { get; set; }
+    public List<uint> SelectedPointIndices { get; init; }
+    public List<(uint, uint)> ConstrainedPointIndexPairs { get; init; }
 
     public struct GridPoint
     {
-        public Vector2 Pos;
-        public bool IsSelected;
+        public Vector2 _pos;
+        public bool IsSelected { get; set; }
+        public bool IsConstrained { get; set; }
 
         public GridPoint()
         {
-            Pos = new Vector2();
+            _pos = new Vector2();
             IsSelected = false;
         }
     }
 
     public int _pointsPerMeter;
-    private const int PointSize = 1;
+    private const int PointSize = 2;
     private uint _pointsX;
     private uint _pointsY;
 
-    public Grid(int pointsPerMeter) => SetGridScale(pointsPerMeter);
+    public Grid(int pointsPerMeter)
+    {
+        SelectedPointIndices = new();
+        ConstrainedPointIndexPairs = new();
+        SetGridScale(pointsPerMeter);
+    }
 
     public void Draw()
     {
         foreach (var point in GridPoints)
         {
-            int pointSize = point.IsSelected ? 5 * PointSize : PointSize;
-            DrawCircleLines(
-                UnitConv.MetersToPixels(point.Pos.X),
-                UnitConv.MetersToPixels(point.Pos.Y),
-                pointSize,
+            DrawRectangleLines(
+                UnitConv.MetersToPixels(point._pos.X),
+                UnitConv.MetersToPixels(point._pos.Y),
+                PointSize,
+                PointSize,
                 Color.White
             );
+            if (point.IsSelected)
+            {
+                Color color = point.IsConstrained ? Color.Purple : Color.Yellow;
+                DrawCircleLines(
+                    UnitConv.MetersToPixels(point._pos.X),
+                    UnitConv.MetersToPixels(point._pos.Y),
+                    UnitConv.MetersToPixels(Tool.Radius),
+                    color
+                );
+            }
         }
     }
 
@@ -54,13 +72,15 @@ public class Grid
         _pointsY = (uint) float.Ceiling(UnitConv.PixelsToMeters(Program.WinH) * _pointsPerMeter);
 
         GridPoints = new GridPoint[_pointsX * _pointsY];
+        SelectedPointIndices.Clear();
+        ConstrainedPointIndexPairs.Clear();
 
         for (uint y = 0; y < _pointsY; y++)
         {
             for (uint x = 0; x < _pointsX; x++)
             {
-                GridPoints[GetIndexFromPoint(x, y)].Pos.X = (float) x / _pointsPerMeter;
-                GridPoints[GetIndexFromPoint(x, y)].Pos.Y = (float) y / _pointsPerMeter;
+                GridPoints[GetIndexFromPoint(x, y)]._pos.X = (float) x / _pointsPerMeter;
+                GridPoints[GetIndexFromPoint(x, y)]._pos.Y = (float) y / _pointsPerMeter;
             }
         }
     }
@@ -70,15 +90,36 @@ public class Grid
         for (int i = 0; i < GridPoints.Length; i++)
         {
             GridPoints[i].IsSelected = false;
+            GridPoints[i].IsConstrained = false;
         }
+        SelectedPointIndices.Clear();
+        ConstrainedPointIndexPairs.Clear();
     }
 
-    public ref GridPoint GetClosestGridPoint(uint xPixels, uint yPixels)
+    public void ToggleGridPoint(int xPixels, int yPixels, bool select)
+    {
+        ref var closestGridPoint = ref GetClosestGridPoint(xPixels, yPixels);
+        uint gridIndex = GetIndexFromPixel(xPixels, yPixels);
+        if (select)
+        {
+            closestGridPoint.IsSelected = true;
+            if (!SelectedPointIndices.Contains(gridIndex))
+            {
+                SelectedPointIndices.Add(gridIndex);
+            }
+            return;
+        }
+        closestGridPoint.IsSelected = false;
+        closestGridPoint.IsConstrained = false;
+        SelectedPointIndices.Remove(gridIndex);
+    }
+
+    public ref GridPoint GetClosestGridPoint(int xPixels, int yPixels)
     {
         return ref GridPoints[GetIndexFromPixel(xPixels, yPixels)];
     }
 
-    private uint[] GetClosestPoint(uint xPixels, uint yPixels)
+    public uint[] GetClosestPoint(int xPixels, int yPixels)
     {
         float xPoint = UnitConv.PixelsToMeters(xPixels) * _pointsPerMeter;
         float yPoint = UnitConv.PixelsToMeters(yPixels) * _pointsPerMeter;
@@ -105,12 +146,12 @@ public class Grid
         return new uint[] { xPointInt, yPointInt };
     }
 
-    private uint GetIndexFromPoint(uint xPoints, uint yPoints)
+    public uint GetIndexFromPoint(uint xPoints, uint yPoints)
     {
         return xPoints + yPoints * _pointsX;
     }
 
-    public uint GetIndexFromPixel(uint xPixels, uint yPixels)
+    public uint GetIndexFromPixel(int xPixels, int yPixels)
     {
         var closestPoint = GetClosestPoint(xPixels, yPixels);
         return GetIndexFromPoint(closestPoint[0], closestPoint[1]);

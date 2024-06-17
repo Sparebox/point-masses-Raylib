@@ -25,7 +25,7 @@ public enum ToolType
 public abstract class Tool
 {
     public const float BaseRadiusChange = 0.01f;
-    public const float RadiusChangeMultShift = 2f;
+    public const float RadiusChangeMultShift = 5f;
     public const float RadiusChangeMultCtrl = 0.1f;
     public const float BaseAngleChange = 10f;
     public const float DefaultRadius = 0.05f;

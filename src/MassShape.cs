@@ -195,20 +195,18 @@ public class MassShape
     }
     
     public const float GasAmountMult = 1f;
-    private readonly Context _context;
-    private static int _idCounter;
-
     public int Id { get; init; }
     public List<Constraint> _constraints;
     public List<PointMass> _points;
     public bool _toBeDeleted;
     public float _gasAmount;
     public bool _inflated;
+    private readonly Context _context;
+    private static int _idCounter;
     private Vector2 _lastCenterOfMass;
     private float _lastAngle;
     private PressureVis _pressureVis;
     private float? _mass;
-    private const float SpringDamping = 5e4f;
 
     public MassShape(Context context, bool inflated = false) 
     {
@@ -254,11 +252,14 @@ public class MassShape
 
     public void Update()
     {
-        _lastAngle = Angle;
         if (!_points.Any())
         {
             _toBeDeleted = true;
             return;
+        }
+        if (_context._drawBodyInfo)
+        {
+            _lastAngle = Angle;
         }
         if (_context._drawBodyInfo)
         {
@@ -387,7 +388,7 @@ public class MassShape
 
     public void DeletePoint(uint id)
     {
-        List<uint> constraintsToDelete = new();
+        HashSet<uint> constraintsToDelete = new();
         uint? pointToDelete = null;
         foreach (var p in _points)
         {
@@ -617,7 +618,7 @@ public class MassShape
         // Constraints
         for (int i = 0; i < res; i++)
         {
-            s._constraints.Add(new SpringConstraint(s._points[i], s._points[(i + 1) % res], stiffness, SpringDamping));
+            s._constraints.Add(new SpringConstraint(s._points[i], s._points[(i + 1) % res], stiffness, SpringConstraint.DefaultDamping));
         }
         return s;
     }
@@ -711,7 +712,7 @@ public class MassShape
                         c._constraints.Add(new RigidConstraint(c._points[col * res + row], c._points[(col + 1) * res + row]));
                     } else
                     {
-                        c._constraints.Add(new SpringConstraint(c._points[col * res + row], c._points[(col + 1) * res + row], stiffness, SpringDamping));
+                        c._constraints.Add(new SpringConstraint(c._points[col * res + row], c._points[(col + 1) * res + row], stiffness, SpringConstraint.DefaultDamping));
                     }
                 }
                 if (row != res - 1)
@@ -721,7 +722,7 @@ public class MassShape
                         c._constraints.Add(new RigidConstraint(c._points[col * res + row], c._points[col * res + row + 1]));
                     } else 
                     {
-                        c._constraints.Add(new SpringConstraint(c._points[col * res + row], c._points[col * res + row + 1], stiffness, SpringDamping));
+                        c._constraints.Add(new SpringConstraint(c._points[col * res + row], c._points[col * res + row + 1], stiffness, SpringConstraint.DefaultDamping));
                     }
                 }
             }
@@ -783,11 +784,11 @@ public class MassShape
                 new(x + size / 2f, y - size / 2f, mass / 4f, false, context)
             }
         };
-        c._constraints.Add(new SpringConstraint(c._points[0], c._points[1], stiffness, SpringDamping));
-        c._constraints.Add(new SpringConstraint(c._points[1], c._points[2], stiffness, SpringDamping));
-        c._constraints.Add(new SpringConstraint(c._points[2], c._points[3], stiffness, SpringDamping));
-        c._constraints.Add(new SpringConstraint(c._points[3], c._points[0], stiffness, SpringDamping));
-        c._constraints.Add(new SpringConstraint(c._points[0], c._points[2], stiffness, SpringDamping));
+        c._constraints.Add(new SpringConstraint(c._points[0], c._points[1], stiffness, SpringConstraint.DefaultDamping));
+        c._constraints.Add(new SpringConstraint(c._points[1], c._points[2], stiffness, SpringConstraint.DefaultDamping));
+        c._constraints.Add(new SpringConstraint(c._points[2], c._points[3], stiffness, SpringConstraint.DefaultDamping));
+        c._constraints.Add(new SpringConstraint(c._points[3], c._points[0], stiffness, SpringConstraint.DefaultDamping));
+        c._constraints.Add(new SpringConstraint(c._points[0], c._points[2], stiffness, SpringConstraint.DefaultDamping));
         return c;
     }
 

@@ -24,23 +24,26 @@ public class Editor : Tool
     public string ActionComboString { get; init; }
     public bool _connectLoop;
     public bool _inflateLoop;
+    public bool _isRigidConstraint;
     public float _gasAmount = Spawn.DefaultGasAmt;
+    public float _stiffness = Spawn.DefaultStiffness;
     public readonly Grid _grid;
-    private readonly LinkedList<uint> _selectedPointIndices;
-
+    private (uint, uint) _clickedPointIndices;
+    
     public enum EditorAction
     {
         CreateParticles,
-        CreateLoop
+        CreateLoop,
+        Freeform
     }
 
     public Editor(Context context)
     {
         _context = context;
         _grid = new Grid(5);
-        _selectedPointIndices = new();
         ActionComboString = GetActionComboString();
         _selectedActionIndex = 0;
+        _clickedPointIndices = new();
     }
 
     public override void Draw()
@@ -52,51 +55,94 @@ public class Editor : Tool
 
     public override void Update()
     {
-        if (IsMouseButtonDown(MouseButton.Left))
+        if (!_context._toolEnabled)
+        {
+            return;
+        }
+        if (IsMouseButtonDown(MouseButton.Left) && !IsKeyDown(KeyboardKey.LeftAlt))
         {
             try {
                 var mousePos = GetMousePosition();
-                ref var closestGridPoint = ref _grid.GetClosestGridPoint((uint) mousePos.X, (uint) mousePos.Y);
-                closestGridPoint.IsSelected = true;
-                uint gridIndex = _grid.GetIndexFromPixel((uint) mousePos.X, (uint) mousePos.Y);
-                if (!_selectedPointIndices.Contains(gridIndex))
+                if (IsKeyDown(KeyboardKey.LeftShift))
                 {
-                    _selectedPointIndices.AddLast(gridIndex);
+                    _grid.ToggleGridPoint((int) mousePos.X, (int) mousePos.Y, false);
+                }
+                else
+                {
+                    _grid.ToggleGridPoint((int) mousePos.X, (int) mousePos.Y, true);
                 }
             }
-            catch (IndexOutOfRangeException)
+            catch (IndexOutOfRangeException e)
             {
-                Console.Error.WriteLine("Grid index was out of range");
+                Console.Error.WriteLine(e);
             }
         }
-        else
+        if (IsMouseButtonPressed(MouseButton.Left))
         {
-            _grid.ClearSelectedPoints();
-        }
-        if (IsMouseButtonReleased(MouseButton.Left)) // Execute editor action
-        {
-            switch (SelectedAction)
-            {
-                case EditorAction.CreateParticles:
-                    CreateParticlesFromIndices();
-                    break;
-                case EditorAction.CreateLoop:
-                    CreateLoopFromIndices(PointMass.RadiusToMass(Radius));
-                    break;
+            var mousePos = GetMousePosition();
+            try {
+                if (IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint start point
+                {
+                    _clickedPointIndices.Item1 = _grid.GetIndexFromPixel((int) mousePos.X, (int) mousePos.Y);
+                    _grid.GridPoints[_clickedPointIndices.Item1].IsConstrained = true;
+                }
             }
-            _selectedPointIndices.Clear();
+            catch (IndexOutOfRangeException e)
+            {
+                Console.Error.WriteLine(e);
+            }
         }
+        if (IsMouseButtonReleased(MouseButton.Left))
+        {
+            try {
+                var mousePos = GetMousePosition();
+                if (IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint end point
+                {
+                    _clickedPointIndices.Item2 = _grid.GetIndexFromPixel((int) mousePos.X, (int) mousePos.Y);
+                    if (_clickedPointIndices.Item1 != _clickedPointIndices.Item2)
+                    {
+                        _grid.GridPoints[_clickedPointIndices.Item2].IsConstrained = true;
+                        _grid.ConstrainedPointIndexPairs.Add(_clickedPointIndices);
+                    }
+                }
+            }
+            catch (IndexOutOfRangeException e)
+            {
+                Console.Error.WriteLine(e);
+            }
+        }
+    }
+
+    public void BuildShape()
+    {
+        if (Radius == 0f)
+        {
+            return;
+        }
+        switch (SelectedAction)
+        {
+            case EditorAction.CreateParticles:
+                CreateParticlesFromIndices();
+                break;
+            case EditorAction.CreateLoop:
+                CreateLoopFromIndices(PointMass.RadiusToMass(Radius));
+                break;
+            case EditorAction.Freeform:
+                CreateFreeformShape(PointMass.RadiusToMass(Radius));
+                break;
+        }
+        _grid.ClearSelectedPoints();
     }
 
     private void CreateParticlesFromIndices()
     {
-        var particles = new List<MassShape>(_selectedPointIndices.Count);
-        foreach (var index in _selectedPointIndices)
+        var particles = new List<MassShape>(_grid.SelectedPointIndices.Count);
+        foreach (var index in _grid.SelectedPointIndices)
         {
             var gridPoint = _grid.GridPoints[index];
             particles.Add(MassShape.Particle(
-                gridPoint.Pos.X,
-                gridPoint.Pos.Y,
+                gridPoint._pos.X,
+                gridPoint._pos.Y,
                 PointMass.RadiusToMass(Radius),
                 _context
             ));
@@ -111,17 +157,54 @@ public class Editor : Tool
             _gasAmount = _gasAmount
         };
         // Points
-        foreach (var index in _selectedPointIndices)
+        foreach (var index in _grid.SelectedPointIndices)
         {
-            Vector2 pos = _grid.GridPoints[index].Pos;
+            Vector2 pos = _grid.GridPoints[index]._pos;
             loop._points.Add(new(pos.X, pos.Y, mass, false, _context));
         }
         // Constraints
         for (int i = 0; i < (_connectLoop ? loop._points.Count : loop._points.Count - 1); i++)
         {
-            loop._constraints.Add(new RigidConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count]));
+            Constraint c;
+            if (_isRigidConstraint)
+            {
+                c = new RigidConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count]);
+            }
+            else
+            {
+                c = new SpringConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count], _stiffness, SpringConstraint.DefaultDamping);
+            }
+            loop._constraints.Add(c);
         }
         _context.AddMassShape(loop);
+    }
+
+    private void CreateFreeformShape(float mass)
+    {
+        MassShape shape = new(_context, _inflateLoop);
+        // Points
+        foreach (var gridIndex in _grid.SelectedPointIndices)
+        {
+            Vector2 pos = _grid.GridPoints[gridIndex]._pos;
+            shape._points.Add(new(pos.X, pos.Y, mass, false, _context));
+        }
+        // Constraints
+        foreach (var pair in _grid.ConstrainedPointIndexPairs)
+        {
+            Constraint c;
+            PointMass a = shape._points.Find(p => p.Pos == _grid.GridPoints[pair.Item1]._pos);
+            PointMass b = shape._points.Find(p => p.Pos == _grid.GridPoints[pair.Item2]._pos);
+            if (_isRigidConstraint)
+            {
+                c = new RigidConstraint(a, b);
+            }
+            else
+            {
+                c = new SpringConstraint(a, b, _stiffness, SpringConstraint.DefaultDamping);
+            }
+            shape._constraints.Add(c);
+        }
+        _context.AddMassShape(shape);
     }
 
     private static string GetActionComboString()

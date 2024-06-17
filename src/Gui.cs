@@ -44,6 +44,8 @@ public class Gui
         {
             Tool.ChangeToolType(context);
         }
+        ImGui.Separator();
+        ImGui.Spacing();
         switch (context.SelectedTool)
         {
             case Spawn:
@@ -53,14 +55,18 @@ public class Gui
                 ShowEditorOptions(context);
                 break;
         }
-        if (ImGui.Button("Delete all"))
+        ImGui.Spacing();
+        ImGui.Separator();
+        if (ImGui.Button("Delete all shapes"))
         {
             foreach (var shape in context.MassShapes)
             {
                 shape._toBeDeleted = true;
             }
         }
-        if (ImGui.IsMouseHoveringRect(ImGui.GetWindowContentRegionMin(), ImGui.GetWindowContentRegionMax()))
+        // Disable tool if mouse is over info window
+        Vector2 margin = new(500f, 500f);
+        if (ImGui.IsMouseHoveringRect(ImGui.GetWindowContentRegionMin() - margin, ImGui.GetWindowContentRegionMax() + margin))
         {
             context._toolEnabled = false;
         }
@@ -111,6 +117,8 @@ public class Gui
 
     private static void ShowEditorOptions(Context context)
     {
+        ImGui.Text("EDITOR OPTIONS");
+        ImGui.Spacing();
         var editor = (Editor) context.SelectedTool;
         if (ImGui.InputInt("Points per meter", ref editor._grid._pointsPerMeter))
         {
@@ -118,6 +126,7 @@ public class Gui
             editor._grid.SetGridScale(editor._grid._pointsPerMeter);
         }
         ImGui.Combo("Editor action", ref editor._selectedActionIndex, editor.ActionComboString);
+        ImGui.Checkbox("Rigid constraint", ref editor._isRigidConstraint);
         if (editor.SelectedAction == Editor.EditorAction.CreateLoop)
         {
             ImGui.Checkbox("Connect ends", ref editor._connectLoop);
@@ -129,6 +138,14 @@ public class Gui
                     ImGui.InputFloat("Gas amount", ref editor._gasAmount);
                 }
             }
+        }
+        if (ImGui.Button("Clear selected points"))
+        {
+            editor._grid.ClearSelectedPoints();
+        }
+        if (ImGui.Button("Build shape"))
+        {
+            editor.BuildShape();
         }
     }
 }
