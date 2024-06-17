@@ -6,6 +6,7 @@ Current features:
 - Impulse based collision response
 - Simple friction
 - Interactive simulation tools
+- Basic shape editor
 - Gas inflated shapes
 
 Libraries:
