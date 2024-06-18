@@ -86,7 +86,7 @@ public static class Graphics
         float angle2 = dirAngle - radians;
         Vector2 branchA = new(ArrowBranchLength * MathF.Cos(angle1), ArrowBranchLength * MathF.Sin(angle1));
         Vector2 branchB = new(ArrowBranchLength * MathF.Cos(angle2), ArrowBranchLength * MathF.Sin(angle2));
-        DrawLine((int) start.X, (int) start.Y, (int) end.X, (int) end.Y, color);
+        DrawLineV(start, end, color);
         DrawLine((int) end.X, (int) end.Y, (int) (end.X + branchA.X), (int) (end.Y + branchA.Y), color);
         DrawLine((int) end.X, (int) end.Y, (int) (end.X + branchB.X), (int) (end.Y + branchB.Y), color);
     }

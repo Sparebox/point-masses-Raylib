@@ -53,11 +53,11 @@ public class Editor : Tool
         if (SelectedAction == EditorAction.Freeform && IsMouseButtonDown(MouseButton.Left) && IsKeyDown(KeyboardKey.LeftAlt))
         {
             var startPos = UnitConv.MetersToPixels(_grid.GridPoints[_clickedPointIndices.Item1]._pos);
-            DrawLine((int) startPos.X, (int) startPos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Yellow);
+            DrawLineV(startPos, mousePos, Color.Yellow);
         }
         else
         {
-            DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
+            DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
         }
     }
 

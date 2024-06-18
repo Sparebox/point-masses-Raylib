@@ -89,7 +89,7 @@ public class PointMass
 
     public void Draw()
     {
-        DrawCircleLines(UnitConv.MetersToPixels(Pos.X), UnitConv.MetersToPixels(Pos.Y), UnitConv.MetersToPixels(Radius), Color.White);
+        DrawCircleLinesV(UnitConv.MetersToPixels(Pos), UnitConv.MetersToPixels(Radius), Color.White);
     }
 
     public void ApplyForce(in Vector2 force)

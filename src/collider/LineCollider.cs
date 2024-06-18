@@ -35,11 +35,9 @@ public class LineCollider
 
     public void Draw()
     {
-        DrawLine(
-            UnitConv.MetersToPixels(StartPos.X),
-            UnitConv.MetersToPixels(StartPos.Y),
-            UnitConv.MetersToPixels(EndPos.X),
-            UnitConv.MetersToPixels(EndPos.Y),
+        DrawLineV(
+            UnitConv.MetersToPixels(StartPos),
+            UnitConv.MetersToPixels(EndPos),
             Color.White
         );
     }

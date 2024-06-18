@@ -274,7 +274,7 @@ public class Delete : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
+        DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
     }
 }
 
@@ -317,11 +317,11 @@ public class PullCom : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
+        DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
         if (_shouldVisualize)
         {
             _shouldVisualize = false;
-            DrawLine(UnitConv.MetersToPixels(_centerOfMass.X), UnitConv.MetersToPixels(_centerOfMass.Y), (int) mousePos.X, (int) mousePos.Y, Color.Red);
+            DrawLineV(UnitConv.MetersToPixels(_centerOfMass), mousePos, Color.Red);
         }
     }
 }
@@ -369,13 +369,13 @@ public class Pull : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
+        DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
         if (_shouldVisualize)
         {
             _shouldVisualize = false;
             foreach (var pos in _positions)
             {
-               DrawLine(UnitConv.MetersToPixels(pos.X), UnitConv.MetersToPixels(pos.Y), (int) mousePos.X, (int) mousePos.Y, Color.Red);
+               DrawLineV(UnitConv.MetersToPixels(pos), mousePos, Color.Red);
             }
         }
     }
@@ -402,8 +402,8 @@ public class Wind : Tool
         {
             foreach (var p in s._points)
             {
-                float forceMult = GetRandomValue(MinForce, MaxForce);
-                p.ApplyForce(forceMult * Direction);
+                float force = GetRandomValue(MinForce, MaxForce);
+                p.ApplyForce(force * Direction);
             }
         }
     }
@@ -455,7 +455,7 @@ public class Rotate : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
+        DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
     }
 }
 
@@ -478,7 +478,7 @@ public class Ruler : Tool
         Vector2 mousePos = GetMousePosition();
         float len = UnitConv.PixelsToMeters(Vector2.Distance(_startPos, mousePos));
         DrawText(string.Format("{0:0.00} m", len), (int) mousePos.X, (int) mousePos.Y + 20, 30, Color.Yellow);
-        DrawLine((int) _startPos.X, (int) _startPos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Yellow);
+        DrawLineV(_startPos, mousePos, Color.Yellow);
     }
 
     public override void Update()

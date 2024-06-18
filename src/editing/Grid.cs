@@ -55,9 +55,8 @@ public class Grid
             if (point.IsSelected)
             {
                 Color color = point.IsConstrained ? Color.Purple : Color.Yellow;
-                DrawCircleLines(
-                    UnitConv.MetersToPixels(point._pos.X),
-                    UnitConv.MetersToPixels(point._pos.Y),
+                DrawCircleLinesV(
+                    UnitConv.MetersToPixels(point._pos),
                     UnitConv.MetersToPixels(Tool.Radius),
                     color
                 );
@@ -65,11 +64,9 @@ public class Grid
         }
         foreach (var pair in ConstrainedPointIndexPairs)
         {
-            DrawLine(
-                UnitConv.MetersToPixels(GridPoints[pair.Item1]._pos.X),
-                UnitConv.MetersToPixels(GridPoints[pair.Item1]._pos.Y),
-                UnitConv.MetersToPixels(GridPoints[pair.Item2]._pos.X),
-                UnitConv.MetersToPixels(GridPoints[pair.Item2]._pos.Y),
+            DrawLineV(
+                UnitConv.MetersToPixels(GridPoints[pair.Item1]._pos),
+                UnitConv.MetersToPixels(GridPoints[pair.Item2]._pos),
                 Color.Purple
             );
         }
