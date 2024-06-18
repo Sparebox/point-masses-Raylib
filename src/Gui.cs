@@ -70,6 +70,17 @@ public class Gui
                 shape._toBeDeleted = true;
             }
         }
+        if (ImGui.Button("Save current state"))
+        {
+            context.SaveCurrentState();
+        }
+        if (context.SavedShapeCount > 0)
+        {
+            if (ImGui.Button($"Load saved state ({context.SavedShapeCount} shapes saved)"))
+            {
+                context.LoadSavedState();
+            }
+        }
         // Disable tool if mouse is over info window
         Vector2 margin = new(500f, 500f);
         if (ImGui.IsMouseHoveringRect(ImGui.GetWindowContentRegionMin() - margin, ImGui.GetWindowContentRegionMax() + margin))

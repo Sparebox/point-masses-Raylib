@@ -133,7 +133,7 @@ public class Program
         }
         if (IsKeyPressed(KeyboardKey.R))
         {
-            _context.LoadState();
+            _context.LoadSavedState();
         }
         if (IsKeyPressed(KeyboardKey.Space))
         {

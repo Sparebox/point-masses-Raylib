@@ -55,7 +55,7 @@ public class PointMass
     }
 
     // Copy constructor
-    public PointMass(in PointMass p)
+    public PointMass(PointMass p)
     {
         Pos = p.Pos;
         PrevPos = Pos;

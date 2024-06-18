@@ -37,6 +37,7 @@ public class Context
     public int _selectedToolIndex;
     public int _selectedSpawnTargetIndex;
     public Tool[] Tools { get; init; }
+    public int SavedShapeCount => _saveState.MassShapes.Count;
     public int MassCount 
     {
         get 
@@ -85,14 +86,13 @@ public class Context
     {
         foreach (var shape in shapes)
         {
-            MassShapes.Add(shape);
+            MassShapes.Add(new(shape));
         }
     }
 
     public void SaveCurrentState()
     {
-        _saveState.LineColliders = new();
-        _saveState.MassShapes = new();
+        _saveState = new();
         foreach (var c in LineColliders)
         {
             _saveState.LineColliders.Add(new LineCollider(c));
@@ -104,7 +104,7 @@ public class Context
         Console.WriteLine("Saved state");
     }
 
-    public void LoadState()
+    public void LoadSavedState()
     {
         _simPaused = true;
         LineColliders.Clear();
@@ -130,10 +130,17 @@ public class Context
         tools[(int) ToolType.Editor] = new Editor(this);
         return tools;
     }
+    
     private struct SaveState
     {
         public HashSet<LineCollider> LineColliders { get; set; }
         public HashSet<MassShape> MassShapes { get; set; }
+
+        public SaveState()
+        {
+            LineColliders = new();
+            MassShapes = new();
+        }
     }
 
     public void LoadClothScenario()
