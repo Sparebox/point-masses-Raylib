@@ -48,17 +48,21 @@ public class Gui
         ImGui.Spacing();
         switch (context.SelectedTool)
         {
-            case Spawn:
+            case Spawn :
                 ShowSpawnToolOptions(context);
                 break;
-            case Editor:
+            case Editor :
                 ShowEditorOptions(context);
                 break;
-            case Pull:
+            case Pull :
                 ImGui.InputFloat("Force coefficient", ref ((Pull) context.SelectedTool)._forceCoeff);
                 break;
-            case PullCom:
+            case PullCom :
                 ImGui.InputFloat("Force coefficient", ref ((PullCom) context.SelectedTool)._forceCoeff);
+                break;
+            case GravityWell :
+                ImGui.InputFloat("Gravitational constant", ref ((GravityWell) context.SelectedTool)._gravConstant);
+                ImGui.InputFloat("Minimum distance", ref ((GravityWell) context.SelectedTool)._minDist);
                 break;
         }
         ImGui.Spacing();

@@ -20,6 +20,7 @@ public enum ToolType
     Ruler,
     Delete,
     Editor,
+    GravityWell
 }
 
 public abstract class Tool
@@ -100,6 +101,9 @@ public abstract class Tool
                 break;
             case ToolType.Editor :
                 context.SelectedTool = context.Tools[(int) ToolType.Editor];
+                break;
+            case ToolType.GravityWell :
+                context.SelectedTool = context.Tools[(int) ToolType.GravityWell];
                 break;
         }
     }
@@ -217,7 +221,7 @@ public class Spawn : Tool
                 _shapeToSpawn = MassShape.SoftBall(mousePos.X, mousePos.Y, Radius, _mass, _resolution, _stiffness, _gasAmount, _context);
                 break;
             case SpawnTarget.Particle:
-                _shapeToSpawn = MassShape.Particle(mousePos.X, mousePos.Y, Radius, _context);
+                _shapeToSpawn = MassShape.Particle(mousePos.X, mousePos.Y, PointMass.RadiusToMass(Radius), _context);
                 break;
         }
     }
@@ -488,6 +492,50 @@ public class Ruler : Tool
         {
             _startPos = GetMousePosition();
             _shouldVisualize = false;
+        }
+    }
+}
+
+public class GravityWell : Tool
+{
+    public float _gravConstant = 1f;
+    public float _minDist = 0.01f;
+    private Vector2 _pos;
+
+    public GravityWell(Context context) => _context = context;
+
+    public override void Draw()
+    {
+        Vector2 pixelPos = UnitConv.MetersToPixels(_pos);
+        DrawText("G", (int) pixelPos.X, (int) pixelPos.Y, 20, Color.Yellow);
+    }
+
+    public override void Update()
+    {
+        if (!_context._toolEnabled)
+        {
+            return;
+        }
+        if (IsMouseButtonPressed(MouseButton.Left))
+        {
+            _pos = UnitConv.PixelsToMeters(GetMousePosition());
+        }
+        ApplyGravityForces();
+    }
+
+    private void ApplyGravityForces()
+    {
+        foreach (var shape in _context.MassShapes)
+        {
+            Vector2 dir = _pos - shape.CenterOfMass;
+            float dist = dir.Length();
+            if (dist == 0f || dist < _minDist)
+            {
+                continue;
+            }
+            dir /= dist;
+            Vector2 gravForce = dir * _gravConstant * shape.Mass / (dist * dist);
+            shape.ApplyForceCOM(gravForce);
         }
     }
 }

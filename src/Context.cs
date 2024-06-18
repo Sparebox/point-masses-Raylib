@@ -128,6 +128,7 @@ public class Context
         tools[(int) ToolType.Ruler] = new Ruler(this);
         tools[(int) ToolType.Delete] = new Delete(this);
         tools[(int) ToolType.Editor] = new Editor(this);
+        tools[(int) ToolType.GravityWell] = new GravityWell(this);
         return tools;
     }
     
