@@ -148,6 +148,10 @@ public class Gui
                 }
             }
         }
+        if (editor.SelectedAction == Editor.EditorAction.Freeform)
+        {
+            ImGui.Checkbox("Pin point", ref editor._pinPoint);
+        }
         if (!editor._isRigidConstraint &&
             (editor.SelectedAction == Editor.EditorAction.CreateLoop || 
             editor.SelectedAction == Editor.EditorAction.Freeform

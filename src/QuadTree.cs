@@ -109,7 +109,7 @@ public class QuadTree
         _northWest.Clear();
     }
 
-    public HashSet<MassShape> QueryShapes(BoundingBox area, HashSet<MassShape> found = null)
+    public HashSet<MassShape> QueryShapes(in BoundingBox area, HashSet<MassShape> found = null)
     {
         found ??= new();
         if (!CheckCollisionBoxes(_boundary, area))
@@ -136,7 +136,7 @@ public class QuadTree
         return found;
     }
 
-     public HashSet<PointMass> QueryPoints(BoundingBox area, HashSet<PointMass> found = null)
+     public HashSet<PointMass> QueryPoints(in BoundingBox area, HashSet<PointMass> found = null)
     {
         found ??= new();
         if (!CheckCollisionBoxes(_boundary, area))
