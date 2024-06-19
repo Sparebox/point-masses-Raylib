@@ -129,6 +129,7 @@ public class Context
         tools[(int) ToolType.Delete] = new Delete(this);
         tools[(int) ToolType.Editor] = new Editor(this);
         tools[(int) ToolType.GravityWell] = new GravityWell(this);
+        tools[(int) ToolType.NbodySim] = new NbodySim(this);
         return tools;
     }
     

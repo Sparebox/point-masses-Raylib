@@ -6,7 +6,7 @@ namespace Textures;
 
 public class TextureManager
 {
-    public Texture2D _centerOfMassIcon;
+    public Texture2D CenterOfMassIcon { get; init; }
 
     public TextureManager()
     {
@@ -19,12 +19,12 @@ public class TextureManager
             resourcesPath = Directory.GetCurrentDirectory() + "/res/";
         #endif
         Image centerOfMassIcon = LoadImage(resourcesPath + "center_of_mass_icon.png");
-        _centerOfMassIcon = LoadTextureFromImage(centerOfMassIcon);
+        CenterOfMassIcon = LoadTextureFromImage(centerOfMassIcon);
         UnloadImage(centerOfMassIcon);
     }
 
     ~TextureManager()
     {
-        UnloadTexture(_centerOfMassIcon);
+        UnloadTexture(CenterOfMassIcon);
     }
 }

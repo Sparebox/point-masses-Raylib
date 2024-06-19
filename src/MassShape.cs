@@ -312,7 +312,8 @@ public class MassShape
             }
             Vector2 COM = UnitConv.MetersToPixels(CenterOfMass);
             Vector2 totalVisForce = UnitConv.MetersToPixels(TotalVisForce);
-            Graphics.DrawArrow(COM, COM + totalVisForce * 1e-2f, Color.Magenta);
+            totalVisForce = Raymath.Vector2ClampValue(totalVisForce, 0f, 150f);
+            Graphics.DrawArrow(COM, COM + totalVisForce, Color.Magenta);
         }
         if (_context._drawBodyInfo)
         {
@@ -558,8 +559,8 @@ public class MassShape
         ImGui.Text(string.Format("Linear energy: {0:0.##} J", LinEnergy));
         ImGui.Text(string.Format("Rot energy: {0:0.##} J", RotEnergy));
         ImGui.End();
-        Vector2 offset = new(-_context.TextureManager._centerOfMassIcon.Width / 2f, -_context.TextureManager._centerOfMassIcon.Height / 2f);
-        DrawTextureEx(_context.TextureManager._centerOfMassIcon, UnitConv.MetersToPixels(Centroid) + 0.5f * offset, 0f, 0.5f, Color.White);
+        Vector2 offset = new(-_context.TextureManager.CenterOfMassIcon.Width / 2f, -_context.TextureManager.CenterOfMassIcon.Height / 2f);
+        DrawTextureEx(_context.TextureManager.CenterOfMassIcon, UnitConv.MetersToPixels(Centroid) + 0.5f * offset, 0f, 0.5f, Color.White);
     }
 
     public static bool operator == (MassShape a, MassShape b)

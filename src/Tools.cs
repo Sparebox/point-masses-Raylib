@@ -20,7 +20,8 @@ public enum ToolType
     Ruler,
     Delete,
     Editor,
-    GravityWell
+    GravityWell,
+    NbodySim,
 }
 
 public abstract class Tool
@@ -104,6 +105,9 @@ public abstract class Tool
                 break;
             case ToolType.GravityWell :
                 context.SelectedTool = context.Tools[(int) ToolType.GravityWell];
+                break;
+            case ToolType.NbodySim :
+                context.SelectedTool = context.Tools[(int) ToolType.NbodySim];
                 break;
         }
     }
@@ -536,6 +540,49 @@ public class GravityWell : Tool
             dir /= dist;
             Vector2 gravForce = dir * _gravConstant * shape.Mass / (dist * dist);
             shape.ApplyForceCOM(gravForce);
+        }
+    }
+}
+
+public class NbodySim : Tool
+{
+    public float _gravConstant = 0.01f;
+    public float _minDist = 0f;
+    public bool _running;
+
+    public NbodySim(Context context) => _context = context;
+
+    public override void Draw() {}
+
+    public override void Update()
+    {
+        if (!_context._toolEnabled || !_running)
+        {
+            return;
+        }
+        ApplyGravityForces();
+    }
+
+    private void ApplyGravityForces()
+    {
+        foreach (var shapeA in _context.MassShapes)
+        {
+            foreach (var shapeB in _context.MassShapes)
+            {
+                if (shapeA == shapeB)
+                {
+                    continue;
+                }
+                Vector2 dir = shapeB.CenterOfMass - shapeA.CenterOfMass;
+                float dist = dir.Length();
+                if (dist == 0f || dist < _minDist)
+                {
+                    continue;
+                }
+                dir /= dist;
+                Vector2 gravForce = dir * _gravConstant * shapeA.Mass * shapeB.Mass / (dist * dist);
+                shapeA.ApplyForce(gravForce);
+            }
         }
     }
 }

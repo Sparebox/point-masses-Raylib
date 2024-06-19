@@ -64,6 +64,11 @@ public class Gui
                 ImGui.InputFloat("Gravitational constant", ref ((GravityWell) context.SelectedTool)._gravConstant);
                 ImGui.InputFloat("Minimum distance", ref ((GravityWell) context.SelectedTool)._minDist);
                 break;
+            case NbodySim :
+                ImGui.Checkbox("Running", ref ((NbodySim) context.SelectedTool)._running);
+                ImGui.InputFloat("Gravitational constant", ref ((NbodySim) context.SelectedTool)._gravConstant);
+                ImGui.InputFloat("Minimum distance", ref ((NbodySim) context.SelectedTool)._minDist);
+                break;
         }
         ImGui.Spacing();
         ImGui.Separator();

@@ -15,7 +15,6 @@ public class Program
 {   
     public const int WinW = 1600;
     public const int WinH = 900;
-    public const int TargetFPS = 165;
     public const float QuadTreeUpdateSeconds = 0.1f;
 
     private static float _accumulator;
@@ -90,7 +89,7 @@ public class Program
     private static void Draw()
     {
         BeginDrawing(); // raylib
-        rlImGui.Begin();
+        rlImGui.Begin(); // GUI
         ClearBackground(Color.Black);
 
         foreach (MassShape s in _context.MassShapes)
