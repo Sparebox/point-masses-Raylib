@@ -37,6 +37,13 @@ public class Context
     public int _selectedToolIndex;
     public int _selectedSpawnTargetIndex;
     public Tool[] Tools { get; init; }
+    public NbodySim NbodySim
+    {
+        get
+        {
+            return Tools[(int) ToolType.NbodySim] as NbodySim;
+        }
+    }
     public int SavedShapeCount => _saveState.MassShapes.Count;
     public int MassCount 
     {

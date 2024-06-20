@@ -34,10 +34,10 @@ public class RigidConstraint : Constraint
         float diff = Length - dist;
         float percentage = diff / dist / 2f;
         Vector2 offset = percentage * AtoB;
-        if (!PointA._pinned) {
+        if (!PointA.Pinned) {
             PointA.Pos -= offset;
         }
-        if (!PointB._pinned)
+        if (!PointB.Pinned)
         {
             PointB.Pos += offset;
         }

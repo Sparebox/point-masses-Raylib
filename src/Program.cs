@@ -81,6 +81,7 @@ public class Program
                 }
                 MassShape.HandleCollisions(_context);
             }
+            _context.NbodySim.Update();
             _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
             _accumulator -= _context.TimeStep;
         }

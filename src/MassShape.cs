@@ -17,7 +17,7 @@ public class MassShape
         {
             return _points.Aggregate(
                 new Vector2(),
-                (totalVisForce, p) => totalVisForce += p._visForce
+                (totalVisForce, p) => totalVisForce += p.VisForce
             );
         }
     }
@@ -515,13 +515,13 @@ public class MassShape
         float impulseMag = -(1f + _context._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / combinedMass + pointMass.InvMass);
         Vector2 impulse = impulseMag * normal;
         pointMass.Vel = preVel + impulse * pointMass.InvMass;
-        closestA.Vel = closestApreVel - impulse / 2f / (combinedMass - closestB.Mass);
-        closestB.Vel = closestBpreVel - impulse / 2f / (combinedMass - closestA.Mass);
+        closestA.Vel = closestApreVel - impulse * 0.5f / (combinedMass - closestB.Mass);
+        closestB.Vel = closestBpreVel - impulse * 0.5f / (combinedMass - closestA.Mass);
         // Apply friction
         pointMass.ApplyFriction(-normal);
     }
 
-    private (PointMass, PointMass, Vector2) FindClosestPoints(Vector2 pos)
+    private (PointMass closestA, PointMass closestB, Vector2 closestPoint) FindClosestPoints(Vector2 pos)
     {
         float closestDistSq = float.MaxValue;
         PointMass closestA = null;
@@ -531,7 +531,7 @@ public class MassShape
         {
             PointMass lineStart = _points[i];
             PointMass lineEnd = _points[(i + 1) % _points.Count];
-            Vector2 pointOnLine = Utils.Geometry.ClosestPointOnLine(lineStart.Pos, lineEnd.Pos, pos);
+            Vector2 pointOnLine = Geometry.ClosestPointOnLine(lineStart.Pos, lineEnd.Pos, pos);
             float distSq = Vector2.DistanceSquared(pointOnLine, pos);
             if (distSq < closestDistSq)
             {

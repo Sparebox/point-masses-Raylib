@@ -516,10 +516,6 @@ public class GravityWell : Tool
 
     public override void Update()
     {
-        if (!_context._toolEnabled)
-        {
-            return;
-        }
         if (IsMouseButtonPressed(MouseButton.Left))
         {
             _pos = UnitConv.PixelsToMeters(GetMousePosition());
@@ -556,7 +552,7 @@ public class NbodySim : Tool
 
     public override void Update()
     {
-        if (!_context._toolEnabled || !_running)
+        if (!_running)
         {
             return;
         }

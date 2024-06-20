@@ -15,11 +15,11 @@ public class PointMass
 {
     private static uint _idCounter;
     private readonly Context _context;
-    public const float RadiusPerMassRatio = 0.01f;
+    public const float RadiusPerMassRatio = 0.01f; // aka inverse density
 
     public uint Id { get; init; }
-    public readonly bool _pinned;
-    public Vector2 _visForce; // For force visualization
+    public bool Pinned { get; init; }
+    public Vector2 VisForce { get; set; } // For force visualization
     public Vector2 Pos { get; set; }
     public Vector2 PrevPos { get; set; }
     public Vector2 Force { get; set; }
@@ -30,7 +30,8 @@ public class PointMass
         set { PrevPos = Pos - value; }
     }
     public float Mass { get; }
-    public float InvMass { get { return 1f / Mass; }}
+    public float InvMass => _invMass;
+    private readonly float _invMass;
     public float Radius { get; init; }
     public BoundingBox AABB 
     {
@@ -48,9 +49,10 @@ public class PointMass
         PrevPos = Pos;
         Force = Vector2.Zero;
         Mass = mass;
+        _invMass = 1f / Mass;
         Radius = MassToRadius(mass);
         Id = _idCounter++;
-        _pinned = pinned;
+        Pinned = pinned;
         _context = context;
     }
 
@@ -61,15 +63,16 @@ public class PointMass
         PrevPos = Pos;
         Force = Vector2.Zero;
         Mass = p.Mass;
+        _invMass = p._invMass;
         Radius = p.Radius;
         Id = p.Id;
-        _pinned = p._pinned;
+        Pinned = p.Pinned;
         _context = p._context;
     }
 
     public void Update()
     {
-        if (_pinned)
+        if (Pinned)
         {
             return;
         }
@@ -78,11 +81,11 @@ public class PointMass
             ApplyForce(Mass * _context.Gravity);
         }
         SolveLineCollisions();
-        Vector2 acc = Force / Mass;
+        Vector2 acc = Force * InvMass;
         Vector2 vel = Vel; // Save the velocity before previous position is reset
         PrevPos = Pos;
         Pos += vel + acc * _context.SubStep * _context.SubStep;
-        _visForce = Force;
+        VisForce = Force;
         PrevForce = Force;
         Force = Vector2.Zero;
     }
@@ -95,7 +98,7 @@ public class PointMass
     public void ApplyForce(in Vector2 force)
     {
         Force += force;
-        _visForce += force;
+        VisForce += force;
     }
 
     public void SolveLineCollisions()
@@ -125,7 +128,7 @@ public class PointMass
             {
                 PointMassA = this,
                 PointMassB = otherPoint,
-                Normal = new(normal.X / dist, normal.Y / dist),
+                Normal = normal / dist,
                 Separation = Radius + otherPoint.Radius - dist,
             };
             return result;
@@ -167,8 +170,8 @@ public class PointMass
             return;
         }
         // Find vel direction perpendicular to the normal
-        Vector2 dir = Vel - Vector2.Dot(Vel, normal) * normal;
-        if (dir.LengthSquared() == 0f)
+        Vector2 perpVel = Vel - Vector2.Dot(Vel, normal) * normal;
+        if (perpVel.LengthSquared() == 0f)
         {
             return;
         }
@@ -181,15 +184,12 @@ public class PointMass
         if (PrevForce.LengthSquared() < MathF.Pow(_context._globalStaticFrictionCoeff * -normalForce, 2f))
         {
             // Apply static friction
-            Vel += -dir;
-            Vel = Vector2.Zero;
+            Vel -= perpVel;
             return;
         }
         // Apply kinetic friction
-        dir = Vector2.Normalize(dir);
-        ApplyForce(dir * _context._globalKineticFrictionCoeff * normalForce);
-        //Vector2 vis = dir * KineticFrictionCoeff * normalForce;
-        //Utils.Graphic.DrawArrow((int) Pos.X, (int) Pos.Y, (int) (Pos.X + vis.X), (int) (Pos.Y + vis.Y), Color.Magenta);
+        perpVel = Vector2.Normalize(perpVel);
+        ApplyForce(perpVel * _context._globalKineticFrictionCoeff * normalForce);
     }
 
     public override bool Equals(object obj)
