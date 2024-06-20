@@ -79,7 +79,7 @@ public class Program
                 {
                     s.Update();
                 }
-                if (_context.NbodySim._running && _context.NbodySim._collisionsEnabled)
+                if (!_context.NbodySim._running || (_context.NbodySim._running && _context.NbodySim._collisionsEnabled))
                 {
                     MassShape.HandleCollisions(_context);
                 }

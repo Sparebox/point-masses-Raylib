@@ -235,15 +235,7 @@ public class MassShape
         }
         foreach (var c in shape._constraints)
         {
-            Constraint copyConstraint = null;
-            if (c.GetType() == typeof(SpringConstraint))
-            {
-                copyConstraint = new SpringConstraint((SpringConstraint) c);
-            }
-            if (c.GetType() == typeof(RigidConstraint))
-            {
-                copyConstraint = new RigidConstraint((RigidConstraint) c);
-            }
+            Constraint copyConstraint = new DistanceConstraint((DistanceConstraint) c);
             copyConstraint.PointA = _points.Where(p => p.Equals(copyConstraint.PointA)).First();
             copyConstraint.PointB = _points.Where(p => p.Equals(copyConstraint.PointB)).First();
             _constraints.Add(copyConstraint);
@@ -619,7 +611,7 @@ public class MassShape
         // Constraints
         for (int i = 0; i < res; i++)
         {
-            s._constraints.Add(new SpringConstraint(s._points[i], s._points[(i + 1) % res], stiffness, SpringConstraint.DefaultDamping));
+            s._constraints.Add(new DistanceConstraint(s._points[i], s._points[(i + 1) % res], stiffness, context));
         }
         return s;
     }
@@ -637,14 +629,14 @@ public class MassShape
             angle += 2f * MathF.PI / res;
         }
         // Constraints
-        List<int> visitedPoints = new();
+        HashSet<int> visitedPoints = new();
         for (int i = 0; i < res; i++)
         {
-            s._constraints.Add(new RigidConstraint(s._points[i], s._points[(i + 1) % res]));
+            s._constraints.Add(new DistanceConstraint(s._points[i], s._points[(i + 1) % res], 1f, context));
             if (!visitedPoints.Contains(i))
             {
                 int nextIndex = res % 2 == 0 ? (i + res / 2 - 1) % res : (i + res / 2) % res;
-                s._constraints.Add(new RigidConstraint(s._points[i], s._points[nextIndex]));
+                s._constraints.Add(new DistanceConstraint(s._points[i], s._points[nextIndex], 1f, context));
                 visitedPoints.Add(i);
             }
         }
@@ -682,7 +674,7 @@ public class MassShape
         // Constraints
         for (int i = 0; i < res - 1; i++)
         {
-            c._constraints.Add(new RigidConstraint(c._points[i], c._points[i + 1]));
+            c._constraints.Add(new DistanceConstraint(c._points[i], c._points[i + 1], 1f, context));
         }
         return c;
     }
@@ -708,23 +700,11 @@ public class MassShape
             {
                 if (col != res - 1)
                 {
-                    if (stiffness == 0f)
-                    {
-                        c._constraints.Add(new RigidConstraint(c._points[col * res + row], c._points[(col + 1) * res + row]));
-                    } else
-                    {
-                        c._constraints.Add(new SpringConstraint(c._points[col * res + row], c._points[(col + 1) * res + row], stiffness, SpringConstraint.DefaultDamping));
-                    }
+                    c._constraints.Add(new DistanceConstraint(c._points[col * res + row], c._points[(col + 1) * res + row], stiffness, context));
                 }
                 if (row != res - 1)
                 {
-                    if (stiffness == 0f)
-                    {
-                        c._constraints.Add(new RigidConstraint(c._points[col * res + row], c._points[col * res + row + 1]));
-                    } else 
-                    {
-                        c._constraints.Add(new SpringConstraint(c._points[col * res + row], c._points[col * res + row + 1], stiffness, SpringConstraint.DefaultDamping));
-                    }
+                    c._constraints.Add(new DistanceConstraint(c._points[col * res + row], c._points[col * res + row + 1], stiffness, context));
                 }
             }
         }
@@ -747,7 +727,7 @@ public class MassShape
         // Constraints
         for (int i = 0; i < order; i++)
         {
-            c._constraints.Add(new RigidConstraint(c._points[i], c._points[i + 1]));
+            c._constraints.Add(new DistanceConstraint(c._points[i], c._points[i + 1], 1f, context));
         }
         return c;
     }
@@ -765,11 +745,11 @@ public class MassShape
             },
             _constraints = new()
         };
-        c._constraints.Add(new RigidConstraint(c._points[0], c._points[1]));
-        c._constraints.Add(new RigidConstraint(c._points[1], c._points[2]));
-        c._constraints.Add(new RigidConstraint(c._points[2], c._points[3]));
-        c._constraints.Add(new RigidConstraint(c._points[3], c._points[0]));
-        c._constraints.Add(new RigidConstraint(c._points[0], c._points[2]));
+        c._constraints.Add(new DistanceConstraint(c._points[0], c._points[1], 1f, context));
+        c._constraints.Add(new DistanceConstraint(c._points[1], c._points[2], 1f, context));
+        c._constraints.Add(new DistanceConstraint(c._points[2], c._points[3], 1f, context));
+        c._constraints.Add(new DistanceConstraint(c._points[3], c._points[0], 1f, context));
+        c._constraints.Add(new DistanceConstraint(c._points[0], c._points[2], 1f, context));
         return c;
     }
 
@@ -785,11 +765,11 @@ public class MassShape
                 new(x + size / 2f, y - size / 2f, mass / 4f, false, context)
             }
         };
-        c._constraints.Add(new SpringConstraint(c._points[0], c._points[1], stiffness, SpringConstraint.DefaultDamping));
-        c._constraints.Add(new SpringConstraint(c._points[1], c._points[2], stiffness, SpringConstraint.DefaultDamping));
-        c._constraints.Add(new SpringConstraint(c._points[2], c._points[3], stiffness, SpringConstraint.DefaultDamping));
-        c._constraints.Add(new SpringConstraint(c._points[3], c._points[0], stiffness, SpringConstraint.DefaultDamping));
-        c._constraints.Add(new SpringConstraint(c._points[0], c._points[2], stiffness, SpringConstraint.DefaultDamping));
+        c._constraints.Add(new DistanceConstraint(c._points[0], c._points[1], stiffness, context));
+        c._constraints.Add(new DistanceConstraint(c._points[1], c._points[2], stiffness, context));
+        c._constraints.Add(new DistanceConstraint(c._points[2], c._points[3], stiffness, context));
+        c._constraints.Add(new DistanceConstraint(c._points[3], c._points[0], stiffness, context));
+        c._constraints.Add(new DistanceConstraint(c._points[0], c._points[2], stiffness, context));
         return c;
     }
 

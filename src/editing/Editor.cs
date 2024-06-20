@@ -168,15 +168,7 @@ public class Editor : Tool
         // Constraints
         for (int i = 0; i < (_connectLoop ? loop._points.Count : loop._points.Count - 1); i++)
         {
-            Constraint c;
-            if (_isRigidConstraint)
-            {
-                c = new RigidConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count]);
-            }
-            else
-            {
-                c = new SpringConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count], _stiffness, SpringConstraint.DefaultDamping);
-            }
+            Constraint c = new DistanceConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count], _stiffness, _context);
             loop._constraints.Add(c);
         }
         _context.AddMassShape(loop);
@@ -195,17 +187,9 @@ public class Editor : Tool
         // Constraints
         foreach (var pair in _grid.ConstrainedPointIndexPairs)
         {
-            Constraint c;
             PointMass a = shape._points.Find(p => p.Pos == _grid.GridPoints[pair.Item1]._pos);
             PointMass b = shape._points.Find(p => p.Pos == _grid.GridPoints[pair.Item2]._pos);
-            if (_isRigidConstraint)
-            {
-                c = new RigidConstraint(a, b);
-            }
-            else
-            {
-                c = new SpringConstraint(a, b, _stiffness, SpringConstraint.DefaultDamping);
-            }
+            Constraint c = new DistanceConstraint(a, b, _stiffness, _context);
             shape._constraints.Add(c);
         }
         _context.AddMassShape(shape);
