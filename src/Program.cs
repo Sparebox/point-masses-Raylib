@@ -79,7 +79,10 @@ public class Program
                 {
                     s.Update();
                 }
-                MassShape.HandleCollisions(_context);
+                if (_context.NbodySim._running && _context.NbodySim._collisionsEnabled)
+                {
+                    MassShape.HandleCollisions(_context);
+                }
             }
             _context.NbodySim.Update();
             _context.MassShapes.RemoveWhere(s => s._toBeDeleted);

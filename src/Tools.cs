@@ -545,6 +545,7 @@ public class NbodySim : Tool
     public float _gravConstant = 0.01f;
     public float _minDist = 0f;
     public bool _running;
+    public bool _collisionsEnabled;
 
     public NbodySim(Context context) => _context = context;
 

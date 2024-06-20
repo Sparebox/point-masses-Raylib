@@ -128,10 +128,10 @@ public class QuadTree
         }
         else
         {
-            _northEast.QueryShapes(area, found);
-            _southEast.QueryShapes(area, found);
-            _southWest.QueryShapes(area, found);
-            _northWest.QueryShapes(area, found);
+            _northEast.QueryShapes(in area, found);
+            _southEast.QueryShapes(in area, found);
+            _southWest.QueryShapes(in area, found);
+            _northWest.QueryShapes(in area, found);
         }
         return found;
     }
@@ -158,10 +158,10 @@ public class QuadTree
         }
         else
         {
-            _northEast.QueryPoints(area, found);
-            _southEast.QueryPoints(area, found);
-            _southWest.QueryPoints(area, found);
-            _northWest.QueryPoints(area, found);
+            _northEast.QueryPoints(in area, found);
+            _southEast.QueryPoints(in area, found);
+            _southWest.QueryPoints(in area, found);
+            _northWest.QueryPoints(in area, found);
         }
         return found;
     }
