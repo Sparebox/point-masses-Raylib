@@ -28,10 +28,10 @@ public class MassShape
         { 
             if (_mass.HasValue)
             {
-                return (float) _mass;
+                return _mass.Value;
             }
             _mass = _points.Select(p => p.Mass).Sum();
-            return (float) _mass;
+            return _mass.Value;
         } 
     }
 
@@ -59,43 +59,38 @@ public class MassShape
         }
     }
 
-    public Vector2 Vel
-    {
-        get
-        {
-            Vector2 vel = (CenterOfMass - _lastCenterOfMass) / _context.SubStep;
-            return vel;
-        }
-    }
+    public Vector2 Vel => CenterOfMass - _lastCenterOfMass;
 
-    public float AngularMass
+    public float Inertia
     {
         get
         {
             Vector2 COM = CenterOfMass;
-            float angularMass = 0f;
+            float inertia = 0f;
             foreach (var p in _points)
             {
                 float distSq = Vector2.DistanceSquared(COM, p.Pos);
-                angularMass += p.Mass * distSq;
+                inertia += p.Mass * distSq;
             }
-            return angularMass;
+            return inertia;
         }
     }
 
-    public Vector2 Momentum
-    {
-        get
-        {
-            return Mass * Vel;
-        }
-    }
+    public Vector2 Momentum => Mass * Vel;
 
     public float AngularMomentum
     {
         get
         {
-            return AngularMass * AngVel;
+            float angularMomentum = 0f;
+            foreach (var point in _points)
+            {
+                Vector2 momentum = (Vel - point.Vel) * point.Mass;
+                Vector2 radius = point.Pos - CenterOfMass;
+                Vector3 cross = Vector3.Cross(new(radius, 0f), new(momentum, 0f));
+                angularMomentum += float.Sign(cross.Z) * cross.Length();
+            }
+            return angularMomentum;
         }
     }
 
@@ -103,8 +98,8 @@ public class MassShape
     {
         get
         {
-            float angVel = AngVel;
-            return 0.5f * AngularMass * angVel * angVel;
+            float angVel = AngVel / _context.SubStep;
+            return 0.5f * Inertia * angVel * angVel;
         }
     }
 
@@ -112,7 +107,7 @@ public class MassShape
     {
         get
         {
-            return 0.5f * Mass * Vel.LengthSquared();
+            return 0.5f * Mass * Vel.LengthSquared() / _context.SubStep;
         }
     }
     
@@ -132,20 +127,7 @@ public class MassShape
         }
     }
 
-    public float Angle
-    {
-        get
-        {
-            if (!_points.Any() || _points.Count == 1)
-            {
-                return 0f;
-            }
-            Vector2 com = CenterOfMass;
-            Vector2 pos = _points.First().Pos;
-            Vector2 dir = pos - com;
-            return MathF.Atan2(dir.Y, dir.X);
-        }
-    }
+    public float Angle => _angle;
 
     public float AngVel
     {
@@ -155,7 +137,7 @@ public class MassShape
             {
                 return 0f;
             }
-            return (Angle - _lastAngle) / _context.SubStep;
+            return AngularMomentum / Inertia;
         }
     }
 
@@ -204,9 +186,9 @@ public class MassShape
     private readonly Context _context;
     private static int _idCounter;
     private Vector2 _lastCenterOfMass;
-    private float _lastAngle;
     private PressureVis _pressureVis;
     private float? _mass;
+    private float _angle;
 
     public MassShape(Context context, bool inflated = false) 
     {
@@ -249,14 +231,9 @@ public class MassShape
             _toBeDeleted = true;
             return;
         }
-        if (_context._drawBodyInfo)
-        {
-            _lastAngle = Angle;
-        }
-        if (_context._drawBodyInfo)
-        {
-            _lastCenterOfMass = CenterOfMass;
-        }
+        _lastCenterOfMass = CenterOfMass;
+        _angle += AngVel;
+        _angle %= 2f * MathF.PI;
         foreach (Constraint c in _constraints)
         {
             c.Update();
@@ -299,7 +276,8 @@ public class MassShape
                 // Draw pressure forces acting on normals
                 foreach (VisLine line in _pressureVis._lines)
                 {
-                    Graphics.DrawArrow(line._start, line._end, Color.Magenta);
+                    Vector2 clampedLine = Raymath.Vector2ClampValue(line._end - line._start, 0f, 150f);
+                    Graphics.DrawArrow(line._start, line._start + clampedLine, Color.Magenta);
                 }
             }
             Vector2 COM = UnitConv.MetersToPixels(CenterOfMass);
@@ -542,11 +520,11 @@ public class MassShape
         ImGui.SetWindowPos(UnitConv.MetersToPixels(Centroid) + new Vector2(25f, 0f));
         ImGui.SetWindowSize(new (250f, 130f));
         ImGui.Text(string.Format("Mass: {0} kg", Mass));
-        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel));
-        ImGui.Text(string.Format("Momentum: {0:0.0} kgm/s", Momentum));
-        ImGui.Text(string.Format("Angular momentum: {0:0.0} Js", AngularMomentum));
-        ImGui.Text(string.Format("Moment of inertia: {0:0} kgm^2", AngularMass));
-        ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel * RAD2DEG));
+        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel / _context.SubStep));
+        ImGui.Text(string.Format("Momentum: {0:0.0} kgm/s", Momentum / _context.SubStep));
+        ImGui.Text(string.Format("Angular momentum: {0:0.0} Js", AngularMomentum / _context.SubStep));
+        ImGui.Text(string.Format("Moment of inertia: {0:0} kgm^2", Inertia));
+        ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel / _context.SubStep * RAD2DEG));
         ImGui.Text(string.Format("Angle: {0:0} deg", Angle * RAD2DEG));
         ImGui.Text(string.Format("Linear energy: {0:0.##} J", LinEnergy));
         ImGui.Text(string.Format("Rot energy: {0:0.##} J", RotEnergy));

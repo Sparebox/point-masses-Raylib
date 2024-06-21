@@ -29,6 +29,7 @@ public class PointMass
         get { return Pos - PrevPos; }
         set { PrevPos = Pos - value; }
     }
+    public Vector2 Momentum => Mass * Vel;
     public float Mass { get; }
     public float InvMass => _invMass;
     private readonly float _invMass;

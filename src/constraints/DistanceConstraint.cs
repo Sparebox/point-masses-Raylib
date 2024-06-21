@@ -39,18 +39,26 @@ public class DistanceConstraint : Constraint
         Vector2 AtoB = PointB.Pos - PointA.Pos;
         float dist = AtoB.Length();
         float error = Length - dist;
-        if (Raymath.FloatEquals(error, 0f) == 1)
+        if (Raymath.FloatEquals(error, 0f) == 1 || (PointA.Pinned && PointB.Pinned))
         {
             return;
         }
         Vector2 correctionVector = AtoB / dist * error;
-        Vector2 correctionA = -PointA.InvMass / (PointA.InvMass + PointB.InvMass) * correctionVector;
-        Vector2 correctionB = PointB.InvMass / (PointA.InvMass + PointB.InvMass) * correctionVector;
+        Vector2 correctionA;
+        Vector2 correctionB;
         float stiffnessCoeff = 1f - MathF.Pow(1f - Stiffness, 1f / _context.Substeps);
-        correctionA *= stiffnessCoeff;
-        correctionB *= stiffnessCoeff;
-        PointA.Pos += correctionA;
-        PointB.Pos += correctionB;
+        if (!PointA.Pinned)
+        {
+            correctionA = -PointA.InvMass / (PointA.InvMass + PointB.InvMass) * correctionVector;
+            correctionA *= stiffnessCoeff;
+            PointA.Pos += correctionA;
+        }
+        if (!PointB.Pinned)
+        {
+            correctionB = PointB.InvMass / (PointA.InvMass + PointB.InvMass) * correctionVector;
+            correctionB *= stiffnessCoeff;
+            PointB.Pos += correctionB;
+        }
     }
 
     public override void Draw()
