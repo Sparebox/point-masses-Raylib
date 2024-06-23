@@ -7,9 +7,7 @@ using Utils;
 using Tools;
 using Editing;
 
-#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Sim;
-#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class Context
 {

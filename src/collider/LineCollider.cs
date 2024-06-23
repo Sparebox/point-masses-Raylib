@@ -6,9 +6,7 @@ using Utils;
 using static Raylib_cs.Raylib;
 using static Utils.Entities;
 
-#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Collision;
-#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class LineCollider
 {

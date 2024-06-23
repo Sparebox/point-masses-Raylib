@@ -6,9 +6,7 @@ using Tools;
 using static Raylib_cs.Raylib;
 using static Tools.Spawn;
 
-#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace UI;
-#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class Gui
 {

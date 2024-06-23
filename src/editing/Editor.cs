@@ -7,9 +7,7 @@ using Tools;
 using Utils;
 using static Raylib_cs.Raylib;
 
-#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Editing;
-#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class Editor : Tool
 {
