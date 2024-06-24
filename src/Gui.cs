@@ -6,9 +6,7 @@ using Tools;
 using static Raylib_cs.Raylib;
 using static Tools.Spawn;
 
-#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace UI;
-#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class Gui
 {
@@ -69,6 +67,7 @@ public class Gui
                 ImGui.Checkbox("Collisions enabled", ref ((NbodySim) context.SelectedTool)._collisionsEnabled);
                 ImGui.InputFloat("Gravitational constant", ref ((NbodySim) context.SelectedTool)._gravConstant);
                 ImGui.InputFloat("Minimum distance", ref ((NbodySim) context.SelectedTool)._minDist);
+                ImGui.InputFloat("Influence meters", ref ((NbodySim) context.SelectedTool)._searchAreaSizeMeters);
                 break;
         }
         ImGui.Spacing();

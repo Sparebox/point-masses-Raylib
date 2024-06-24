@@ -1,8 +1,7 @@
 using Raylib_cs;
 using static Raylib_cs.Raylib;
-#pragma warning disable IDE0130 // Namespace does not match folder structure
+
 namespace Textures;
-#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class TextureManager
 {

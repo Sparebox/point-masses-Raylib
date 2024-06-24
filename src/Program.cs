@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Entities;
 using Physics;
 using Raylib_cs;
 using rlImGui_cs;
@@ -7,15 +8,13 @@ using UI;
 using Utils;
 using static Raylib_cs.Raylib;
 
-#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Sim;
-#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class Program 
 {   
     public const int WinW = 1600;
     public const int WinH = 900;
-    public const float QuadTreeUpdateSeconds = 0.1f;
+    public const float QuadTreeUpdateSeconds = 0.01f;
 
     private static float _accumulator;
     private static float _quadTreeAccumulator;
@@ -51,12 +50,12 @@ public class Program
                 new(0f, 0f, 0f, winHeightMeters),
                 new(winWidthMeters, 0f, winWidthMeters, winHeightMeters),
                 new(0f, winHeightMeters, winWidthMeters, winHeightMeters),
-            },
-            QuadTree = new Entities.QuadTree(
-                UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
-                UnitConv.PixelsToMeters(new Vector2(WinW, WinH))
-            )
+            }
         };
+        context.QuadTree = new(
+            UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
+            UnitConv.PixelsToMeters(new Vector2(WinW, WinH))
+        );
         context.SelectedTool = new PullCom(context);
         context.SaveCurrentState();
         return context;
@@ -64,8 +63,9 @@ public class Program
 
     private static void Update()
     {
-        _accumulator += GetFrameTime();
-        _quadTreeAccumulator += GetFrameTime();
+        float frameTime = GetFrameTime();
+        _accumulator += frameTime;
+        _quadTreeAccumulator += frameTime;
         while (_quadTreeAccumulator >= QuadTreeUpdateSeconds)
         {
             _context.QuadTree.Update(_context);
@@ -142,7 +142,7 @@ public class Program
         {
             _context._simPaused = !_context._simPaused;
         }
-        if (_context._toolEnabled)
+        if (_context._toolEnabled && _context.SelectedTool.GetType() != typeof(NbodySim))
         {
             _context.SelectedTool.Update();
         }

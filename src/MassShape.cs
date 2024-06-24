@@ -175,14 +175,14 @@ public partial class MassShape
     }
     
     public const float GasAmountMult = 1f;
-    public int Id { get; init; }
+    public uint Id { get; init; }
     public List<Constraint> _constraints;
     public List<PointMass> _points;
     public bool _toBeDeleted;
     public float _gasAmount;
     public bool _inflated;
     private readonly Context _context;
-    private static int _idCounter;
+    private static uint _idCounter;
     private Vector2 _lastCenterOfMass;
     private PressureVis _pressureVis;
     private float? _mass;
@@ -416,11 +416,11 @@ public partial class MassShape
         }
     }
 
-    private void HandlePointOnPointCollisions(MassShape otherShape, BoundingBox otherAABB)
+    private void HandlePointOnPointCollisions(MassShape otherShape)
     {
         foreach (var pointA in _points)
         {
-            if (!CheckCollisionBoxes(pointA.AABB, otherAABB))
+            if (!CheckCollisionBoxes(pointA.AABB, otherShape.AABB))
             {
                 continue;
             }
@@ -439,14 +439,14 @@ public partial class MassShape
     {
         foreach (var shapeA in context.MassShapes)
         {
-            var nearShapes = context.QuadTree.QueryShapes(shapeA.AABB);
+            var nearShapes = context.GetMassShapes(shapeA.AABB);
             foreach (var shapeB in nearShapes)
             {
                 if (shapeA.Equals(shapeB))
                 {
                     continue;
                 }
-                shapeA.HandlePointOnPointCollisions(shapeB, shapeB.AABB);
+                shapeA.HandlePointOnPointCollisions(shapeB);
                 shapeA.HandleLineCollisions(shapeB);
             }
         }

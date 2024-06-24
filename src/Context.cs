@@ -6,10 +6,9 @@ using Textures;
 using Utils;
 using Tools;
 using Editing;
+using Raylib_cs;
 
-#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Sim;
-#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class Context
 {
@@ -30,7 +29,7 @@ public class Context
     public float _globalRestitutionCoeff = 0.3f;
     public float _globalKineticFrictionCoeff = 1f;
     public float _globalStaticFrictionCoeff = 1.1f;
-    public QuadTree QuadTree { get; init; }
+    public QuadTree QuadTree { get; set; }
     public HashSet<LineCollider> LineColliders { get; init; }
     public HashSet<MassShape> MassShapes { get; init; }
     public Tool SelectedTool { get; set; }
@@ -122,6 +121,47 @@ public class Context
         }
         AddMassShapes(_saveState.MassShapes);
         Console.WriteLine("Loaded state");
+    }
+
+    public MassShape GetMassShape(uint id)
+    {
+        var activeShapes = MassShapes.Where(s => !s._toBeDeleted);
+        if (!activeShapes.Any())
+        {
+            return null;
+        }
+        if (!activeShapes.Select(s => s.Id).Contains(id))
+        {
+            return null;
+        }
+        MassShape shape = activeShapes.Single(s => s.Id == id);
+        return shape;
+    }
+
+    public IEnumerable<MassShape> GetMassShapes(in BoundingBox area)
+    {
+        return QuadTree.QueryShapes(area);
+    }
+
+    public IEnumerable<MassShape> GetMassShapes(HashSet<uint> shapeIds)
+    {
+        var filteredShapes = MassShapes.Where(s => shapeIds.Contains(s.Id));
+        return filteredShapes;
+    }
+
+    public IEnumerable<PointMass> GetPointMasses(uint shapeId)
+    {
+        return GetMassShape(shapeId)._points;
+    }
+
+    public IEnumerable<PointMass> GetPointMasses(HashSet<uint> pointIds)
+    {
+        return MassShapes.SelectMany(s => s._points).Where(p => pointIds.Contains(p.Id));
+    }
+
+    public IEnumerable<PointMass> GetPointMasses(in BoundingBox area)
+    {
+        return QuadTree.QueryPoints(in area);
     }
 
     private Tool[] CreateTools()

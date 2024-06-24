@@ -6,9 +6,7 @@ using Sim;
 using Utils;
 using static Raylib_cs.Raylib;
 
-#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Tools;
-#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public enum ToolType
 {
@@ -123,7 +121,7 @@ public abstract class Tool
         return sb.ToString();
     }
 
-    protected static MassShape FindClosestShape(in Vector2 pos, HashSet<MassShape> shapes)
+    protected static MassShape FindClosestShape(in Vector2 pos, IEnumerable<MassShape> shapes)
     {
         MassShape closest = null;
         float closestDistSq = float.MaxValue;
@@ -257,7 +255,7 @@ public class Delete : Tool
         }
         Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-        var shapes = _context.QuadTree.QueryShapes(area);
+        var shapes = _context.GetMassShapes(area).ToHashSet();
         if (!shapes.Any())
         {
             return;
@@ -306,7 +304,7 @@ public class PullCom : Tool
         }
         Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-        var shapes = _context.QuadTree.QueryShapes(area);
+        var shapes = _context.GetMassShapes(area);
         if (!shapes.Any())
         {
             return;
@@ -355,7 +353,7 @@ public class Pull : Tool
         }
         Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-        var points = _context.QuadTree.QueryPoints(area);
+        var points = _context.GetPointMasses(area);
         if (!points.Any())
         {
             return;
@@ -439,7 +437,7 @@ public class Rotate : Tool
             return;
         }
         Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
-        var shapes = _context.QuadTree.QueryShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
+        var shapes = _context.GetMassShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
         if (!shapes.Any())
         {
             return;
@@ -542,6 +540,7 @@ public class GravityWell : Tool
 
 public class NbodySim : Tool
 {
+    public float _searchAreaSizeMeters = 3f;
     public float _gravConstant = 0.01f;
     public float _minDist = 0f;
     public bool _running;
@@ -564,9 +563,15 @@ public class NbodySim : Tool
     {
         foreach (var shapeA in _context.MassShapes)
         {
-            foreach (var shapeB in _context.MassShapes)
+            BoundingBox searchArea = new()
             {
-                if (shapeA == shapeB)
+                Min = new Vector3(shapeA.CenterOfMass, 0f) - new Vector3(_searchAreaSizeMeters / 2f, _searchAreaSizeMeters / 2f, 0f),
+                Max = new Vector3(shapeA.CenterOfMass, 0f) + new Vector3(_searchAreaSizeMeters / 2f, _searchAreaSizeMeters / 2f, 0f)
+            };
+            var closeShapes = _context.GetMassShapes(searchArea);
+            foreach (var shapeB in closeShapes)
+            {
+                if (shapeA.Equals(shapeB))
                 {
                     continue;
                 }

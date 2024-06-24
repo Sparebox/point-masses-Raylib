@@ -5,26 +5,23 @@ using Sim;
 using Utils;
 using static Raylib_cs.Raylib;
 
-#pragma warning disable IDE0130 // Namespace does not match folder structure
 namespace Entities;
-#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 public class QuadTree
 {
-    public const int QuadCapacity = 4;
-    public const int MaxSubdivisions = 1_000;
+    public const int QuadCapacity = 1; // > 1
+    public const uint MaxDepth = 5;
 
-    private static int _subdivisions;
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
     private readonly Vector2 _size;
     private readonly HashSet<MassShape> _massShapes;
-    // TODO: add points
     private bool _subdivided;
     private QuadTree _northEast;
     private QuadTree _southEast;
     private QuadTree _southWest;
     private QuadTree _northWest;
+    private uint _depth;
 
     public QuadTree(in Vector2 center, in Vector2 size)
     {
@@ -33,12 +30,12 @@ public class QuadTree
         _boundary = new BoundingBox(new(_center.X - _size.X / 2f, _center.Y - _size.Y / 2f, 0f), new(_center.X + _size.X / 2f, _center.Y + _size.Y / 2f, 0f));
         _massShapes = new();
         _subdivided  = false;
+        _depth = 0;
     }
 
     public void Update(Context context)
     {
         Clear();
-        _subdivisions = 0;
         foreach (var shape in context.MassShapes)
         {
             Insert(shape);
@@ -60,13 +57,13 @@ public class QuadTree
             _northWest.Insert(shape);
             return;
         }
-        if (_massShapes.Count < QuadCapacity || _subdivisions >= MaxSubdivisions)
+        if (_massShapes.Count < QuadCapacity || _depth >= MaxDepth)
         {
             // Insert into this quad
             _massShapes.Add(shape);
             return;
         }
-        if (_subdivisions >= MaxSubdivisions)
+        if (_depth >= MaxDepth)
         {
             return;
         }
@@ -91,8 +88,11 @@ public class QuadTree
         _southEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize);
         _southWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize);
         _northWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize);
+        _northEast._depth = _depth + 1;
+        _southEast._depth = _depth + 1;
+        _southWest._depth = _depth + 1;
+        _northWest._depth = _depth + 1;
         _subdivided = true;
-        _subdivisions++;
     }
 
     private void Clear()
@@ -100,6 +100,7 @@ public class QuadTree
         if (!_subdivided)
         {
             _massShapes.Clear();
+            _depth = 0;
             return;
         }
         _subdivided = false;
