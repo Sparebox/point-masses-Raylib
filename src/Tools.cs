@@ -1,5 +1,7 @@
 using System.Numerics;
 using System.Text;
+using Entities;
+using GravitySim;
 using Physics;
 using Raylib_cs;
 using Sim;
@@ -540,15 +542,26 @@ public class GravityWell : Tool
 
 public class NbodySim : Tool
 {
-    public float _searchAreaSizeMeters = 3f;
     public float _gravConstant = 0.01f;
     public float _minDist = 0f;
+    public float _threshold = 0.1f;
     public bool _running;
     public bool _collisionsEnabled;
+    private readonly BarnesHutTree _quadTree;
 
-    public NbodySim(Context context) => _context = context;
+    public NbodySim(Context context)
+    {
+        _context = context;
+        _quadTree = new(
+            UnitConv.PixelsToMeters(new Vector2(Program.WinW / 2f, Program.WinH / 2f)),
+            UnitConv.PixelsToMeters(new Vector2(Program.WinW, Program.WinH))
+        );
+    }
 
-    public override void Draw() {}
+    public override void Draw() 
+    {
+        _quadTree.Draw();
+    }
 
     public override void Update()
     {
@@ -556,35 +569,15 @@ public class NbodySim : Tool
         {
             return;
         }
+        _quadTree.Update(_context);
         ApplyGravityForces();
     }
 
     private void ApplyGravityForces()
     {
-        foreach (var shapeA in _context.MassShapes)
+        foreach (var shape in _context.MassShapes)
         {
-            BoundingBox searchArea = new()
-            {
-                Min = new Vector3(shapeA.CenterOfMass, 0f) - new Vector3(_searchAreaSizeMeters / 2f, _searchAreaSizeMeters / 2f, 0f),
-                Max = new Vector3(shapeA.CenterOfMass, 0f) + new Vector3(_searchAreaSizeMeters / 2f, _searchAreaSizeMeters / 2f, 0f)
-            };
-            var closeShapes = _context.GetMassShapes(searchArea);
-            foreach (var shapeB in closeShapes)
-            {
-                if (shapeA.Equals(shapeB))
-                {
-                    continue;
-                }
-                Vector2 dir = shapeB.CenterOfMass - shapeA.CenterOfMass;
-                float dist = dir.Length();
-                if (dist == 0f || dist < _minDist)
-                {
-                    continue;
-                }
-                dir /= dist;
-                Vector2 gravForce = dir * _gravConstant * shapeA.Mass * shapeB.Mass / (dist * dist);
-                shapeA.ApplyForce(gravForce);
-            }
+            _quadTree.CalculateGravity(shape, this);
         }
     }
 }

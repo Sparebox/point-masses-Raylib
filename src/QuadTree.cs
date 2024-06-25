@@ -2,6 +2,7 @@
 using Physics;
 using Raylib_cs;
 using Sim;
+using Tools;
 using Utils;
 using static Raylib_cs.Raylib;
 
@@ -9,9 +10,8 @@ namespace Entities;
 
 public class QuadTree
 {
-    public const int QuadCapacity = 1; // > 1
-    public const uint MaxDepth = 5;
-
+    public const int QuadCapacity = 2; // > 1
+    public uint MaxDepth { get; init;}
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
     private readonly Vector2 _size;
@@ -23,7 +23,7 @@ public class QuadTree
     private QuadTree _northWest;
     private uint _depth;
 
-    public QuadTree(in Vector2 center, in Vector2 size)
+    public QuadTree(in Vector2 center, in Vector2 size, uint maxDepth)
     {
         _center = center;
         _size = size;
@@ -31,6 +31,7 @@ public class QuadTree
         _massShapes = new();
         _subdivided  = false;
         _depth = 0;
+        MaxDepth = maxDepth;
     }
 
     public void Update(Context context)
@@ -79,15 +80,16 @@ public class QuadTree
             _northWest.Insert(s);
         }
         _massShapes.Clear();
+        return;
     }
 
     private void Subdivide()
     {
         Vector2 newSize = _size / 2f;
-        _northEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize);
-        _southEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize);
-        _southWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize);
-        _northWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize);
+        _northEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize, MaxDepth);
+        _southEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize, MaxDepth);
+        _southWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize, MaxDepth);
+        _northWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize, MaxDepth);
         _northEast._depth = _depth + 1;
         _southEast._depth = _depth + 1;
         _southWest._depth = _depth + 1;

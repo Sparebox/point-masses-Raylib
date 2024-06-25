@@ -12,8 +12,8 @@ namespace Sim;
 
 public class Program 
 {   
-    public const int WinW = 1600;
-    public const int WinH = 900;
+    public const int WinW = 1200;
+    public const int WinH = 1200;
     public const float QuadTreeUpdateSeconds = 0.01f;
 
     private static float _accumulator;
@@ -50,12 +50,13 @@ public class Program
                 new(0f, 0f, 0f, winHeightMeters),
                 new(winWidthMeters, 0f, winWidthMeters, winHeightMeters),
                 new(0f, winHeightMeters, winWidthMeters, winHeightMeters),
-            }
+            },
+            QuadTree = new(
+                UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
+                UnitConv.PixelsToMeters(new Vector2(WinW, WinH)),
+                5
+            )
         };
-        context.QuadTree = new(
-            UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
-            UnitConv.PixelsToMeters(new Vector2(WinW, WinH))
-        );
         context.SelectedTool = new PullCom(context);
         context.SaveCurrentState();
         return context;
@@ -106,7 +107,8 @@ public class Program
         }
         if (_context._drawQuadTree)
         {
-            _context.QuadTree.Draw();
+            //_context.QuadTree.Draw();
+            _context.NbodySim.Draw();
         }
         _context.SelectedTool.Draw();
         Gui.DrawInfo(_context); // GUI

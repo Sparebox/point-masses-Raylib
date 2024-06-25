@@ -67,7 +67,7 @@ public class Gui
                 ImGui.Checkbox("Collisions enabled", ref ((NbodySim) context.SelectedTool)._collisionsEnabled);
                 ImGui.InputFloat("Gravitational constant", ref ((NbodySim) context.SelectedTool)._gravConstant);
                 ImGui.InputFloat("Minimum distance", ref ((NbodySim) context.SelectedTool)._minDist);
-                ImGui.InputFloat("Influence meters", ref ((NbodySim) context.SelectedTool)._searchAreaSizeMeters);
+                ImGui.InputFloat("Threshold", ref ((NbodySim) context.SelectedTool)._threshold);
                 break;
         }
         ImGui.Spacing();
