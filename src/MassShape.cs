@@ -139,7 +139,7 @@ public partial class MassShape
         }
     }
 
-    public BoundingBox AABB
+    public BoundingBox Aabb
     {
         get
         {
@@ -170,6 +170,42 @@ public partial class MassShape
             {
                 Max = new(maxX, maxY, 0f),
                 Min = new(minX, minY, 0f)
+            };
+        }
+    }
+
+    public BoundingBox AabbMargin
+    {
+        get
+        {
+            float minX = float.MaxValue;
+            float minY = float.MaxValue;
+            float maxX = 0f;
+            float maxY = 0f;
+            foreach (var p in _points)
+            {
+                if (p.Pos.X - p.Radius <= minX)
+                {
+                    minX = p.Pos.X - p.Radius;
+                }
+                if (p.Pos.Y - p.Radius <= minY)
+                {
+                    minY = p.Pos.Y - p.Radius;
+                }
+                if (p.Pos.X + p.Radius >= maxX)
+                {
+                    maxX = p.Pos.X + p.Radius;
+                }
+                if (p.Pos.Y + p.Radius >= maxY)
+                {
+                    maxY = p.Pos.Y + p.Radius;
+                }
+            }
+            float margin = UnitConv.PixelsToMeters(1f);
+            return new BoundingBox()
+            {
+                Max = new(maxX + margin, maxY + margin, 0f),
+                Min = new(minX - margin, minY - margin, 0f)
             };
         }
     }
@@ -258,7 +294,7 @@ public partial class MassShape
         }
         if (_context._drawAABBS)
         {
-            BoundingBox aabb = AABB;
+            BoundingBox aabb = Aabb;
             DrawRectangleLines(
                 UnitConv.MetersToPixels(aabb.Min.X),
                 UnitConv.MetersToPixels(aabb.Min.Y),
@@ -402,7 +438,11 @@ public partial class MassShape
 
     private void HandleLineCollisions(MassShape otherShape)
     {
-        var thisAABB = AABB;
+        if (_points.Count == 1 && otherShape._points.Count == 1)
+        {
+            return;
+        }
+        var thisAABB = Aabb;
         foreach (var point in otherShape._points)
         {
             if (!CheckCollisionBoxes(point.AABB, thisAABB))
@@ -420,7 +460,7 @@ public partial class MassShape
     {
         foreach (var pointA in _points)
         {
-            if (!CheckCollisionBoxes(pointA.AABB, otherShape.AABB))
+            if (!CheckCollisionBoxes(pointA.AABB, otherShape.Aabb))
             {
                 continue;
             }
@@ -439,7 +479,7 @@ public partial class MassShape
     {
         foreach (var shapeA in context.MassShapes)
         {
-            var nearShapes = context.GetMassShapes(shapeA.AABB);
+            var nearShapes = context.GetMassShapes(shapeA.AabbMargin);
             foreach (var shapeB in nearShapes)
             {
                 if (shapeA.Equals(shapeB))

@@ -54,7 +54,8 @@ public class Program
             QuadTree = new(
                 UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
                 UnitConv.PixelsToMeters(new Vector2(WinW, WinH)),
-                5
+                10,
+                7
             )
         };
         context.SelectedTool = new PullCom(context);
@@ -64,6 +65,10 @@ public class Program
 
     private static void Update()
     {
+        if (GetFPS() < 10) // Pause if running too slow
+        {
+            _context._simPaused = true;
+        }
         float frameTime = GetFrameTime();
         _accumulator += frameTime;
         _quadTreeAccumulator += frameTime;
@@ -107,8 +112,8 @@ public class Program
         }
         if (_context._drawQuadTree)
         {
-            //_context.QuadTree.Draw();
-            _context.NbodySim.Draw();
+            _context.QuadTree.Draw();
+            //_context.NbodySim.Draw();
         }
         _context.SelectedTool.Draw();
         Gui.DrawInfo(_context); // GUI

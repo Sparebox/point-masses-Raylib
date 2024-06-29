@@ -262,7 +262,7 @@ public class Delete : Tool
         {
             return;
         }
-        shapes.RemoveWhere(s => !CheckCollisionBoxes(area, s.AABB));
+        shapes.RemoveWhere(s => !CheckCollisionBoxes(area, s.Aabb));
         List<uint> pointsToDelete = new();
         foreach (var shape in shapes)
         {
@@ -312,7 +312,7 @@ public class PullCom : Tool
             return;
         }
         MassShape closest = FindClosestShape(mousePos, shapes);
-        if (!CheckCollisionBoxes(area, closest.AABB))
+        if (!CheckCollisionBoxes(area, closest.Aabb))
         {
             return;
         }
@@ -544,7 +544,7 @@ public class NbodySim : Tool
 {
     public float _gravConstant = 0.01f;
     public float _minDist = 0f;
-    public float _threshold = 0.1f;
+    public float _threshold = 0.01f;
     public bool _running;
     public bool _collisionsEnabled;
     private readonly BarnesHutTree _quadTree;

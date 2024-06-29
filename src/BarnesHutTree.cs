@@ -44,7 +44,7 @@ public class BarnesHutTree
 
     public bool Insert(MassShape shape)
     {
-        if (!CheckCollisionBoxes(_boundary, shape.AABB))
+        if (!CheckCollisionBoxSphere(_boundary, new(shape.CenterOfMass, 0f), UnitConv.PixelsToMeters(1f)))
         {
             return false;
         }
@@ -136,13 +136,6 @@ public class BarnesHutTree
 
     private void UpdateCenterOfMass()
     {
-        if (_subdivided)
-        {
-            _northEast.UpdateCenterOfMass();
-            _southEast.UpdateCenterOfMass();
-            _southWest.UpdateCenterOfMass();
-            _northWest.UpdateCenterOfMass();
-        }
         _totalMass = _massShapes.Aggregate(0f, (_totalMass, s) => _totalMass + s.Mass);
         _centerOfMass = _massShapes.Aggregate(Vector2.Zero, (_centerOfMass, s) => _centerOfMass + s.CenterOfMass * s.Mass);
         _centerOfMass /= _totalMass;
@@ -169,7 +162,7 @@ public class BarnesHutTree
             {
                 return;
             }
-            Vector2 gravForce = dir * nbodySim._gravConstant * shapeA.Mass * shapeB.Mass / (dist * dist);
+            Vector2 gravForce = GetGravForce(dir, nbodySim._gravConstant, dist, shapeA.Mass, shapeB.Mass);
             shapeA.ApplyForce(gravForce);
             return;
         }
@@ -177,7 +170,7 @@ public class BarnesHutTree
         dist = dir.Length();
         if (dist == 0f)
         {
-            return;
+            dist += float.Epsilon;
         }
         float quotient = _size.X / dist;
         if (quotient < nbodySim._threshold) // Far away -> treating as a single body
@@ -187,7 +180,7 @@ public class BarnesHutTree
                 return;
             }
             dir /= dist;
-            Vector2 gravForce = dir * nbodySim._gravConstant * shapeA.Mass * _totalMass / (dist * dist);
+            Vector2 gravForce = GetGravForce(dir, nbodySim._gravConstant, dist, shapeA.Mass, _totalMass);
             shapeA.ApplyForce(gravForce);
         }
         else // Close to a center of mass
@@ -197,6 +190,11 @@ public class BarnesHutTree
             _southWest.CalculateGravity(shapeA, nbodySim);
             _northWest.CalculateGravity(shapeA, nbodySim);
         }
+    }
+
+    private static Vector2 GetGravForce(Vector2 dir, float gravConst, float dist, float massA, float massb)
+    {
+        return dir * gravConst * massA * massb / (dist * dist);
     }
 
     public void Draw()
@@ -209,7 +207,7 @@ public class BarnesHutTree
             Color.Red
         );
         DrawText(
-            $"Shapes: {_massShapes.Count}",
+            _massShapes.Count.ToString(),
             UnitConv.MetersToPixels(_center.X),
             UnitConv.MetersToPixels(_center.Y),
             15,
