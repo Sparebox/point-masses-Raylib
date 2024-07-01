@@ -76,22 +76,6 @@ public partial class MassShape
 
     public Vector2 Momentum => Mass * Vel;
 
-    public float AngularMomentum
-    {
-        get
-        {
-            float angularMomentum = 0f;
-            foreach (var point in _points)
-            {
-                Vector2 momentum = (Vel - point.Vel) * point.Mass;
-                Vector2 radius = point.Pos - CenterOfMass;
-                Vector3 cross = Vector3.Cross(new(radius, 0f), new(momentum, 0f));
-                angularMomentum += float.Sign(cross.Z) * cross.Length();
-            }
-            return angularMomentum;
-        }
-    }
-
     public float RotEnergy
     {
         get
@@ -125,17 +109,25 @@ public partial class MassShape
         }
     }
 
-    public float Angle => _angle;
+    private float Angle
+    {
+        get
+        {
+            if (!_points.Any() || _points.Count == 1)
+            {
+                return 0f;
+            }
+            Vector2 pos = _points.First().Pos;
+            Vector2 dir = pos - CenterOfMass;
+            return MathF.Atan2(dir.Y, dir.X);
+        }
+    }
 
     public float AngVel
     {
         get
         {
-            if (_points.Count == 1)
-            {
-                return 0f;
-            }
-            return AngularMomentum / Inertia;
+            return Angle - _lastAngle;
         }
     }
 
@@ -222,7 +214,7 @@ public partial class MassShape
     private Vector2 _lastCenterOfMass;
     private PressureVis _pressureVis;
     private float? _mass;
-    private float _angle;
+    private float _lastAngle;
 
     public MassShape(Context context, bool inflated = false) 
     {
@@ -265,9 +257,11 @@ public partial class MassShape
             _toBeDeleted = true;
             return;
         }
-        _lastCenterOfMass = CenterOfMass;
-        _angle += AngVel;
-        _angle %= 2f * MathF.PI;
+        if (_context._drawBodyInfo)
+        {
+            _lastCenterOfMass = CenterOfMass;
+            _lastAngle = Angle;
+        }
         foreach (Constraint c in _constraints)
         {
             c.Update();
@@ -560,10 +554,8 @@ public partial class MassShape
         ImGui.Text(string.Format("Mass: {0} kg", Mass));
         ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel / _context.SubStep));
         ImGui.Text(string.Format("Momentum: {0:0.0} kgm/s", Momentum / _context.SubStep));
-        ImGui.Text(string.Format("Angular momentum: {0:0.0} Js", AngularMomentum / _context.SubStep));
         ImGui.Text(string.Format("Moment of inertia: {0:0} kgm^2", Inertia));
         ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel / _context.SubStep * RAD2DEG));
-        ImGui.Text(string.Format("Angle: {0:0} deg", Angle * RAD2DEG));
         ImGui.Text(string.Format("Linear energy: {0:0.##} J", LinEnergy));
         ImGui.Text(string.Format("Rot energy: {0:0.##} J", RotEnergy));
         ImGui.End();

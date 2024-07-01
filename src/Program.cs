@@ -54,8 +54,8 @@ public class Program
             QuadTree = new(
                 UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
                 UnitConv.PixelsToMeters(new Vector2(WinW, WinH)),
-                10,
-                7
+                2,
+                6
             )
         };
         context.SelectedTool = new PullCom(context);
@@ -70,13 +70,8 @@ public class Program
             _context._simPaused = true;
         }
         float frameTime = GetFrameTime();
+        UpdateQuadTree(frameTime);
         _accumulator += frameTime;
-        _quadTreeAccumulator += frameTime;
-        while (_quadTreeAccumulator >= QuadTreeUpdateSeconds)
-        {
-            _context.QuadTree.Update(_context);
-            _quadTreeAccumulator -= QuadTreeUpdateSeconds;
-        }
         while (_accumulator >= _context.TimeStep)
         {
             for (int i = 0; i < _context.Substeps; i++)
@@ -178,6 +173,16 @@ public class Program
                 var spawnTool = (Spawn) _context.SelectedTool;
                 spawnTool.UpdateSpawnTarget();
             }
+        }
+    }
+
+    private static void UpdateQuadTree(float frameTime)
+    {
+        _quadTreeAccumulator += frameTime;
+        while (_quadTreeAccumulator >= QuadTreeUpdateSeconds)
+        {
+            _context.QuadTree.Update(_context);
+            _quadTreeAccumulator -= QuadTreeUpdateSeconds;
         }
     }
 

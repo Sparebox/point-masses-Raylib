@@ -112,21 +112,48 @@ public class QuadTree
         }
     }
 
-    public HashSet<MassShape> QueryShapes(in BoundingBox area, HashSet<MassShape> found = null)
+    private QuadTree GetClosestChildNode(MassShape shape)
     {
-        found ??= new();
+        QuadTree closestNode = null;
+        float minDistSq = float.MaxValue;
+        float distSq;
+        distSq = Vector2.DistanceSquared(shape.Centroid, _northEast._center);
+        if (distSq < minDistSq)
+        {
+            closestNode = _northEast;
+            minDistSq = distSq;
+        }
+        distSq = Vector2.DistanceSquared(shape.Centroid, _southEast._center);
+        if (distSq < minDistSq)
+        {
+            closestNode = _southEast;
+            minDistSq = distSq;
+        }
+        distSq = Vector2.DistanceSquared(shape.Centroid, _southWest._center);
+        if (distSq < minDistSq)
+        {
+            closestNode = _southWest;
+            minDistSq = distSq;
+        }
+        distSq = Vector2.DistanceSquared(shape.Centroid, _northWest._center);
+        if (distSq < minDistSq)
+        {
+            closestNode = _northWest;
+        }
+        return closestNode;
+    }
+
+    public void QueryShapes(in BoundingBox area, HashSet<MassShape> found)
+    {
         if (!CheckCollisionBoxes(_boundary, area))
         {
-            return found;
+            return;
         }
-        if (!_subdivided)
+        if (!_subdivided) // External node
         {
             foreach (var shape in _massShapes)
             {
-                if (CheckCollisionBoxes(area, shape.Aabb))
-                {
-                    found.Add(shape);
-                }
+                found.Add(shape);
             }
         }
         else
@@ -136,15 +163,15 @@ public class QuadTree
             _southWest.QueryShapes(in area, found);
             _northWest.QueryShapes(in area, found);
         }
-        return found;
+        return;
     }
 
-     public HashSet<PointMass> QueryPoints(in BoundingBox area, HashSet<PointMass> found = null)
+     public void QueryPoints(in BoundingBox area, HashSet<PointMass> found)
     {
         found ??= new();
         if (!CheckCollisionBoxes(_boundary, area))
         {
-            return found;
+            return;
         }
         if (!_subdivided)
         {
@@ -152,10 +179,7 @@ public class QuadTree
             {
                 foreach (var point in shape._points)
                 {
-                    if (CheckCollisionBoxes(area, point.AABB))
-                    {
-                        found.Add(point);
-                    }
+                    found.Add(point);
                 }
             }
         }
@@ -166,11 +190,15 @@ public class QuadTree
             _southWest.QueryPoints(in area, found);
             _northWest.QueryPoints(in area, found);
         }
-        return found;
+        return;
     }
 
     public void Draw()
     {
+        if (_massShapes.Count == 0 && !_subdivided)
+        {
+            return;
+        }
         DrawRectangleLines(
             UnitConv.MetersToPixels(_center.X - _size.X / 2f),
             UnitConv.MetersToPixels(_center.Y - _size.Y / 2f),

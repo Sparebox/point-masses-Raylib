@@ -140,7 +140,9 @@ public class Context
 
     public IEnumerable<MassShape> GetMassShapes(in BoundingBox area)
     {
-        return QuadTree.QueryShapes(area);
+        HashSet<MassShape> found = new();
+        QuadTree.QueryShapes(area, found);
+        return found;
     }
 
     public IEnumerable<MassShape> GetMassShapes(HashSet<uint> shapeIds)
@@ -161,7 +163,9 @@ public class Context
 
     public IEnumerable<PointMass> GetPointMasses(in BoundingBox area)
     {
-        return QuadTree.QueryPoints(in area);
+        HashSet<PointMass> found = new();
+        QuadTree.QueryPoints(in area, found);
+        return found;
     }
 
     private Tool[] CreateTools()
