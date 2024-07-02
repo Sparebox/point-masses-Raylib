@@ -1,5 +1,5 @@
 using System.Numerics;
-using Physics;
+using Entities;
 using Raylib_cs;
 using Sim;
 using Utils;
@@ -8,31 +8,98 @@ using static Utils.Entities;
 
 namespace Collision;
 
-public class LineCollider
+public class LineCollider : Entity
 {
     public Vector2 StartPos { get; set; }
     public Vector2 EndPos { get; set; }
+    public override Vector2 CenterOfMass => Centroid;
+    public override Vector2 Centroid
+    {
+        get
+        {
+            if (_center.HasValue)
+            {
+                return _center.Value;
+            }
+            _center = StartPos + (EndPos - StartPos) * 0.5f;
+            return _center.Value;
+        }
+    }
+    public override BoundingBox Aabb
+    {
+        get
+        {
+            if (_aabb.HasValue)
+            {
+                return _aabb.Value;
+            }
+            float minX, minY, maxX, maxY;
+            if (StartPos.X < EndPos.X)
+            {
+                minX = StartPos.X;
+                maxX = EndPos.X;
+            }
+            else
+            {
+                minX = EndPos.X;
+                maxX = StartPos.X;
+            }
+            if (StartPos.Y < EndPos.X)
+            {
+                minY = StartPos.Y;
+                maxY = EndPos.Y;
+            }
+            else
+            {
+                minY = EndPos.Y;
+                maxY = StartPos.Y;
+            }
+            _aabb = new BoundingBox()
+            {
+                Min = new(minX, minY, 0f),
+                Max = new(maxX, maxY, 0f)
+            };
+            return _aabb.Value;
+        }
+    }
+    private BoundingBox? _aabb;
+    private Vector2? _center;
 
-    public LineCollider(float x0, float y0, float x1, float y1)
+    public LineCollider(float x0, float y0, float x1, float y1, Context context) : base(context)
     {
         StartPos = new(x0, y0);
         EndPos = new(x1, y1);
     }
 
-    public LineCollider(in Vector2 start, in Vector2 end)
+    public LineCollider(in Vector2 start, in Vector2 end, Context context) : base(context)
     {
         StartPos = start;
         EndPos = end;
     }
 
-    public LineCollider(in LineCollider c)
+    public LineCollider(LineCollider c) : base(c.Context)
     {
         StartPos = c.StartPos;
         EndPos = c.EndPos;
     }
 
-    public void Draw()
+    public override void Update()
     {
+
+    }
+
+    public override void Draw()
+    {
+        if (Context._drawAABBS)
+        {
+            DrawRectangleLines(
+                UnitConv.MetersToPixels(Aabb.Min.X),
+                UnitConv.MetersToPixels(Aabb.Min.Y),
+                UnitConv.MetersToPixels(Aabb.Max.X - Aabb.Min.X),
+                UnitConv.MetersToPixels(Aabb.Max.Y - Aabb.Min.Y),
+                Color.Red
+            );
+        }
         DrawLineV(
             UnitConv.MetersToPixels(StartPos),
             UnitConv.MetersToPixels(EndPos),
@@ -53,7 +120,6 @@ public class LineCollider
         p.Pos += colData.Separation * colData.Normal;
         p.Vel = parallelVel + reflectedNormalVel; 
         p.ApplyFriction(colData.Normal);
-        
     }
 
     public CollisionData? CheckCollision(PointMass p)

@@ -1,11 +1,12 @@
 using System.Numerics;
 using ImGuiNET;
+using Physics;
 using Raylib_cs;
 using Sim;
 using Utils;
 using static Raylib_cs.Raylib;
 
-namespace Physics;
+namespace Entities;
 
 public partial class MassShape : Entity
 {

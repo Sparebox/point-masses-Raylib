@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using Entities;
-using Physics;
 using Raylib_cs;
 using rlImGui_cs;
 using Tools;
@@ -45,18 +44,18 @@ public class Program
         float winHeightMeters = UnitConv.PixelsToMeters(WinH);
         Context context = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f))
         {
-            LineColliders = {
-                new(0f, 0f, winWidthMeters, 0f),
-                new(0f, 0f, 0f, winHeightMeters),
-                new(winWidthMeters, 0f, winWidthMeters, winHeightMeters),
-                new(0f, winHeightMeters, winWidthMeters, winHeightMeters),
-            },
             QuadTree = new(
                 UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
                 UnitConv.PixelsToMeters(new Vector2(WinW, WinH)),
                 2,
                 6
             )
+        };
+        context.LineColliders = new() {
+            new(0f, 0f, winWidthMeters, 0f, context),
+            new(0f, 0f, 0f, winHeightMeters, context),
+            new(winWidthMeters, 0f, winWidthMeters, winHeightMeters, context),
+            new(0f, winHeightMeters, winWidthMeters, winHeightMeters, context)
         };
         context.SelectedTool = new PullCom(context);
         context.SaveCurrentState();

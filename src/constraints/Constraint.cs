@@ -1,3 +1,5 @@
+using Entities;
+
 namespace Physics;
 
 public abstract class Constraint

@@ -1,10 +1,10 @@
 ﻿using System.Numerics;
-using Physics;
 using Raylib_cs;
 using static Raylib_cs.Raylib;
 using Sim;
 using Tools;
 using Utils;
+using Entities;
 
 namespace GravitySim;
 

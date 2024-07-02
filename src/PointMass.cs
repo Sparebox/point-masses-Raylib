@@ -6,7 +6,7 @@ using Utils;
 using static Raylib_cs.Raylib;
 using static Utils.Entities;
 
-namespace Physics;
+namespace Entities;
 
 public class PointMass : Entity
 {

@@ -1,6 +1,5 @@
 using System.Numerics;
 using Collision;
-using Physics;
 using Entities;
 using Textures;
 using Utils;
@@ -30,7 +29,7 @@ public class Context
     public float _globalKineticFrictionCoeff = 1f;
     public float _globalStaticFrictionCoeff = 1.1f;
     public QuadTree QuadTree { get; set; }
-    public HashSet<LineCollider> LineColliders { get; init; }
+    public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; init; }
     public Tool SelectedTool { get; set; }
     public int _selectedToolIndex;

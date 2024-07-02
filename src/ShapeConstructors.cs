@@ -1,7 +1,8 @@
 ﻿using System.Numerics;
+using Physics;
 using Sim;
 
-namespace Physics;
+namespace Entities;
 
 public partial class MassShape
 {

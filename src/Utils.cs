@@ -1,7 +1,6 @@
 using System.Numerics;
-using Physics;
+using Entities;
 using Raylib_cs;
-using Sim;
 using static Raylib_cs.Raylib;
 
 namespace Utils;
