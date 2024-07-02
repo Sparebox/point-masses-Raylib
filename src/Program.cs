@@ -43,7 +43,7 @@ public class Program
         SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
         float winWidthMeters = UnitConv.PixelsToMeters(WinW);
         float winHeightMeters = UnitConv.PixelsToMeters(WinH);
-        Context context = new(timeStep: 1f / 60f, 13, gravity: new(0f, 9.81f))
+        Context context = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f))
         {
             LineColliders = {
                 new(0f, 0f, winWidthMeters, 0f),
@@ -67,6 +67,7 @@ public class Program
     {
         if (GetFPS() < 10) // Pause if running too slow
         {
+            Console.WriteLine("Running too slow. Pausing sim");
             _context._simPaused = true;
         }
         float frameTime = GetFrameTime();
@@ -108,7 +109,6 @@ public class Program
         if (_context._drawQuadTree)
         {
             _context.QuadTree.Draw();
-            //_context.NbodySim.Draw();
         }
         _context.SelectedTool.Draw();
         Gui.DrawInfo(_context); // GUI
@@ -178,6 +178,10 @@ public class Program
 
     private static void UpdateQuadTree(float frameTime)
     {
+        if (_context.NbodySim._running && !_context.NbodySim._collisionsEnabled)
+        {
+            return;
+        }
         _quadTreeAccumulator += frameTime;
         while (_quadTreeAccumulator >= QuadTreeUpdateSeconds)
         {

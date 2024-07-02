@@ -43,12 +43,12 @@ public class SpringConstraint : Constraint
         // damping
         force += DampingCoeff * Vector2.Dot(AtoB, BrelVel);
         Vector2 forceVec = force * AtoB;
-        if (!PointA._pinned)
+        if (!PointA.Pinned)
         {
             PointA.ApplyForce(forceVec);
         }
-        if (!PointB._pinned)
-        {
+        if (!PointB.Pinned)
+        { 
             PointB.ApplyForce(-forceVec);
         }
     }

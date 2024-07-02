@@ -1,4 +1,3 @@
-using System.Data;
 using System.Numerics;
 using Collision;
 using Raylib_cs;
@@ -9,13 +8,10 @@ using static Utils.Entities;
 
 namespace Physics;
 
-public class PointMass
+public class PointMass : Entity
 {
-    private static uint _idCounter;
-    private readonly Context _context;
     public const float RadiusPerMassRatio = 0.01f; // aka inverse density
 
-    public uint Id { get; init; }
     public bool Pinned { get; init; }
     public Vector2 VisForce { get; set; } // For force visualization
     public Vector2 Pos { get; set; }
@@ -28,11 +24,8 @@ public class PointMass
         set { PrevPos = Pos - value; }
     }
     public Vector2 Momentum => Mass * Vel;
-    public float Mass { get; }
-    public float InvMass => _invMass;
-    private readonly float _invMass;
     public float Radius { get; init; }
-    public BoundingBox AABB 
+    public override BoundingBox Aabb 
     {
         get
         {
@@ -41,55 +34,49 @@ public class PointMass
             return new BoundingBox(min, max);
         }
     }
+    public override Vector2 Centroid => Pos;
+    public override Vector2 CenterOfMass => Pos;
     
-    public PointMass(float x, float y, float mass, bool pinned, Context context)
+    public PointMass(float x, float y, float mass, bool pinned, Context context) : base(context, mass)
     {
         Pos = new(x, y);
         PrevPos = Pos;
         Force = Vector2.Zero;
-        Mass = mass;
-        _invMass = 1f / Mass;
         Radius = MassToRadius(mass);
-        Id = _idCounter++;
         Pinned = pinned;
-        _context = context;
     }
 
     // Copy constructor
-    public PointMass(PointMass p)
+    public PointMass(PointMass p) : base(p.Context, p.Mass, p.Id)
     {
         Pos = p.Pos;
         PrevPos = Pos;
-        Force = Vector2.Zero;
-        Mass = p.Mass;
-        _invMass = p._invMass;
+        Force = Vector2.Zero;;
         Radius = p.Radius;
-        Id = p.Id;
         Pinned = p.Pinned;
-        _context = p._context;
     }
 
-    public void Update()
+    public override void Update()
     {
         if (Pinned)
         {
             return;
         }
-        if (_context._gravityEnabled)
+        if (Context._gravityEnabled)
         {
-            ApplyForce(Mass * _context.Gravity);
+            ApplyForce(Mass * Context.Gravity);
         }
         SolveLineCollisions();
-        Vector2 acc = Force * InvMass;
+        Vector2 acc = Force * _invMass;
         Vector2 vel = Vel; // Save the velocity before previous position is reset
         PrevPos = Pos;
-        Pos += vel + acc * _context.SubStep * _context.SubStep;
+        Pos += vel + acc * Context.SubStep * Context.SubStep;
         VisForce = Force;
         PrevForce = Force;
         Force = Vector2.Zero;
     }
 
-    public void Draw()
+    public override void Draw()
     {
         DrawCircleLinesV(UnitConv.MetersToPixels(Pos), UnitConv.MetersToPixels(Radius), Color.White);
     }
@@ -102,12 +89,12 @@ public class PointMass
 
     public void SolveLineCollisions()
     {
-        foreach (LineCollider c in _context.LineColliders)
+        foreach (LineCollider c in Context.LineColliders)
         {
             CollisionData? collisionResult = c.CheckCollision(this);
             if (collisionResult.HasValue)
             {
-                LineCollider.SolvePointCollision(collisionResult.Value, _context);
+                LineCollider.SolvePointCollision(collisionResult.Value, Context);
             }
         }
     }
@@ -180,7 +167,7 @@ public class PointMass
             // The total force is not towards the normal
             return;
         }
-        if (PrevForce.LengthSquared() < MathF.Pow(_context._globalStaticFrictionCoeff * -normalForce, 2f))
+        if (PrevForce.LengthSquared() < MathF.Pow(Context._globalStaticFrictionCoeff * -normalForce, 2f))
         {
             // Apply static friction
             Vel -= perpVel;
@@ -188,7 +175,7 @@ public class PointMass
         }
         // Apply kinetic friction
         perpVel = Vector2.Normalize(perpVel);
-        ApplyForce(perpVel * _context._globalKineticFrictionCoeff * normalForce);
+        ApplyForce(perpVel * Context._globalKineticFrictionCoeff * normalForce);
     }
 
     public override bool Equals(object obj)

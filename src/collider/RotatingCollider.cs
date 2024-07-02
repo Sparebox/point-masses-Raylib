@@ -1,8 +1,7 @@
 using System.Numerics;
-using Collision;
 using static Raylib_cs.Raylib;
 
-namespace Entity;
+namespace Collision;
 
 public class RotatingCollider : LineCollider
 {

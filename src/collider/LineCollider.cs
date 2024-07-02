@@ -40,7 +40,7 @@ public class LineCollider
         );
     }
 
-    public static void SolvePointCollision(CollisionData colData, Context context)
+    public static void SolvePointCollision(in CollisionData colData, Context context)
     {
         PointMass p = colData.PointMassA;
         // Collision
