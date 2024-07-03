@@ -2,7 +2,6 @@ using System.Numerics;
 using System.Text;
 using Entities;
 using GravitySim;
-using Physics;
 using Raylib_cs;
 using Sim;
 using Utils;

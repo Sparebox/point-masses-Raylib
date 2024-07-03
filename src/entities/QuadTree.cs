@@ -1,8 +1,6 @@
 ﻿using System.Numerics;
-using Physics;
 using Raylib_cs;
 using Sim;
-using Tools;
 using Utils;
 using static Raylib_cs.Raylib;
 
@@ -15,7 +13,7 @@ public class QuadTree
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
     private readonly Vector2 _size;
-    private readonly HashSet<MassShape> _massShapes;
+    private readonly List<MassShape> _massShapes;
     private bool _subdivided;
     private QuadTree _northEast;
     private QuadTree _southEast;

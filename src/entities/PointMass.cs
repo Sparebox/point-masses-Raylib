@@ -4,7 +4,6 @@ using Raylib_cs;
 using Sim;
 using Utils;
 using static Raylib_cs.Raylib;
-using static Utils.Entities;
 
 namespace Entities;
 

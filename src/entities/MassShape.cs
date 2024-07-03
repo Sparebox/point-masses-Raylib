@@ -446,10 +446,6 @@ public partial class MassShape : Entity
     {
         foreach (var pointA in _points)
         {
-            if (!CheckCollisionBoxes(pointA.Aabb, otherShape.Aabb))
-            {
-                continue;
-            }
             foreach (var pointB in otherShape._points)
             {
                 var collisionResult = pointA.CheckPointToPointCollision(pointB);
@@ -465,10 +461,10 @@ public partial class MassShape : Entity
     {
         foreach (var shapeA in context.MassShapes)
         {
-            var nearShapes = context.GetMassShapes(shapeA.AabbMargin);
+            var nearShapes = context.GetMassShapes(shapeA.Aabb);
             foreach (var shapeB in nearShapes)
             {
-                if (shapeA.Equals(shapeB))
+                if (shapeA.Equals(shapeB) || !CheckCollisionBoxes(shapeA.Aabb, shapeB.Aabb))
                 {
                     continue;
                 }

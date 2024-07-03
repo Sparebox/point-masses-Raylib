@@ -1,7 +1,8 @@
 ﻿using System.Numerics;
 using Raylib_cs;
+using Sim;
 
-namespace Sim;
+namespace Entities;
 
 public abstract class Entity
 {

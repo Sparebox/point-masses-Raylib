@@ -204,8 +204,25 @@ public class Context
             height: UnitConv.PixelsToMeters(500f),
             mass: 0.7f,
             res: 42,
-            stiffness: 0.9f,
+            stiffness: 0.8f,
+            true,
             this
         ));
+    }
+
+    public void LoadBenchmark(int particleCount, float particleMass, float spacing, Vector2 offset)
+    {
+        List<MassShape> particles = new(particleCount);
+        int sideCount = (int) Math.Sqrt(particleCount);
+        spacing = UnitConv.PixelsToMeters(spacing);
+        offset = UnitConv.PixelsToMeters(offset);
+        for (int y = 0; y < sideCount; y++)
+        {
+            for (int x = 0; x < sideCount; x++)
+            {
+                particles.Add(MassShape.Particle(x * spacing + offset.X, y * spacing + offset.Y, particleMass, this));
+            }
+        }
+        AddMassShapes(particles);
     }
 }

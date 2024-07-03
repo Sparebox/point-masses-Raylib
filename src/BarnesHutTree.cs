@@ -13,7 +13,7 @@ public class BarnesHutTree
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
     private readonly Vector2 _size;
-    private readonly HashSet<MassShape> _massShapes;
+    private readonly List<MassShape> _massShapes;
     private Vector2 _centerOfMass;
     private float _totalMass;
     private bool _subdivided;

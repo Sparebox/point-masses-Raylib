@@ -127,10 +127,6 @@ public class Program
         {
             _context._drawForces = !_context._drawForces;
         }
-        if (IsKeyPressed(KeyboardKey.B))
-        {
-            _context._drawAABBS = !_context._drawAABBS;
-        }
         if (IsKeyPressed(KeyboardKey.Q))
         {
             _context._drawQuadTree = !_context._drawQuadTree;
@@ -151,6 +147,10 @@ public class Program
         if (IsKeyPressed(KeyboardKey.C))
         {
             _context.LoadClothScenario();
+        }
+        if (IsKeyPressed(KeyboardKey.B))
+        {
+            _context.LoadBenchmark(700, 1f, 20f, new(WinW / 2f - 200f, 200f));
         }
         // Mouse
         if (GetMouseWheelMoveV().Y > 0f)

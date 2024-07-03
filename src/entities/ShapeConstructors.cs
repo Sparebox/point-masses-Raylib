@@ -92,7 +92,7 @@ public partial class MassShape
         return c;
     }
 
-    public static MassShape Cloth(float x, float y, float width, float height, float mass, int res, float stiffness, Context context)
+    public static MassShape Cloth(float x, float y, float width, float height, float mass, int res, float stiffness, bool crossHatched, Context context)
     {
         float metersPerConstraintW = width / res;
         float metersPerConstraintH = height / res;
@@ -111,13 +111,21 @@ public partial class MassShape
         {
             for (int row = 0; row < res; row++)
             {
-                if (col != res - 1)
+                if (col != res - 1) // Not at last column
                 {
                     c._constraints.Add(new DistanceConstraint(c._points[col * res + row], c._points[(col + 1) * res + row], stiffness, context));
                 }
-                if (row != res - 1)
+                if (row != res - 1) // Not at last row
                 {
                     c._constraints.Add(new DistanceConstraint(c._points[col * res + row], c._points[col * res + row + 1], stiffness, context));
+                }
+                if (crossHatched && col != res - 1 && row != res - 1) // Not at last column or row
+                {
+                    c._constraints.Add(new DistanceConstraint(c._points[col * res + row], c._points[(col + 1) * res + row + 1], stiffness, context));
+                }
+                if (crossHatched && col != res - 1 && row != 0) // Not at lasat column and not on the first row
+                {
+                    c._constraints.Add(new DistanceConstraint(c._points[col * res + row], c._points[(col + 1) * res + row - 1], stiffness, context));
                 }
             }
         }
