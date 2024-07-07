@@ -52,7 +52,7 @@ namespace Utils
 
     public static class Graphics
     {
-        public const float ArrowBranchLength = 20f;
+        public const float ArrowBranchLength = 10f;
         public const float ArrowAngle = 20f;
 
         public static void DrawArrow(float x0, float y0, float x1, float y1, Color color)

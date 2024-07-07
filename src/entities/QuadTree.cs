@@ -8,8 +8,8 @@ namespace Entities;
 
 public class QuadTree
 {
-    public uint MaxDepth { get; init;}
-    private readonly uint _nodeCapacity;
+    public static uint MaxDepth { get; set; }
+    public static uint NodeCapacity { get; set; }
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
     private readonly Vector2 _size;
@@ -28,7 +28,7 @@ public class QuadTree
         _boundary = new BoundingBox(new(_center.X - _size.X / 2f, _center.Y - _size.Y / 2f, 0f), new(_center.X + _size.X / 2f, _center.Y + _size.Y / 2f, 0f));
         _massShapes = new();
         _subdivided  = false;
-        _nodeCapacity = nodeCapacity;
+        NodeCapacity = nodeCapacity;
         _depth = 0;
         MaxDepth = maxDepth;
     }
@@ -58,7 +58,7 @@ public class QuadTree
             return;
         }
         // External node
-        if (_massShapes.Count < _nodeCapacity || _depth >= MaxDepth)
+        if (_massShapes.Count < NodeCapacity || _depth >= MaxDepth)
         {
             // Insert into this quad
             _massShapes.Add(shape);
@@ -85,10 +85,10 @@ public class QuadTree
     private void Subdivide()
     {
         Vector2 newSize = _size / 2f;
-        _northEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize, _nodeCapacity, MaxDepth);
-        _southEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize, _nodeCapacity, MaxDepth);
-        _southWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize, _nodeCapacity, MaxDepth);
-        _northWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize, _nodeCapacity, MaxDepth);
+        _northEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
+        _southEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
+        _southWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
+        _northWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
         _northEast._depth = _depth + 1;
         _southEast._depth = _depth + 1;
         _southWest._depth = _depth + 1;
@@ -108,37 +108,6 @@ public class QuadTree
             _northWest.Clear();
             _subdivided = false;
         }
-    }
-
-    private QuadTree GetClosestChildNode(MassShape shape)
-    {
-        QuadTree closestNode = null;
-        float minDistSq = float.MaxValue;
-        float distSq;
-        distSq = Vector2.DistanceSquared(shape.Centroid, _northEast._center);
-        if (distSq < minDistSq)
-        {
-            closestNode = _northEast;
-            minDistSq = distSq;
-        }
-        distSq = Vector2.DistanceSquared(shape.Centroid, _southEast._center);
-        if (distSq < minDistSq)
-        {
-            closestNode = _southEast;
-            minDistSq = distSq;
-        }
-        distSq = Vector2.DistanceSquared(shape.Centroid, _southWest._center);
-        if (distSq < minDistSq)
-        {
-            closestNode = _southWest;
-            minDistSq = distSq;
-        }
-        distSq = Vector2.DistanceSquared(shape.Centroid, _northWest._center);
-        if (distSq < minDistSq)
-        {
-            closestNode = _northWest;
-        }
-        return closestNode;
     }
 
     public void QueryShapes(in BoundingBox area, HashSet<MassShape> found)

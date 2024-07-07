@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using Entities;
 using Raylib_cs;
 using rlImGui_cs;
@@ -11,9 +12,9 @@ namespace Sim;
 
 public class Program 
 {   
-    public const int WinW = 1200;
-    public const int WinH = 1200;
-    public const float QuadTreeUpdateSeconds = 0.01f;
+    public const int WinW = 1600;
+    public const int WinH = 900;
+    public const float QuadTreeUpdateSeconds = 0.05f;
 
     private static float _accumulator;
     private static float _quadTreeAccumulator;
@@ -47,7 +48,7 @@ public class Program
             QuadTree = new(
                 UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
                 UnitConv.PixelsToMeters(new Vector2(WinW, WinH)),
-                2,
+                1,
                 6
             )
         };
@@ -150,7 +151,7 @@ public class Program
         }
         if (IsKeyPressed(KeyboardKey.B))
         {
-            _context.LoadBenchmark(700, 1f, 20f, new(WinW / 2f - 200f, 200f));
+            _context.LoadBenchmark(500, 1f, 20f, new(WinW / 2f - 200f, 200f));
         }
         // Mouse
         if (GetMouseWheelMoveV().Y > 0f)
