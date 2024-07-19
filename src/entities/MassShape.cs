@@ -476,8 +476,8 @@ public partial class MassShape : Entity
 
     private void HandleLineCollision(PointMass pointMass)
     {
-        (PointMass closestA, PointMass closestB, Vector2 closestPoint) = FindClosestPoints(pointMass.Pos);
-        Vector2 pointToClosest = closestPoint - pointMass.Pos;
+        (PointMass closestA, PointMass closestB, Vector2 closestPointOnLine) = FindClosestPoints(pointMass.Pos);
+        Vector2 pointToClosest = closestPointOnLine - pointMass.Pos;
         float totalOffset = pointMass.Radius - pointToClosest.Length();
         if (totalOffset == 0f)
         {
@@ -488,7 +488,7 @@ public partial class MassShape : Entity
         {
             return;
         }
-        float distToB = Vector2.Distance(closestPoint, closestB.Pos);
+        float distToB = Vector2.Distance(closestPointOnLine, closestB.Pos);
         float aOffset = distToB / lineLen * totalOffset;
         float bOffset = totalOffset - aOffset;
         var normal = Vector2.Normalize(pointToClosest);
@@ -500,6 +500,7 @@ public partial class MassShape : Entity
         pointMass.Pos += totalOffset * -normal;
         closestA.Pos += aOffset * normal;
         closestB.Pos += bOffset * normal;
+
         // Apply impulse
         float combinedMass = closestA.Mass + closestB.Mass;
         float impulseMag = -(1f + Context._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / combinedMass + pointMass.InvMass);
@@ -509,6 +510,8 @@ public partial class MassShape : Entity
         closestB.Vel = closestBpreVel - impulse * 0.5f / (combinedMass - closestA.Mass);
         // Apply friction
         pointMass.ApplyFriction(-normal);
+        closestA.ApplyFriction(normal);
+        closestB.ApplyFriction(normal);
     }
 
     private (PointMass closestA, PointMass closestB, Vector2 closestPoint) FindClosestPoints(Vector2 pos)

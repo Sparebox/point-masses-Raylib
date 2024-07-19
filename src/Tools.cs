@@ -546,21 +546,18 @@ public class NbodySim : Tool
     public float _threshold = 0.01f;
     public bool _running;
     public bool _collisionsEnabled;
-    private readonly BarnesHutTree _quadTree;
+    private readonly BarnesHutTree _barnesHutTree;
 
     public NbodySim(Context context)
     {
         _context = context;
-        _quadTree = new(
+        _barnesHutTree = new(
             UnitConv.PixelsToMeters(new Vector2(Program.WinW / 2f, Program.WinH / 2f)),
             UnitConv.PixelsToMeters(new Vector2(Program.WinW, Program.WinH))
         );
     }
 
-    public override void Draw() 
-    {
-        _quadTree.Draw();
-    }
+    public override void Draw() {}
 
     public override void Update()
     {
@@ -568,7 +565,7 @@ public class NbodySim : Tool
         {
             return;
         }
-        _quadTree.Update(_context);
+        _barnesHutTree.Update(_context);
         ApplyGravityForces();
     }
 
@@ -576,7 +573,7 @@ public class NbodySim : Tool
     {
         foreach (var shape in _context.MassShapes)
         {
-            _quadTree.CalculateGravity(shape, this);
+            _barnesHutTree.CalculateGravity(shape, this);
         }
     }
 }

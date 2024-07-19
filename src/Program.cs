@@ -14,6 +14,7 @@ public class Program
 {   
     public const int WinW = 1600;
     public const int WinH = 900;
+    public const int PauseThresholdFPS = 10;
     public const float QuadTreeUpdateSeconds = 0.05f;
 
     private static float _accumulator;
@@ -65,7 +66,7 @@ public class Program
 
     private static void Update()
     {
-        if (GetFPS() < 10) // Pause if running too slow
+        if (GetFPS() < PauseThresholdFPS) // Pause if running too slow
         {
             Console.WriteLine("Running too slow. Pausing sim");
             _context._simPaused = true;

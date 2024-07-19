@@ -11,7 +11,7 @@ public class DistanceConstraint : Constraint
 {
     public float Length { get; init; }
     public float Stiffness { get; init; }
-    private Context _context;
+    private readonly Context _context;
 
     public DistanceConstraint(in PointMass a, in PointMass b, float stiffness, Context context)
     {
