@@ -1,13 +1,14 @@
 using System.Numerics;
 using ImGuiNET;
+using Physics;
 using Raylib_cs;
 using Sim;
 using Utils;
 using static Raylib_cs.Raylib;
 
-namespace Physics;
+namespace Entities;
 
-public class MassShape
+public partial class MassShape : Entity
 {
     public Vector2 TotalVisForce
     {
@@ -15,25 +16,25 @@ public class MassShape
         {
             return _points.Aggregate(
                 new Vector2(),
-                (totalVisForce, p) => totalVisForce += p._visForce
+                (totalVisForce, p) => totalVisForce += p.VisForce
             );
         }
     }
 
-    public float Mass
+    public override float Mass
     {
         get 
         { 
             if (_mass.HasValue)
             {
-                return (float) _mass;
+                return _mass.Value;
             }
-            _mass = _points.Select(p => p.Mass).Sum();
-            return (float) _mass;
+            base.Mass = _points.Select(p => p.Mass).Sum();
+            return base.Mass;
         } 
     }
 
-    public Vector2 CenterOfMass
+    public override Vector2 CenterOfMass
     {
         get
         {
@@ -45,7 +46,7 @@ public class MassShape
         }
     }
 
-    public Vector2 Centroid
+    public override Vector2 Centroid
     {
         get
         {
@@ -57,52 +58,31 @@ public class MassShape
         }
     }
 
-    public Vector2 Vel
-    {
-        get
-        {
-            Vector2 vel = (CenterOfMass - _lastCenterOfMass) / _context.SubStep;
-            return vel;
-        }
-    }
+    public Vector2 Vel => CenterOfMass - _lastCenterOfMass;
 
-    public float AngularMass
+    public float Inertia
     {
         get
         {
             Vector2 COM = CenterOfMass;
-            float angularMass = 0f;
+            float inertia = 0f;
             foreach (var p in _points)
             {
                 float distSq = Vector2.DistanceSquared(COM, p.Pos);
-                angularMass += p.Mass * distSq;
+                inertia += p.Mass * distSq;
             }
-            return angularMass;
+            return inertia;
         }
     }
 
-    public Vector2 Momentum
-    {
-        get
-        {
-            return Mass * Vel;
-        }
-    }
-
-    public float AngularMomentum
-    {
-        get
-        {
-            return AngularMass * AngVel;
-        }
-    }
+    public Vector2 Momentum => Mass * Vel;
 
     public float RotEnergy
     {
         get
         {
-            float angVel = AngVel;
-            return 0.5f * AngularMass * angVel * angVel;
+            float angVel = AngVel / Context.SubStep;
+            return 0.5f * Inertia * angVel * angVel;
         }
     }
 
@@ -110,7 +90,7 @@ public class MassShape
     {
         get
         {
-            return 0.5f * Mass * Vel.LengthSquared();
+            return 0.5f * Mass * Vel.LengthSquared() / Context.SubStep;
         }
     }
     
@@ -130,7 +110,7 @@ public class MassShape
         }
     }
 
-    public float Angle
+    private float Angle
     {
         get
         {
@@ -138,9 +118,8 @@ public class MassShape
             {
                 return 0f;
             }
-            Vector2 com = CenterOfMass;
             Vector2 pos = _points.First().Pos;
-            Vector2 dir = pos - com;
+            Vector2 dir = pos - CenterOfMass;
             return MathF.Atan2(dir.Y, dir.X);
         }
     }
@@ -149,15 +128,11 @@ public class MassShape
     {
         get
         {
-            if (_points.Count == 1)
-            {
-                return 0f;
-            }
-            return (Angle - _lastAngle) / _context.SubStep;
+            return Angle - _lastAngle;
         }
     }
 
-    public BoundingBox AABB
+    public override BoundingBox Aabb
     {
         get
         {
@@ -191,39 +166,66 @@ public class MassShape
             };
         }
     }
+
+    public BoundingBox AabbMargin
+    {
+        get
+        {
+            float minX = float.MaxValue;
+            float minY = float.MaxValue;
+            float maxX = 0f;
+            float maxY = 0f;
+            foreach (var p in _points)
+            {
+                if (p.Pos.X - p.Radius <= minX)
+                {
+                    minX = p.Pos.X - p.Radius;
+                }
+                if (p.Pos.Y - p.Radius <= minY)
+                {
+                    minY = p.Pos.Y - p.Radius;
+                }
+                if (p.Pos.X + p.Radius >= maxX)
+                {
+                    maxX = p.Pos.X + p.Radius;
+                }
+                if (p.Pos.Y + p.Radius >= maxY)
+                {
+                    maxY = p.Pos.Y + p.Radius;
+                }
+            }
+            float margin = UnitConv.PixelsToMeters(1f);
+            return new BoundingBox()
+            {
+                Max = new(maxX + margin, maxY + margin, 0f),
+                Min = new(minX - margin, minY - margin, 0f)
+            };
+        }
+    }
     
     public const float GasAmountMult = 1f;
-    public int Id { get; init; }
     public List<Constraint> _constraints;
     public List<PointMass> _points;
     public bool _toBeDeleted;
     public float _gasAmount;
     public bool _inflated;
-    private readonly Context _context;
-    private static int _idCounter;
     private Vector2 _lastCenterOfMass;
-    private float _lastAngle;
     private PressureVis _pressureVis;
-    private float? _mass;
+    private float _lastAngle;
 
-    public MassShape(Context context, bool inflated = false) 
+    public MassShape(Context context, bool inflated = false) : base(context)
     {
-        _context = context;
         _inflated = inflated;
-        Id = _idCounter++;
         _toBeDeleted = false;
         _points = new();
         _constraints = new();
     }
 
     // Copy constructor
-    public MassShape(in MassShape shape)
+    public MassShape(in MassShape shape) : base(shape.Context, shape.Mass)
     {
-        _context = shape._context;
         _inflated = shape._inflated;
         _gasAmount = shape._gasAmount;
-        _mass = shape._mass;
-        Id = _idCounter++;
         _toBeDeleted = false;
         _points = new();
         _constraints = new();
@@ -233,35 +235,24 @@ public class MassShape
         }
         foreach (var c in shape._constraints)
         {
-            Constraint copyConstraint = null;
-            if (c.GetType() == typeof(SpringConstraint))
-            {
-                copyConstraint = new SpringConstraint((SpringConstraint) c);
-            }
-            if (c.GetType() == typeof(RigidConstraint))
-            {
-                copyConstraint = new RigidConstraint((RigidConstraint) c);
-            }
+            Constraint copyConstraint = new DistanceConstraint((DistanceConstraint) c);
             copyConstraint.PointA = _points.Where(p => p.Equals(copyConstraint.PointA)).First();
             copyConstraint.PointB = _points.Where(p => p.Equals(copyConstraint.PointB)).First();
             _constraints.Add(copyConstraint);
         }
     }
 
-    public void Update()
+    public override void Update()
     {
         if (!_points.Any())
         {
             _toBeDeleted = true;
             return;
         }
-        if (_context._drawBodyInfo)
-        {
-            _lastAngle = Angle;
-        }
-        if (_context._drawBodyInfo)
+        if (Context._drawBodyInfo)
         {
             _lastCenterOfMass = CenterOfMass;
+            _lastAngle = Angle;
         }
         foreach (Constraint c in _constraints)
         {
@@ -277,7 +268,7 @@ public class MassShape
         }
     }
 
-    public void Draw()
+    public override void Draw()
     {
         foreach (Constraint c in _constraints)
         {
@@ -287,9 +278,9 @@ public class MassShape
         {
             p.Draw();
         }
-        if (_context._drawAABBS)
+        if (Context._drawAABBS)
         {
-            BoundingBox aabb = AABB;
+            BoundingBox aabb = Aabb;
             DrawRectangleLines(
                 UnitConv.MetersToPixels(aabb.Min.X),
                 UnitConv.MetersToPixels(aabb.Min.Y),
@@ -298,21 +289,23 @@ public class MassShape
                 Color.Red
             );
         }
-        if (_context._drawForces)
+        if (Context._drawForces)
         {
             if (_inflated && _pressureVis._lines != null)
             {
                 // Draw pressure forces acting on normals
                 foreach (VisLine line in _pressureVis._lines)
                 {
-                    Graphics.DrawArrow(line._start, line._end, Color.Magenta);
+                    Vector2 clampedLine = Raymath.Vector2ClampValue(line._end - line._start, 0f, 150f);
+                    Graphics.DrawArrow(line._start, line._start + clampedLine, Color.Magenta);
                 }
             }
             Vector2 COM = UnitConv.MetersToPixels(CenterOfMass);
             Vector2 totalVisForce = UnitConv.MetersToPixels(TotalVisForce);
-            Graphics.DrawArrow(COM, COM + totalVisForce * 1e-2f, Color.Magenta);
+            totalVisForce = Raymath.Vector2ClampValue(totalVisForce, 0f, 150f);
+            Graphics.DrawArrow(COM, COM + totalVisForce, Color.Magenta);
         }
-        if (_context._drawBodyInfo)
+        if (Context._drawBodyInfo)
         {
             DrawInfo();
         }
@@ -356,7 +349,7 @@ public class MassShape
             Vector2 force = faceLength * GasAmountMult * _gasAmount / Volume / 2f * normal;
             p1.ApplyForce(force);
             p2.ApplyForce(force);
-            if (_context._drawForces)
+            if (Context._drawForces)
             {   
                 _pressureVis._lines ??= new VisLine[_points.Count];
                 if (_pressureVis._lines.Length != _points.Count)
@@ -431,10 +424,14 @@ public class MassShape
 
     private void HandleLineCollisions(MassShape otherShape)
     {
-        var thisAABB = AABB;
+        if (_points.Count == 1 && otherShape._points.Count == 1)
+        {
+            return;
+        }
+        var thisAABB = Aabb;
         foreach (var point in otherShape._points)
         {
-            if (!CheckCollisionBoxes(point.AABB, thisAABB))
+            if (!CheckCollisionBoxes(point.Aabb, thisAABB))
             {
                 continue;
             }
@@ -445,20 +442,16 @@ public class MassShape
         }
     }
 
-    private void HandlePointOnPointCollisions(MassShape otherShape, BoundingBox otherAABB)
+    private void HandlePointOnPointCollisions(MassShape otherShape)
     {
         foreach (var pointA in _points)
         {
-            if (!CheckCollisionBoxes(pointA.AABB, otherAABB))
-            {
-                continue;
-            }
             foreach (var pointB in otherShape._points)
             {
                 var collisionResult = pointA.CheckPointToPointCollision(pointB);
                 if (collisionResult.HasValue)
                 {
-                    PointMass.HandlePointToPointCollision(collisionResult.Value, _context);
+                    PointMass.HandlePointToPointCollision(collisionResult.Value, Context);
                 }
             }
         }
@@ -468,14 +461,14 @@ public class MassShape
     {
         foreach (var shapeA in context.MassShapes)
         {
-            var nearShapes = context.QuadTree.QueryShapes(shapeA.AABB);
+            var nearShapes = context.GetMassShapes(shapeA.Aabb);
             foreach (var shapeB in nearShapes)
             {
-                if (shapeA.Equals(shapeB))
+                if (shapeA.Equals(shapeB) || !CheckCollisionBoxes(shapeA.Aabb, shapeB.Aabb))
                 {
                     continue;
                 }
-                shapeA.HandlePointOnPointCollisions(shapeB, shapeB.AABB);
+                shapeA.HandlePointOnPointCollisions(shapeB);
                 shapeA.HandleLineCollisions(shapeB);
             }
         }
@@ -509,16 +502,16 @@ public class MassShape
         closestB.Pos += bOffset * normal;
         // Apply impulse
         float combinedMass = closestA.Mass + closestB.Mass;
-        float impulseMag = -(1f + _context._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / combinedMass + pointMass.InvMass);
+        float impulseMag = -(1f + Context._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / combinedMass + pointMass.InvMass);
         Vector2 impulse = impulseMag * normal;
         pointMass.Vel = preVel + impulse * pointMass.InvMass;
-        closestA.Vel = closestApreVel - impulse / 2f / (combinedMass - closestB.Mass);
-        closestB.Vel = closestBpreVel - impulse / 2f / (combinedMass - closestA.Mass);
+        closestA.Vel = closestApreVel - impulse * 0.5f / (combinedMass - closestB.Mass);
+        closestB.Vel = closestBpreVel - impulse * 0.5f / (combinedMass - closestA.Mass);
         // Apply friction
         pointMass.ApplyFriction(-normal);
     }
 
-    private (PointMass, PointMass, Vector2) FindClosestPoints(Vector2 pos)
+    private (PointMass closestA, PointMass closestB, Vector2 closestPoint) FindClosestPoints(Vector2 pos)
     {
         float closestDistSq = float.MaxValue;
         PointMass closestA = null;
@@ -528,7 +521,7 @@ public class MassShape
         {
             PointMass lineStart = _points[i];
             PointMass lineEnd = _points[(i + 1) % _points.Count];
-            Vector2 pointOnLine = Utils.Geometry.ClosestPointOnLine(lineStart.Pos, lineEnd.Pos, pos);
+            Vector2 pointOnLine = Geometry.ClosestPointOnLine(lineStart.Pos, lineEnd.Pos, pos);
             float distSq = Vector2.DistanceSquared(pointOnLine, pos);
             if (distSq < closestDistSq)
             {
@@ -547,17 +540,15 @@ public class MassShape
         ImGui.SetWindowPos(UnitConv.MetersToPixels(Centroid) + new Vector2(25f, 0f));
         ImGui.SetWindowSize(new (250f, 130f));
         ImGui.Text(string.Format("Mass: {0} kg", Mass));
-        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel));
-        ImGui.Text(string.Format("Momentum: {0:0.0} kgm/s", Momentum));
-        ImGui.Text(string.Format("Angular momentum: {0:0.0} Js", AngularMomentum));
-        ImGui.Text(string.Format("Moment of inertia: {0:0} kgm^2", AngularMass));
-        ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel * RAD2DEG));
-        ImGui.Text(string.Format("Angle: {0:0} deg", Angle * RAD2DEG));
+        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel / Context.SubStep));
+        ImGui.Text(string.Format("Momentum: {0:0.0} kgm/s", Momentum / Context.SubStep));
+        ImGui.Text(string.Format("Moment of inertia: {0:0} kgm^2", Inertia));
+        ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel / Context.SubStep * RAD2DEG));
         ImGui.Text(string.Format("Linear energy: {0:0.##} J", LinEnergy));
         ImGui.Text(string.Format("Rot energy: {0:0.##} J", RotEnergy));
         ImGui.End();
-        Vector2 offset = new(-_context.TextureManager._centerOfMassIcon.Width / 2f, -_context.TextureManager._centerOfMassIcon.Height / 2f);
-        DrawTextureEx(_context.TextureManager._centerOfMassIcon, UnitConv.MetersToPixels(Centroid) + 0.5f * offset, 0f, 0.5f, Color.White);
+        Vector2 offset = new(-Context.TextureManager.CenterOfMassIcon.Width / 2f, -Context.TextureManager.CenterOfMassIcon.Height / 2f);
+        DrawTextureEx(Context.TextureManager.CenterOfMassIcon, UnitConv.MetersToPixels(Centroid) + 0.5f * offset, 0f, 0.5f, Color.White);
     }
 
     public static bool operator == (MassShape a, MassShape b)
@@ -594,208 +585,5 @@ public class MassShape
     {
         public Vector2 _start;
         public Vector2 _end;
-    }
-
-    // Shape constructors
-
-    public static MassShape SoftBall(float x, float y, float radius, float mass, int res, float stiffness, float gasAmount, Context context)
-    {
-        float angle = MathF.PI / 2f;
-        MassShape s = new(context, true)
-        {
-            _gasAmount = gasAmount
-        };
-        // Points
-        for (int i = 0; i < res; i++)
-        {
-            float x0 = radius * MathF.Cos(angle);
-            float y0 = radius * MathF.Sin(angle);
-            s._points.Add(new(x0 + x, y0 + y, mass / res, false, context));
-            angle += 2f * MathF.PI / res;
-        }
-        // Constraints
-        for (int i = 0; i < res; i++)
-        {
-            s._constraints.Add(new SpringConstraint(s._points[i], s._points[(i + 1) % res], stiffness, SpringConstraint.DefaultDamping));
-        }
-        return s;
-    }
-
-    public static MassShape HardBall(float x, float y, float radius, float mass, int res, Context context)
-    {
-        float angle = MathF.PI / 2f;
-        MassShape s = new(context, false);
-        // Points
-        for (int i = 0; i < res; i++)
-        {
-            float x0 = radius * MathF.Cos(angle);
-            float y0 = radius * MathF.Sin(angle);
-            s._points.Add(new(x0 + x, y0 + y, mass / res, false, context));
-            angle += 2f * MathF.PI / res;
-        }
-        // Constraints
-        List<int> visitedPoints = new();
-        for (int i = 0; i < res; i++)
-        {
-            s._constraints.Add(new RigidConstraint(s._points[i], s._points[(i + 1) % res]));
-            if (!visitedPoints.Contains(i))
-            {
-                int nextIndex = res % 2 == 0 ? (i + res / 2 - 1) % res : (i + res / 2) % res;
-                s._constraints.Add(new RigidConstraint(s._points[i], s._points[nextIndex]));
-                visitedPoints.Add(i);
-            }
-        }
-        
-        return s;
-    }
-
-    public static MassShape Chain(float x0, float y0, float x1, float y1, float mass, int res, (bool, bool) pins, Context context)
-    {
-        MassShape c = new(context, false);
-        Vector2 start = new(x0, y0);
-        Vector2 end = new(x1, y1);
-        float len = Vector2.Distance(start, end);
-        float spacing = len / (res - 1);
-        Vector2 dir = (end - start) / len;
-        // Points
-        for (int i = 0; i < res; i++)
-        {
-            bool pinned;
-            if (pins.Item1 && pins.Item2)
-            {
-                pinned = i == 0 || i == res - 1;
-            } else if (pins.Item1)
-            {
-                pinned = i == 0;
-            } else if (pins.Item2)
-            {
-                pinned = i == res - 1;
-            } else
-            {
-                pinned = false;
-            }
-            c._points.Add(new(start.X + i * spacing * dir.X, start.Y + i * spacing * dir.Y, mass / res, pinned, context));
-        }
-        // Constraints
-        for (int i = 0; i < res - 1; i++)
-        {
-            c._constraints.Add(new RigidConstraint(c._points[i], c._points[i + 1]));
-        }
-        return c;
-    }
-
-    public static MassShape Cloth(float x, float y, float width, float height, float mass, int res, float stiffness, Context context)
-    {
-        float metersPerConstraintW = width / res;
-        float metersPerConstraintH = height / res;
-        MassShape c = new(context, false);
-        // Points
-        for (int col = 0; col < res; col++)
-        {
-            for (int row = 0; row < res; row++)
-            {
-                bool pinned = (col == 0 || col == res - 1) && row == 0;
-                c._points.Add(new(x + col * metersPerConstraintW, y + row * metersPerConstraintH, mass, pinned, context));
-            }
-        }
-        // Constraints
-        for (int col = 0; col < res; col++)
-        {
-            for (int row = 0; row < res; row++)
-            {
-                if (col != res - 1)
-                {
-                    if (stiffness == 0f)
-                    {
-                        c._constraints.Add(new RigidConstraint(c._points[col * res + row], c._points[(col + 1) * res + row]));
-                    } else
-                    {
-                        c._constraints.Add(new SpringConstraint(c._points[col * res + row], c._points[(col + 1) * res + row], stiffness, SpringConstraint.DefaultDamping));
-                    }
-                }
-                if (row != res - 1)
-                {
-                    if (stiffness == 0f)
-                    {
-                        c._constraints.Add(new RigidConstraint(c._points[col * res + row], c._points[col * res + row + 1]));
-                    } else 
-                    {
-                        c._constraints.Add(new SpringConstraint(c._points[col * res + row], c._points[col * res + row + 1], stiffness, SpringConstraint.DefaultDamping));
-                    }
-                }
-            }
-        }
-        return c;
-    }
-
-    public static MassShape Pendulum(float x, float y, float length, float mass, int order, Context context)
-    {
-        if (order < 1)
-        {
-            return null;
-        }
-        MassShape c = new(context, false);
-        // Points
-        for (int i = 0; i < order + 1; i++)
-        {
-            c._points.Add(new PointMass(x, y, mass / (order + 1), i == 0, context));
-            y += length / (order + 1);
-        }
-        // Constraints
-        for (int i = 0; i < order; i++)
-        {
-            c._constraints.Add(new RigidConstraint(c._points[i], c._points[i + 1]));
-        }
-        return c;
-    }
-
-    public static MassShape Box(float x, float y, float size, float mass, Context context)
-    {
-        MassShape c = new(context, false)
-        {
-            _points = new() 
-            {
-                new(x - size / 2f, y - size / 2f, mass / 4f, false, context),
-                new(x - size / 2f, y + size / 2f, mass / 4f, false, context),
-                new(x + size / 2f, y + size / 2f, mass / 4f, false, context),
-                new(x + size / 2f, y - size / 2f, mass / 4f, false, context)
-            },
-            _constraints = new()
-        };
-        c._constraints.Add(new RigidConstraint(c._points[0], c._points[1]));
-        c._constraints.Add(new RigidConstraint(c._points[1], c._points[2]));
-        c._constraints.Add(new RigidConstraint(c._points[2], c._points[3]));
-        c._constraints.Add(new RigidConstraint(c._points[3], c._points[0]));
-        c._constraints.Add(new RigidConstraint(c._points[0], c._points[2]));
-        return c;
-    }
-
-    public static MassShape SoftBox(float x, float y, float size, float mass, float stiffness, Context context)
-    {
-        MassShape c = new(context, false)
-        {
-            _points =  
-            {
-                new(x - size / 2f, y - size / 2f, mass / 4f, false, context),
-                new(x - size / 2f, y + size / 2f, mass / 4f, false, context),
-                new(x + size / 2f, y + size / 2f, mass / 4f, false, context),
-                new(x + size / 2f, y - size / 2f, mass / 4f, false, context)
-            }
-        };
-        c._constraints.Add(new SpringConstraint(c._points[0], c._points[1], stiffness, SpringConstraint.DefaultDamping));
-        c._constraints.Add(new SpringConstraint(c._points[1], c._points[2], stiffness, SpringConstraint.DefaultDamping));
-        c._constraints.Add(new SpringConstraint(c._points[2], c._points[3], stiffness, SpringConstraint.DefaultDamping));
-        c._constraints.Add(new SpringConstraint(c._points[3], c._points[0], stiffness, SpringConstraint.DefaultDamping));
-        c._constraints.Add(new SpringConstraint(c._points[0], c._points[2], stiffness, SpringConstraint.DefaultDamping));
-        return c;
-    }
-
-    public static MassShape Particle(float x, float y, float mass, Context context)
-    {
-        MassShape c = new(context, false)
-        {
-            _points = { new(x, y, mass, false, context) }
-        };
-        return c;
     }
 }

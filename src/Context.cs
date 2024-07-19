@@ -1,11 +1,11 @@
 using System.Numerics;
 using Collision;
-using Physics;
 using Entities;
 using Textures;
 using Utils;
 using Tools;
 using Editing;
+using Raylib_cs;
 
 namespace Sim;
 
@@ -28,13 +28,21 @@ public class Context
     public float _globalRestitutionCoeff = 0.3f;
     public float _globalKineticFrictionCoeff = 1f;
     public float _globalStaticFrictionCoeff = 1.1f;
-    public QuadTree QuadTree { get; init; }
-    public HashSet<LineCollider> LineColliders { get; init; }
+    public QuadTree QuadTree { get; set; }
+    public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; init; }
     public Tool SelectedTool { get; set; }
     public int _selectedToolIndex;
     public int _selectedSpawnTargetIndex;
     public Tool[] Tools { get; init; }
+    public NbodySim NbodySim
+    {
+        get
+        {
+            return Tools[(int) ToolType.NbodySim] as NbodySim;
+        }
+    }
+    public int SavedShapeCount => _saveState.MassShapes.Count;
     public int MassCount 
     {
         get 
@@ -83,14 +91,13 @@ public class Context
     {
         foreach (var shape in shapes)
         {
-            MassShapes.Add(shape);
+            MassShapes.Add(new(shape));
         }
     }
 
     public void SaveCurrentState()
     {
-        _saveState.LineColliders = new();
-        _saveState.MassShapes = new();
+        _saveState = new();
         foreach (var c in LineColliders)
         {
             _saveState.LineColliders.Add(new LineCollider(c));
@@ -102,7 +109,7 @@ public class Context
         Console.WriteLine("Saved state");
     }
 
-    public void LoadState()
+    public void LoadSavedState()
     {
         _simPaused = true;
         LineColliders.Clear();
@@ -113,6 +120,51 @@ public class Context
         }
         AddMassShapes(_saveState.MassShapes);
         Console.WriteLine("Loaded state");
+    }
+
+    public MassShape GetMassShape(uint id)
+    {
+        var activeShapes = MassShapes.Where(s => !s._toBeDeleted);
+        if (!activeShapes.Any())
+        {
+            return null;
+        }
+        if (!activeShapes.Select(s => s.Id).Contains(id))
+        {
+            return null;
+        }
+        MassShape shape = activeShapes.Single(s => s.Id == id);
+        return shape;
+    }
+
+    public IEnumerable<MassShape> GetMassShapes(in BoundingBox area)
+    {
+        HashSet<MassShape> found = new();
+        QuadTree.QueryShapes(area, found);
+        return found;
+    }
+
+    public IEnumerable<MassShape> GetMassShapes(HashSet<uint> shapeIds)
+    {
+        var filteredShapes = MassShapes.Where(s => shapeIds.Contains(s.Id));
+        return filteredShapes;
+    }
+
+    public IEnumerable<PointMass> GetPointMasses(uint shapeId)
+    {
+        return GetMassShape(shapeId)._points;
+    }
+
+    public IEnumerable<PointMass> GetPointMasses(HashSet<uint> pointIds)
+    {
+        return MassShapes.SelectMany(s => s._points).Where(p => pointIds.Contains(p.Id));
+    }
+
+    public IEnumerable<PointMass> GetPointMasses(in BoundingBox area)
+    {
+        HashSet<PointMass> found = new();
+        QuadTree.QueryPoints(in area, found);
+        return found;
     }
 
     private Tool[] CreateTools()
@@ -126,12 +178,21 @@ public class Context
         tools[(int) ToolType.Ruler] = new Ruler(this);
         tools[(int) ToolType.Delete] = new Delete(this);
         tools[(int) ToolType.Editor] = new Editor(this);
+        tools[(int) ToolType.GravityWell] = new GravityWell(this);
+        tools[(int) ToolType.NbodySim] = new NbodySim(this);
         return tools;
     }
+    
     private struct SaveState
     {
         public HashSet<LineCollider> LineColliders { get; set; }
         public HashSet<MassShape> MassShapes { get; set; }
+
+        public SaveState()
+        {
+            LineColliders = new();
+            MassShapes = new();
+        }
     }
 
     public void LoadClothScenario()
@@ -143,8 +204,25 @@ public class Context
             height: UnitConv.PixelsToMeters(500f),
             mass: 0.7f,
             res: 42,
-            stiffness: 1e5f,
+            stiffness: 0.8f,
+            true,
             this
         ));
+    }
+
+    public void LoadBenchmark(int particleCount, float particleMass, float spacing, Vector2 offset)
+    {
+        List<MassShape> particles = new(particleCount);
+        int sideCount = (int) Math.Sqrt(particleCount);
+        spacing = UnitConv.PixelsToMeters(spacing);
+        offset = UnitConv.PixelsToMeters(offset);
+        for (int y = 0; y < sideCount; y++)
+        {
+            for (int x = 0; x < sideCount; x++)
+            {
+                particles.Add(MassShape.Particle(x * spacing + offset.X, y * spacing + offset.Y, particleMass, this));
+            }
+        }
+        AddMassShapes(particles);
     }
 }

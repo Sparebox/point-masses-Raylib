@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Text;
-using Physics;
+using Entities;
+using GravitySim;
 using Raylib_cs;
 using Sim;
 using Utils;
@@ -18,6 +19,8 @@ public enum ToolType
     Ruler,
     Delete,
     Editor,
+    GravityWell,
+    NbodySim,
 }
 
 public abstract class Tool
@@ -99,6 +102,12 @@ public abstract class Tool
             case ToolType.Editor :
                 context.SelectedTool = context.Tools[(int) ToolType.Editor];
                 break;
+            case ToolType.GravityWell :
+                context.SelectedTool = context.Tools[(int) ToolType.GravityWell];
+                break;
+            case ToolType.NbodySim :
+                context.SelectedTool = context.Tools[(int) ToolType.NbodySim];
+                break;
         }
     }
 
@@ -113,7 +122,7 @@ public abstract class Tool
         return sb.ToString();
     }
 
-    protected static MassShape FindClosestShape(in Vector2 pos, HashSet<MassShape> shapes)
+    protected static MassShape FindClosestShape(in Vector2 pos, IEnumerable<MassShape> shapes)
     {
         MassShape closest = null;
         float closestDistSq = float.MaxValue;
@@ -132,9 +141,9 @@ public abstract class Tool
 
 public class Spawn : Tool
 {
-    public const float DefaultStiffness = 1e2f;
+    public const float DefaultStiffness = 1f;
     public const float DefaultGasAmt = 100f;
-    private const float DefaultMass = 30f;
+    private const float DefaultMass = 10f;
     private const int DefaultRes = 15;
 
     public SpawnTarget _currentTarget;
@@ -206,7 +215,7 @@ public class Spawn : Tool
                 _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, _mass, _context);
                 break;
             case SpawnTarget.SoftBox:
-                _shapeToSpawn = MassShape.SoftBox(mousePos.X, mousePos.Y, Radius, _mass, 1e3f, _context);
+                _shapeToSpawn = MassShape.SoftBox(mousePos.X, mousePos.Y, Radius, _mass, _stiffness, _context);
                 break;
             case SpawnTarget.Ball:
                 _shapeToSpawn = MassShape.HardBall(mousePos.X, mousePos.Y, Radius, _mass, _resolution, _context);
@@ -215,7 +224,7 @@ public class Spawn : Tool
                 _shapeToSpawn = MassShape.SoftBall(mousePos.X, mousePos.Y, Radius, _mass, _resolution, _stiffness, _gasAmount, _context);
                 break;
             case SpawnTarget.Particle:
-                _shapeToSpawn = MassShape.Particle(mousePos.X, mousePos.Y, Radius, _context);
+                _shapeToSpawn = MassShape.Particle(mousePos.X, mousePos.Y, PointMass.RadiusToMass(Radius), _context);
                 break;
         }
     }
@@ -247,12 +256,12 @@ public class Delete : Tool
         }
         Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-        var shapes = _context.QuadTree.QueryShapes(area);
+        var shapes = _context.GetMassShapes(area).ToHashSet();
         if (!shapes.Any())
         {
             return;
         }
-        shapes.RemoveWhere(s => !CheckCollisionBoxes(area, s.AABB));
+        shapes.RemoveWhere(s => !CheckCollisionBoxes(area, s.Aabb));
         List<uint> pointsToDelete = new();
         foreach (var shape in shapes)
         {
@@ -272,7 +281,7 @@ public class Delete : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
+        DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
     }
 }
 
@@ -296,13 +305,13 @@ public class PullCom : Tool
         }
         Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-        var shapes = _context.QuadTree.QueryShapes(area);
+        var shapes = _context.GetMassShapes(area);
         if (!shapes.Any())
         {
             return;
         }
         MassShape closest = FindClosestShape(mousePos, shapes);
-        if (!CheckCollisionBoxes(area, closest.AABB))
+        if (!CheckCollisionBoxes(area, closest.Aabb))
         {
             return;
         }
@@ -315,11 +324,11 @@ public class PullCom : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
+        DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
         if (_shouldVisualize)
         {
             _shouldVisualize = false;
-            DrawLine(UnitConv.MetersToPixels(_centerOfMass.X), UnitConv.MetersToPixels(_centerOfMass.Y), (int) mousePos.X, (int) mousePos.Y, Color.Red);
+            DrawLineV(UnitConv.MetersToPixels(_centerOfMass), mousePos, Color.Red);
         }
     }
 }
@@ -345,7 +354,7 @@ public class Pull : Tool
         }
         Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-        var points = _context.QuadTree.QueryPoints(area);
+        var points = _context.GetPointMasses(area);
         if (!points.Any())
         {
             return;
@@ -367,13 +376,13 @@ public class Pull : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
+        DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
         if (_shouldVisualize)
         {
             _shouldVisualize = false;
             foreach (var pos in _positions)
             {
-               DrawLine(UnitConv.MetersToPixels(pos.X), UnitConv.MetersToPixels(pos.Y), (int) mousePos.X, (int) mousePos.Y, Color.Red);
+               DrawLineV(UnitConv.MetersToPixels(pos), mousePos, Color.Red);
             }
         }
     }
@@ -400,8 +409,8 @@ public class Wind : Tool
         {
             foreach (var p in s._points)
             {
-                float forceMult = GetRandomValue(MinForce, MaxForce);
-                p.ApplyForce(forceMult * Direction);
+                float force = GetRandomValue(MinForce, MaxForce);
+                p.ApplyForce(force * Direction);
             }
         }
     }
@@ -429,7 +438,7 @@ public class Rotate : Tool
             return;
         }
         Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
-        var shapes = _context.QuadTree.QueryShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
+        var shapes = _context.GetMassShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
         if (!shapes.Any())
         {
             return;
@@ -453,7 +462,7 @@ public class Rotate : Tool
     public override void Draw()
     {
         Vector2 mousePos = GetMousePosition();
-        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
+        DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
     }
 }
 
@@ -476,7 +485,7 @@ public class Ruler : Tool
         Vector2 mousePos = GetMousePosition();
         float len = UnitConv.PixelsToMeters(Vector2.Distance(_startPos, mousePos));
         DrawText(string.Format("{0:0.00} m", len), (int) mousePos.X, (int) mousePos.Y + 20, 30, Color.Yellow);
-        DrawLine((int) _startPos.X, (int) _startPos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Yellow);
+        DrawLineV(_startPos, mousePos, Color.Yellow);
     }
 
     public override void Update()
@@ -486,6 +495,88 @@ public class Ruler : Tool
         {
             _startPos = GetMousePosition();
             _shouldVisualize = false;
+        }
+    }
+}
+
+public class GravityWell : Tool
+{
+    public float _gravConstant = 1f;
+    public float _minDist = 0.01f;
+    private Vector2 _pos;
+
+    public GravityWell(Context context) => _context = context;
+
+    public override void Draw()
+    {
+        Vector2 pixelPos = UnitConv.MetersToPixels(_pos);
+        DrawText("G", (int) pixelPos.X, (int) pixelPos.Y, 20, Color.Yellow);
+    }
+
+    public override void Update()
+    {
+        if (IsMouseButtonPressed(MouseButton.Left))
+        {
+            _pos = UnitConv.PixelsToMeters(GetMousePosition());
+        }
+        ApplyGravityForces();
+    }
+
+    private void ApplyGravityForces()
+    {
+        foreach (var shape in _context.MassShapes)
+        {
+            Vector2 dir = _pos - shape.CenterOfMass;
+            float dist = dir.Length();
+            if (dist == 0f || dist < _minDist)
+            {
+                continue;
+            }
+            dir /= dist;
+            Vector2 gravForce = dir * _gravConstant * shape.Mass / (dist * dist);
+            shape.ApplyForceCOM(gravForce);
+        }
+    }
+}
+
+public class NbodySim : Tool
+{
+    public float _gravConstant = 0.01f;
+    public float _minDist = 0f;
+    public float _threshold = 0.01f;
+    public bool _running;
+    public bool _collisionsEnabled;
+    private readonly BarnesHutTree _quadTree;
+
+    public NbodySim(Context context)
+    {
+        _context = context;
+        _quadTree = new(
+            UnitConv.PixelsToMeters(new Vector2(Program.WinW / 2f, Program.WinH / 2f)),
+            UnitConv.PixelsToMeters(new Vector2(Program.WinW, Program.WinH))
+        );
+    }
+
+    public override void Draw() 
+    {
+        _quadTree.Draw();
+    }
+
+    public override void Update()
+    {
+        if (!_running)
+        {
+            return;
+        }
+        _quadTree.Update(_context);
+        ApplyGravityForces();
+    }
+
+    private void ApplyGravityForces()
+    {
+        foreach (var shape in _context.MassShapes)
+        {
+            _quadTree.CalculateGravity(shape, this);
         }
     }
 }

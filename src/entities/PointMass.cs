@@ -1,23 +1,18 @@
-using System.Data;
 using System.Numerics;
 using Collision;
 using Raylib_cs;
 using Sim;
 using Utils;
 using static Raylib_cs.Raylib;
-using static Utils.Entities;
 
-namespace Physics;
+namespace Entities;
 
-public class PointMass
+public class PointMass : Entity
 {
-    private static uint _idCounter;
-    private readonly Context _context;
-    public const float RadiusPerMassRatio = 0.01f;
+    public const float RadiusPerMassRatio = 0.01f; // aka inverse density
 
-    public uint Id { get; init; }
-    public readonly bool _pinned;
-    public Vector2 _visForce; // For force visualization
+    public bool Pinned { get; init; }
+    public Vector2 VisForce { get; set; } // For force visualization
     public Vector2 Pos { get; set; }
     public Vector2 PrevPos { get; set; }
     public Vector2 Force { get; set; }
@@ -27,10 +22,9 @@ public class PointMass
         get { return Pos - PrevPos; }
         set { PrevPos = Pos - value; }
     }
-    public float Mass { get; }
-    public float InvMass { get { return 1f / Mass; }}
+    public Vector2 Momentum => Mass * Vel;
     public float Radius { get; init; }
-    public BoundingBox AABB 
+    public override BoundingBox Aabb 
     {
         get
         {
@@ -39,71 +33,67 @@ public class PointMass
             return new BoundingBox(min, max);
         }
     }
+    public override Vector2 Centroid => Pos;
+    public override Vector2 CenterOfMass => Pos;
     
-    public PointMass(float x, float y, float mass, bool pinned, Context context)
+    public PointMass(float x, float y, float mass, bool pinned, Context context) : base(context, mass)
     {
         Pos = new(x, y);
         PrevPos = Pos;
         Force = Vector2.Zero;
-        Mass = mass;
         Radius = MassToRadius(mass);
-        Id = _idCounter++;
-        _pinned = pinned;
-        _context = context;
+        Pinned = pinned;
     }
 
     // Copy constructor
-    public PointMass(in PointMass p)
+    public PointMass(PointMass p) : base(p.Context, p.Mass, p.Id)
     {
         Pos = p.Pos;
         PrevPos = Pos;
-        Force = Vector2.Zero;
-        Mass = p.Mass;
+        Force = Vector2.Zero;;
         Radius = p.Radius;
-        Id = p.Id;
-        _pinned = p._pinned;
-        _context = p._context;
+        Pinned = p.Pinned;
     }
 
-    public void Update()
+    public override void Update()
     {
-        if (_pinned)
+        if (Pinned)
         {
             return;
         }
-        if (_context._gravityEnabled)
+        if (Context._gravityEnabled)
         {
-            ApplyForce(Mass * _context.Gravity);
+            ApplyForce(Mass * Context.Gravity);
         }
         SolveLineCollisions();
-        Vector2 acc = Force / Mass;
+        Vector2 acc = Force * _invMass;
         Vector2 vel = Vel; // Save the velocity before previous position is reset
         PrevPos = Pos;
-        Pos += vel + acc * _context.SubStep * _context.SubStep;
-        _visForce = Force;
+        Pos += vel + acc * Context.SubStep * Context.SubStep;
+        VisForce = Force;
         PrevForce = Force;
         Force = Vector2.Zero;
     }
 
-    public void Draw()
+    public override void Draw()
     {
-        DrawCircleLines(UnitConv.MetersToPixels(Pos.X), UnitConv.MetersToPixels(Pos.Y), UnitConv.MetersToPixels(Radius), Color.White);
+        DrawCircleLinesV(UnitConv.MetersToPixels(Pos), UnitConv.MetersToPixels(Radius), Color.White);
     }
 
     public void ApplyForce(in Vector2 force)
     {
         Force += force;
-        _visForce += force;
+        VisForce += force;
     }
 
     public void SolveLineCollisions()
     {
-        foreach (LineCollider c in _context.LineColliders)
+        foreach (LineCollider c in Context.LineColliders)
         {
             CollisionData? collisionResult = c.CheckCollision(this);
             if (collisionResult.HasValue)
             {
-                LineCollider.SolvePointCollision(collisionResult.Value, _context);
+                LineCollider.SolvePointCollision(collisionResult.Value, Context);
             }
         }
     }
@@ -123,7 +113,7 @@ public class PointMass
             {
                 PointMassA = this,
                 PointMassB = otherPoint,
-                Normal = new(normal.X / dist, normal.Y / dist),
+                Normal = normal / dist,
                 Separation = Radius + otherPoint.Radius - dist,
             };
             return result;
@@ -165,8 +155,8 @@ public class PointMass
             return;
         }
         // Find vel direction perpendicular to the normal
-        Vector2 dir = Vel - Vector2.Dot(Vel, normal) * normal;
-        if (dir.LengthSquared() == 0f)
+        Vector2 perpVel = Vel - Vector2.Dot(Vel, normal) * normal;
+        if (perpVel.LengthSquared() == 0f)
         {
             return;
         }
@@ -176,18 +166,15 @@ public class PointMass
             // The total force is not towards the normal
             return;
         }
-        if (PrevForce.LengthSquared() < MathF.Pow(_context._globalStaticFrictionCoeff * -normalForce, 2f))
+        if (PrevForce.LengthSquared() < MathF.Pow(Context._globalStaticFrictionCoeff * -normalForce, 2f))
         {
             // Apply static friction
-            Vel += -dir;
-            Vel = Vector2.Zero;
+            Vel -= perpVel;
             return;
         }
         // Apply kinetic friction
-        dir = Vector2.Normalize(dir);
-        ApplyForce(dir * _context._globalKineticFrictionCoeff * normalForce);
-        //Vector2 vis = dir * KineticFrictionCoeff * normalForce;
-        //Utils.Graphic.DrawArrow((int) Pos.X, (int) Pos.Y, (int) (Pos.X + vis.X), (int) (Pos.Y + vis.Y), Color.Magenta);
+        perpVel = Vector2.Normalize(perpVel);
+        ApplyForce(perpVel * Context._globalKineticFrictionCoeff * normalForce);
     }
 
     public override bool Equals(object obj)

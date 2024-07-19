@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Text;
+using Entities;
 using Physics;
 using Raylib_cs;
 using Sim;
@@ -23,6 +24,7 @@ public class Editor : Tool
     public bool _connectLoop;
     public bool _inflateLoop;
     public bool _isRigidConstraint;
+    public bool _pinPoint;
     public float _gasAmount = Spawn.DefaultGasAmt;
     public float _stiffness = Spawn.DefaultStiffness;
     public readonly Grid _grid;
@@ -51,11 +53,11 @@ public class Editor : Tool
         if (SelectedAction == EditorAction.Freeform && IsMouseButtonDown(MouseButton.Left) && IsKeyDown(KeyboardKey.LeftAlt))
         {
             var startPos = UnitConv.MetersToPixels(_grid.GridPoints[_clickedPointIndices.Item1]._pos);
-            DrawLine((int) startPos.X, (int) startPos.Y, (int) mousePos.X, (int) mousePos.Y, Color.Yellow);
+            DrawLineV(startPos, mousePos, Color.Purple);
         }
         else
         {
-            DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
+            DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
         }
     }
 
@@ -71,11 +73,11 @@ public class Editor : Tool
                 var mousePos = GetMousePosition();
                 if (IsKeyDown(KeyboardKey.LeftShift))
                 {
-                    _grid.ToggleGridPoint((int) mousePos.X, (int) mousePos.Y, false);
+                    _grid.ToggleGridPoint((int) mousePos.X, (int) mousePos.Y, false, _pinPoint);
                 }
                 else
                 {
-                    _grid.ToggleGridPoint((int) mousePos.X, (int) mousePos.Y, true);
+                    _grid.ToggleGridPoint((int) mousePos.X, (int) mousePos.Y, true, _pinPoint);
                 }
             }
             catch (IndexOutOfRangeException e)
@@ -89,11 +91,7 @@ public class Editor : Tool
             try {
                 if (SelectedAction == EditorAction.Freeform && IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint start point
                 {
-                    _clickedPointIndices.Item1 = _grid.GetIndexFromPixel((int) mousePos.X, (int) mousePos.Y);
-                    if (_grid.GridPoints[_clickedPointIndices.Item1].IsSelected)
-                    {
-                        _grid.GridPoints[_clickedPointIndices.Item1].IsConstrained = true;
-                    }
+                    SetClickedPoint(mousePos, true);
                 }
             }
             catch (IndexOutOfRangeException e)
@@ -107,12 +105,7 @@ public class Editor : Tool
                 var mousePos = GetMousePosition();
                 if (SelectedAction == EditorAction.Freeform && IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint end point
                 {
-                    _clickedPointIndices.Item2 = _grid.GetIndexFromPixel((int) mousePos.X, (int) mousePos.Y);
-                    if (_clickedPointIndices.Item1 != _clickedPointIndices.Item2 && _grid.GridPoints[_clickedPointIndices.Item2].IsSelected)
-                    {
-                        _grid.GridPoints[_clickedPointIndices.Item2].IsConstrained = true;
-                        _grid.ConstrainedPointIndexPairs.Add(_clickedPointIndices);
-                    }
+                    SetClickedPoint(mousePos, false);
                 }
             }
             catch (IndexOutOfRangeException e)
@@ -174,15 +167,7 @@ public class Editor : Tool
         // Constraints
         for (int i = 0; i < (_connectLoop ? loop._points.Count : loop._points.Count - 1); i++)
         {
-            Constraint c;
-            if (_isRigidConstraint)
-            {
-                c = new RigidConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count]);
-            }
-            else
-            {
-                c = new SpringConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count], _stiffness, SpringConstraint.DefaultDamping);
-            }
+            Constraint c = new DistanceConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count], _stiffness, _context);
             loop._constraints.Add(c);
         }
         _context.AddMassShape(loop);
@@ -195,22 +180,15 @@ public class Editor : Tool
         foreach (var gridIndex in _grid.SelectedPointIndices)
         {
             Vector2 pos = _grid.GridPoints[gridIndex]._pos;
-            shape._points.Add(new(pos.X, pos.Y, mass, false, _context));
+            bool isPinned = _grid.GridPoints[gridIndex].IsPinned;
+            shape._points.Add(new(pos.X, pos.Y, mass, isPinned, _context));
         }
         // Constraints
         foreach (var pair in _grid.ConstrainedPointIndexPairs)
         {
-            Constraint c;
             PointMass a = shape._points.Find(p => p.Pos == _grid.GridPoints[pair.Item1]._pos);
             PointMass b = shape._points.Find(p => p.Pos == _grid.GridPoints[pair.Item2]._pos);
-            if (_isRigidConstraint)
-            {
-                c = new RigidConstraint(a, b);
-            }
-            else
-            {
-                c = new SpringConstraint(a, b, _stiffness, SpringConstraint.DefaultDamping);
-            }
+            Constraint c = new DistanceConstraint(a, b, _stiffness, _context);
             shape._constraints.Add(c);
         }
         _context.AddMassShape(shape);
@@ -225,5 +203,24 @@ public class Editor : Tool
             sb.Append(action.ToString() + "\0");
         }
         return sb.ToString();
+    }
+
+    private void SetClickedPoint(Vector2 mousePos, bool isFirstPoint)
+    {
+        if (isFirstPoint)
+        {
+            _clickedPointIndices.Item1 = _grid.GetIndexFromPixel((int) mousePos.X, (int) mousePos.Y);
+        }
+        else
+        {
+            _clickedPointIndices.Item2 = _grid.GetIndexFromPixel((int) mousePos.X, (int) mousePos.Y);
+            bool bothPointsAreSelected = _grid.GridPoints[_clickedPointIndices.Item1].IsSelected && _grid.GridPoints[_clickedPointIndices.Item2].IsSelected;
+            if (_clickedPointIndices.Item1 != _clickedPointIndices.Item2 && bothPointsAreSelected)
+            {
+                _grid.GridPoints[_clickedPointIndices.Item1].IsConstrained = true;
+                _grid.GridPoints[_clickedPointIndices.Item2].IsConstrained = true;
+                _grid.ConstrainedPointIndexPairs.Add(_clickedPointIndices);
+            }   
+        }
     }
 }

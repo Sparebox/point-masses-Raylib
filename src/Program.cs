@@ -1,5 +1,6 @@
-﻿using System.Numerics;
-using Physics;
+﻿using System.Diagnostics;
+using System.Numerics;
+using Entities;
 using Raylib_cs;
 using rlImGui_cs;
 using Tools;
@@ -13,8 +14,7 @@ public class Program
 {   
     public const int WinW = 1600;
     public const int WinH = 900;
-    public const int TargetFPS = 165;
-    public const float QuadTreeUpdateSeconds = 0.1f;
+    public const float QuadTreeUpdateSeconds = 0.05f;
 
     private static float _accumulator;
     private static float _quadTreeAccumulator;
@@ -43,18 +43,20 @@ public class Program
         SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
         float winWidthMeters = UnitConv.PixelsToMeters(WinW);
         float winHeightMeters = UnitConv.PixelsToMeters(WinH);
-        Context context = new(timeStep: 1f / 60f, 13, gravity: new(0f, 9.81f))
+        Context context = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f))
         {
-            LineColliders = {
-                new(0f, 0f, winWidthMeters, 0f),
-                new(0f, 0f, 0f, winHeightMeters),
-                new(winWidthMeters, 0f, winWidthMeters, winHeightMeters),
-                new(0f, winHeightMeters, winWidthMeters, winHeightMeters),
-            },
-            QuadTree = new Entities.QuadTree(
+            QuadTree = new(
                 UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
-                UnitConv.PixelsToMeters(new Vector2(WinW, WinH))
+                UnitConv.PixelsToMeters(new Vector2(WinW, WinH)),
+                1,
+                6
             )
+        };
+        context.LineColliders = new() {
+            new(0f, 0f, winWidthMeters, 0f, context),
+            new(0f, 0f, 0f, winHeightMeters, context),
+            new(winWidthMeters, 0f, winWidthMeters, winHeightMeters, context),
+            new(0f, winHeightMeters, winWidthMeters, winHeightMeters, context)
         };
         context.SelectedTool = new PullCom(context);
         context.SaveCurrentState();
@@ -63,13 +65,14 @@ public class Program
 
     private static void Update()
     {
-        _accumulator += GetFrameTime();
-        _quadTreeAccumulator += GetFrameTime();
-        while (_quadTreeAccumulator >= QuadTreeUpdateSeconds)
+        if (GetFPS() < 10) // Pause if running too slow
         {
-            _context.QuadTree.Update(_context);
-            _quadTreeAccumulator -= QuadTreeUpdateSeconds;
+            Console.WriteLine("Running too slow. Pausing sim");
+            _context._simPaused = true;
         }
+        float frameTime = GetFrameTime();
+        UpdateQuadTree(frameTime);
+        _accumulator += frameTime;
         while (_accumulator >= _context.TimeStep)
         {
             for (int i = 0; i < _context.Substeps; i++)
@@ -78,8 +81,12 @@ public class Program
                 {
                     s.Update();
                 }
-                MassShape.HandleCollisions(_context);
+                if (!_context.NbodySim._running || (_context.NbodySim._running && _context.NbodySim._collisionsEnabled))
+                {
+                    MassShape.HandleCollisions(_context);
+                }
             }
+            _context.NbodySim.Update();
             _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
             _accumulator -= _context.TimeStep;
         }
@@ -88,7 +95,7 @@ public class Program
     private static void Draw()
     {
         BeginDrawing(); // raylib
-        rlImGui.Begin();
+        rlImGui.Begin(); // GUI
         ClearBackground(Color.Black);
 
         foreach (MassShape s in _context.MassShapes)
@@ -121,23 +128,19 @@ public class Program
         {
             _context._drawForces = !_context._drawForces;
         }
-        if (IsKeyPressed(KeyboardKey.B))
-        {
-            _context._drawAABBS = !_context._drawAABBS;
-        }
         if (IsKeyPressed(KeyboardKey.Q))
         {
             _context._drawQuadTree = !_context._drawQuadTree;
         }
         if (IsKeyPressed(KeyboardKey.R))
         {
-            _context.LoadState();
+            _context.LoadSavedState();
         }
         if (IsKeyPressed(KeyboardKey.Space))
         {
             _context._simPaused = !_context._simPaused;
         }
-        if (_context._toolEnabled)
+        if (_context._toolEnabled && _context.SelectedTool.GetType() != typeof(NbodySim))
         {
             _context.SelectedTool.Update();
         }
@@ -145,6 +148,10 @@ public class Program
         if (IsKeyPressed(KeyboardKey.C))
         {
             _context.LoadClothScenario();
+        }
+        if (IsKeyPressed(KeyboardKey.B))
+        {
+            _context.LoadBenchmark(500, 1f, 20f, new(WinW / 2f - 200f, 200f));
         }
         // Mouse
         if (GetMouseWheelMoveV().Y > 0f)
@@ -166,6 +173,20 @@ public class Program
                 var spawnTool = (Spawn) _context.SelectedTool;
                 spawnTool.UpdateSpawnTarget();
             }
+        }
+    }
+
+    private static void UpdateQuadTree(float frameTime)
+    {
+        if (_context.NbodySim._running && !_context.NbodySim._collisionsEnabled)
+        {
+            return;
+        }
+        _quadTreeAccumulator += frameTime;
+        while (_quadTreeAccumulator >= QuadTreeUpdateSeconds)
+        {
+            _context.QuadTree.Update(_context);
+            _quadTreeAccumulator -= QuadTreeUpdateSeconds;
         }
     }
 

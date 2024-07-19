@@ -19,11 +19,14 @@ public class Grid
         public Vector2 _pos;
         public bool IsSelected { get; set; }
         public bool IsConstrained { get; set; }
+        public bool IsPinned { get; set; }
 
         public GridPoint()
         {
             _pos = new Vector2();
             IsSelected = false;
+            IsConstrained = false;
+            IsPinned = false;
         }
     }
 
@@ -53,21 +56,29 @@ public class Grid
             if (point.IsSelected)
             {
                 Color color = point.IsConstrained ? Color.Purple : Color.Yellow;
-                DrawCircleLines(
-                    UnitConv.MetersToPixels(point._pos.X),
-                    UnitConv.MetersToPixels(point._pos.Y),
-                    UnitConv.MetersToPixels(Tool.Radius),
+                int toolRadiusPixels = UnitConv.MetersToPixels(Tool.Radius);
+                DrawCircleLinesV(
+                    UnitConv.MetersToPixels(point._pos),
+                    toolRadiusPixels,
                     color
                 );
+                if (point.IsPinned)
+                {
+                    DrawRectangleLines(
+                        UnitConv.MetersToPixels(point._pos.X) - toolRadiusPixels / 2,
+                        UnitConv.MetersToPixels(point._pos.Y) - toolRadiusPixels / 2,
+                        toolRadiusPixels,
+                        toolRadiusPixels,
+                        color
+                    );
+                }
             }
         }
         foreach (var pair in ConstrainedPointIndexPairs)
         {
-            DrawLine(
-                UnitConv.MetersToPixels(GridPoints[pair.Item1]._pos.X),
-                UnitConv.MetersToPixels(GridPoints[pair.Item1]._pos.Y),
-                UnitConv.MetersToPixels(GridPoints[pair.Item2]._pos.X),
-                UnitConv.MetersToPixels(GridPoints[pair.Item2]._pos.Y),
+            DrawLineV(
+                UnitConv.MetersToPixels(GridPoints[pair.Item1]._pos),
+                UnitConv.MetersToPixels(GridPoints[pair.Item2]._pos),
                 Color.Purple
             );
         }
@@ -99,26 +110,30 @@ public class Grid
         {
             GridPoints[i].IsSelected = false;
             GridPoints[i].IsConstrained = false;
+            GridPoints[i].IsPinned = false;
         }
         SelectedPointIndices.Clear();
         ConstrainedPointIndexPairs.Clear();
     }
 
-    public void ToggleGridPoint(int xPixels, int yPixels, bool select)
+    public void ToggleGridPoint(int xPixels, int yPixels, bool select, bool pin)
     {
         ref var closestGridPoint = ref GetClosestGridPoint(xPixels, yPixels);
         uint gridIndex = GetIndexFromPixel(xPixels, yPixels);
         if (select)
         {
             closestGridPoint.IsSelected = true;
+            closestGridPoint.IsPinned = pin;
             if (!SelectedPointIndices.Contains(gridIndex))
             {
                 SelectedPointIndices.Add(gridIndex);
             }
             return;
         }
+        // Deselect
         closestGridPoint.IsSelected = false;
         closestGridPoint.IsConstrained = false;
+        closestGridPoint.IsPinned = false;
         SelectedPointIndices.Remove(gridIndex);
     }
 

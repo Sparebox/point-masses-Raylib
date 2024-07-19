@@ -46,17 +46,28 @@ public class Gui
         ImGui.Spacing();
         switch (context.SelectedTool)
         {
-            case Spawn:
+            case Spawn :
                 ShowSpawnToolOptions(context);
                 break;
-            case Editor:
+            case Editor :
                 ShowEditorOptions(context);
                 break;
-            case Pull:
+            case Pull :
                 ImGui.InputFloat("Force coefficient", ref ((Pull) context.SelectedTool)._forceCoeff);
                 break;
-            case PullCom:
+            case PullCom :
                 ImGui.InputFloat("Force coefficient", ref ((PullCom) context.SelectedTool)._forceCoeff);
+                break;
+            case GravityWell :
+                ImGui.InputFloat("Gravitational constant", ref ((GravityWell) context.SelectedTool)._gravConstant);
+                ImGui.InputFloat("Minimum distance", ref ((GravityWell) context.SelectedTool)._minDist);
+                break;
+            case NbodySim :
+                ImGui.Checkbox("Running", ref ((NbodySim) context.SelectedTool)._running);
+                ImGui.Checkbox("Collisions enabled", ref ((NbodySim) context.SelectedTool)._collisionsEnabled);
+                ImGui.InputFloat("Gravitational constant", ref ((NbodySim) context.SelectedTool)._gravConstant);
+                ImGui.InputFloat("Minimum distance", ref ((NbodySim) context.SelectedTool)._minDist);
+                ImGui.InputFloat("Threshold", ref ((NbodySim) context.SelectedTool)._threshold);
                 break;
         }
         ImGui.Spacing();
@@ -66,6 +77,17 @@ public class Gui
             foreach (var shape in context.MassShapes)
             {
                 shape._toBeDeleted = true;
+            }
+        }
+        if (ImGui.Button("Save current state"))
+        {
+            context.SaveCurrentState();
+        }
+        if (context.SavedShapeCount > 0)
+        {
+            if (ImGui.Button($"Load saved state ({context.SavedShapeCount} shapes saved)"))
+            {
+                context.LoadSavedState();
             }
         }
         // Disable tool if mouse is over info window
@@ -145,6 +167,10 @@ public class Gui
                     ImGui.InputFloat("Gas amount", ref editor._gasAmount);
                 }
             }
+        }
+        if (editor.SelectedAction == Editor.EditorAction.Freeform)
+        {
+            ImGui.Checkbox("Pin point", ref editor._pinPoint);
         }
         if (!editor._isRigidConstraint &&
             (editor.SelectedAction == Editor.EditorAction.CreateLoop || 
