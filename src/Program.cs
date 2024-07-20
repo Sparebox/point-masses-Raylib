@@ -15,11 +15,12 @@ public class Program
     public const int WinW = 1600;
     public const int WinH = 900;
     public const int PauseThresholdFPS = 10;
-    public const float QuadTreeUpdateSeconds = 0.05f;
+    public const int QuadTreeUpdateMs = 100;
+    public static readonly int TargetFPS = GetMonitorRefreshRate(GetCurrentMonitor());
 
     private static float _accumulator;
-    private static float _quadTreeAccumulator;
     private static Context _context;
+    private static Timer _quadTreeUpdateTimer;
 
     public static void Main() 
     {
@@ -41,7 +42,8 @@ public class Program
     private static Context Init()
     {
         InitWindow(WinW, WinH, "Point-masses");
-        SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
+        SetTargetFPS(TargetFPS);
+        _quadTreeUpdateTimer = new Timer(QuadTreeUpdateCallback, null, 1000, QuadTreeUpdateMs);
         float winWidthMeters = UnitConv.PixelsToMeters(WinW);
         float winHeightMeters = UnitConv.PixelsToMeters(WinH);
         Context context = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f))
@@ -72,7 +74,6 @@ public class Program
             _context._simPaused = true;
         }
         float frameTime = GetFrameTime();
-        UpdateQuadTree(frameTime);
         _accumulator += frameTime;
         while (_accumulator >= _context.TimeStep)
         {
@@ -88,7 +89,9 @@ public class Program
                 }
             }
             _context.NbodySim.Update();
+            _context.Lock.EnterWriteLock();
             _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
+            _context.Lock.ExitWriteLock();
             _accumulator -= _context.TimeStep;
         }
     }
@@ -177,18 +180,13 @@ public class Program
         }
     }
 
-    private static void UpdateQuadTree(float frameTime)
+    private static void QuadTreeUpdateCallback(object _)
     {
         if (_context.NbodySim._running && !_context.NbodySim._collisionsEnabled)
         {
             return;
         }
-        _quadTreeAccumulator += frameTime;
-        while (_quadTreeAccumulator >= QuadTreeUpdateSeconds)
-        {
-            _context.QuadTree.Update(_context);
-            _quadTreeAccumulator -= QuadTreeUpdateSeconds;
-        }
+        _context.QuadTree.Update(_context);
     }
 
 }

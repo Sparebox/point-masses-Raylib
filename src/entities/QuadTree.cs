@@ -10,6 +10,7 @@ public class QuadTree
 {
     public static uint MaxDepth { get; set; }
     public static uint NodeCapacity { get; set; }
+    public ReaderWriterLockSlim Lock { get; set; }
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
     private readonly Vector2 _size;
@@ -28,6 +29,7 @@ public class QuadTree
         _boundary = new BoundingBox(new(_center.X - _size.X / 2f, _center.Y - _size.Y / 2f, 0f), new(_center.X + _size.X / 2f, _center.Y + _size.Y / 2f, 0f));
         _massShapes = new();
         _subdivided  = false;
+        Lock = new ReaderWriterLockSlim();
         NodeCapacity = nodeCapacity;
         _depth = 0;
         MaxDepth = maxDepth;
@@ -35,11 +37,16 @@ public class QuadTree
 
     public void Update(Context context)
     {
+        Lock.EnterWriteLock();
         Clear();
+        context.Lock.EnterReadLock();
         foreach (var shape in context.MassShapes)
         {
             Insert(shape);
         }
+        context.Lock.ExitReadLock();
+        Lock.ExitWriteLock();
+        
     }
 
     public void Insert(MassShape shape)

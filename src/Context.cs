@@ -11,6 +11,7 @@ namespace Sim;
 
 public class Context
 {
+    public ReaderWriterLockSlim Lock { get; set; }
     public float TimeStep { get; init; }
     public float SubStep { get; init; }
     public int Substeps { get; init; }
@@ -47,21 +48,30 @@ public class Context
     {
         get 
         {
-            return MassShapes.Aggregate(0, (count, shape) => count + shape._points.Count);
+            Lock.EnterReadLock();
+            int count = MassShapes.Aggregate(0, (count, shape) => count + shape._points.Count);
+            Lock.ExitReadLock();
+            return count;
         }
     }
     public int ConstraintCount 
     {
         get
         {
-            return MassShapes.Aggregate(0, (count, shape) => count + shape._constraints.Count);
+            Lock.EnterReadLock();
+            int count = MassShapes.Aggregate(0, (count, shape) => count + shape._constraints.Count);
+            Lock.ExitReadLock();
+            return count;
         }
     }
     public float SystemEnergy
     {
         get
         {
-            return MassShapes.Aggregate(0f, (energy, shape) => energy + shape.LinEnergy + shape.RotEnergy);
+            Lock.EnterReadLock();
+            float energy = MassShapes.Aggregate(0f, (energy, shape) => energy + shape.LinEnergy + shape.RotEnergy);
+            Lock.ExitReadLock();
+            return energy;
         }
     }
 
@@ -71,6 +81,7 @@ public class Context
         Substeps = subSteps;
         SubStep = timeStep / subSteps;
         Gravity = gravity;
+        Lock = new ReaderWriterLockSlim();
         TextureManager = new TextureManager();
         _toolEnabled = true;
         _gravityEnabled = false;
@@ -84,19 +95,24 @@ public class Context
 
     public void AddMassShape(MassShape shape)
     {
+        Lock.EnterWriteLock();
         MassShapes.Add(shape);
+        Lock.ExitWriteLock();
     }
 
     public void AddMassShapes(IEnumerable<MassShape> shapes)
     {
+        Lock.EnterWriteLock();
         foreach (var shape in shapes)
         {
             MassShapes.Add(new(shape));
         }
+        Lock.ExitWriteLock();
     }
 
     public void SaveCurrentState()
     {
+        Lock.EnterWriteLock();
         _saveState = new();
         foreach (var c in LineColliders)
         {
@@ -106,11 +122,13 @@ public class Context
         {
             _saveState.MassShapes.Add(new MassShape(s));
         }
+        Lock.ExitWriteLock();
         Console.WriteLine("Saved state");
     }
 
     public void LoadSavedState()
     {
+        Lock.EnterWriteLock();
         _simPaused = true;
         LineColliders.Clear();
         MassShapes.Clear();
@@ -118,12 +136,14 @@ public class Context
         {
             LineColliders.Add(new LineCollider(c));
         }
+        Lock.ExitWriteLock();
         AddMassShapes(_saveState.MassShapes);
         Console.WriteLine("Loaded state");
     }
 
     public MassShape GetMassShape(uint id)
     {
+        Lock.EnterReadLock();
         var activeShapes = MassShapes.Where(s => !s._toBeDeleted);
         if (!activeShapes.Any())
         {
@@ -134,19 +154,24 @@ public class Context
             return null;
         }
         MassShape shape = activeShapes.Single(s => s.Id == id);
+        Lock.ExitReadLock();
         return shape;
     }
 
     public IEnumerable<MassShape> GetMassShapes(in BoundingBox area)
     {
         HashSet<MassShape> found = new();
+        QuadTree.Lock.EnterReadLock();
         QuadTree.QueryShapes(area, found);
+        QuadTree.Lock.ExitReadLock();
         return found;
     }
 
     public IEnumerable<MassShape> GetMassShapes(HashSet<uint> shapeIds)
     {
+        Lock.EnterReadLock();
         var filteredShapes = MassShapes.Where(s => shapeIds.Contains(s.Id));
+        Lock.ExitReadLock();
         return filteredShapes;
     }
 
@@ -163,7 +188,9 @@ public class Context
     public IEnumerable<PointMass> GetPointMasses(in BoundingBox area)
     {
         HashSet<PointMass> found = new();
+        QuadTree.Lock.EnterReadLock();
         QuadTree.QueryPoints(in area, found);
+        QuadTree.Lock.ExitReadLock();
         return found;
     }
 
@@ -210,10 +237,10 @@ public class Context
         ));
     }
 
-    public void LoadBenchmark(int particleCount, float particleMass, float spacing, Vector2 offset)
+    public void LoadBenchmark(int maxParticleCount, float particleMass, float spacing, Vector2 offset)
     {
-        List<MassShape> particles = new(particleCount);
-        int sideCount = (int) Math.Sqrt(particleCount);
+        List<MassShape> particles = new(maxParticleCount);
+        int sideCount = (int) Math.Sqrt(maxParticleCount);
         spacing = UnitConv.PixelsToMeters(spacing);
         offset = UnitConv.PixelsToMeters(offset);
         for (int y = 0; y < sideCount; y++)

@@ -74,10 +74,12 @@ public class Gui
         ImGui.Separator();
         if (ImGui.Button("Delete all shapes"))
         {
+            context.Lock.EnterWriteLock();
             foreach (var shape in context.MassShapes)
             {
                 shape._toBeDeleted = true;
             }
+            context.Lock.ExitWriteLock();
         }
         if (ImGui.Button("Save current state"))
         {
