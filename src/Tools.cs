@@ -557,7 +557,10 @@ public class NbodySim : Tool
             UnitConv.PixelsToMeters(new Vector2(Program.WinW / 2f, Program.WinH / 2f)),
             UnitConv.PixelsToMeters(new Vector2(Program.WinW, Program.WinH))
         );
-        _updateThread = new Thread(new ThreadStart(ThreadUpdate));
+        _updateThread = new Thread(new ThreadStart(ThreadUpdate))
+        {
+            IsBackground = true
+        };
         _updateThread.Start();
     }
 

@@ -43,7 +43,10 @@ public class Program
     {
         InitWindow(WinW, WinH, "Point-masses");
         SetTargetFPS(TargetFPS);
-        _quadTreeUpdateThread = new Thread(new ParameterizedThreadStart(QuadTree.ThreadUpdate));
+        _quadTreeUpdateThread = new Thread(new ParameterizedThreadStart(QuadTree.ThreadUpdate))
+        {
+            IsBackground = true
+        };
         float winWidthMeters = UnitConv.PixelsToMeters(WinW);
         float winHeightMeters = UnitConv.PixelsToMeters(WinH);
         Context context = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f))
