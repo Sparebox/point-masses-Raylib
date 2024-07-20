@@ -10,7 +10,8 @@ public class QuadTree
 {
     public static uint MaxDepth { get; set; }
     public static uint NodeCapacity { get; set; }
-    public ReaderWriterLockSlim Lock { get; set; }
+
+    public ReaderWriterLockSlim Lock { get; init; }
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
     private readonly Vector2 _size;
@@ -96,10 +97,11 @@ public class QuadTree
         _southEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
         _southWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
         _northWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
-        _northEast._depth = _depth + 1;
-        _southEast._depth = _depth + 1;
-        _southWest._depth = _depth + 1;
-        _northWest._depth = _depth + 1;
+        uint newDepth = _depth + 1;
+        _northEast._depth = newDepth;
+        _southEast._depth = newDepth;
+        _southWest._depth = newDepth;
+        _northWest._depth = newDepth;
         _subdivided = true;
     }
 
@@ -195,4 +197,19 @@ public class QuadTree
             _northWest.Draw();
         }
     }
+
+    public static void ThreadUpdate(object data)
+    {
+        Context ctx = (Context) data;
+        for (;;)
+        {
+            Thread.Sleep(Program.QuadTreeUpdateMs);
+            if (ctx.NbodySim._running && !ctx.NbodySim._collisionsEnabled)
+            {
+                continue;
+            }
+            ctx.QuadTree.Update(ctx);
+        }
+    }
 }
+

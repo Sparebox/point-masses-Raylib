@@ -36,9 +36,20 @@ public class BarnesHutTree
     public void Update(Context context)
     {
         Clear();
+        context.Lock.EnterReadLock();
         foreach (var shape in context.MassShapes)
         {
             Insert(shape);
+        }
+        context.Lock.ExitReadLock();
+        ApplyGravityForces(context.NbodySim);
+    }
+
+    private void ApplyGravityForces(NbodySim nbodySim)
+    {
+        foreach (var shape in _massShapes)
+        {
+            ApplyGravityForce(shape, nbodySim);
         }
     }
 
@@ -111,10 +122,11 @@ public class BarnesHutTree
         _southEast ??= new BarnesHutTree(new(_center.X + newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize);
         _southWest ??= new BarnesHutTree(new(_center.X - newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize);
         _northWest ??= new BarnesHutTree(new(_center.X - newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize);
-        _northEast._depth = _depth + 1;
-        _southEast._depth = _depth + 1;
-        _southWest._depth = _depth + 1;
-        _northWest._depth = _depth + 1;
+        uint newDepth = _depth + 1;
+        _northEast._depth = newDepth;
+        _southEast._depth = newDepth;
+        _southWest._depth = newDepth;
+        _northWest._depth = newDepth;
         _subdivided = true;
     }
 
@@ -141,7 +153,7 @@ public class BarnesHutTree
         _centerOfMass /= _totalMass;
     }
 
-    public void CalculateGravity(MassShape shapeA, NbodySim nbodySim)
+    private void ApplyGravityForce(MassShape shapeA, NbodySim nbodySim)
     {   
         Vector2 dir;
         float dist;
@@ -185,10 +197,10 @@ public class BarnesHutTree
         }
         else // Close to a center of mass
         {
-            _northEast.CalculateGravity(shapeA, nbodySim);
-            _southEast.CalculateGravity(shapeA, nbodySim);
-            _southWest.CalculateGravity(shapeA, nbodySim);
-            _northWest.CalculateGravity(shapeA, nbodySim);
+            _northEast.ApplyGravityForce(shapeA, nbodySim);
+            _southEast.ApplyGravityForce(shapeA, nbodySim);
+            _southWest.ApplyGravityForce(shapeA, nbodySim);
+            _northWest.ApplyGravityForce(shapeA, nbodySim);
         }
     }
 

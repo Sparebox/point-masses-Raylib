@@ -1,5 +1,4 @@
 using System.Numerics;
-using Entities;
 using Raylib_cs;
 using static Raylib_cs.Raylib;
 
@@ -38,13 +37,13 @@ namespace Utils
             Vector2 startToEnd = lineEnd - lineStart;
             Vector2 startToEndNorm = Vector2.Normalize(startToEnd);
             float distOnLine = Vector2.Dot(startToPoint, startToEndNorm);
-            if (distOnLine < 0f)
+            if (distOnLine <= 0f)
             {
-                return new Vector2(lineStart.X, lineStart.Y);
+                return lineStart;
             }
             if (distOnLine * distOnLine > startToEnd.LengthSquared())
             {
-                return new Vector2(lineEnd.X, lineEnd.Y);
+                return lineEnd;
             }
             return lineStart + distOnLine * startToEndNorm;
         }

@@ -546,7 +546,9 @@ public class NbodySim : Tool
     public float _threshold = 0.01f;
     public bool _running;
     public bool _collisionsEnabled;
+    private const int UpdateIntervalMs = 100;
     private readonly BarnesHutTree _barnesHutTree;
+    private Thread _updateThread;
 
     public NbodySim(Context context)
     {
@@ -555,25 +557,23 @@ public class NbodySim : Tool
             UnitConv.PixelsToMeters(new Vector2(Program.WinW / 2f, Program.WinH / 2f)),
             UnitConv.PixelsToMeters(new Vector2(Program.WinW, Program.WinH))
         );
+        _updateThread = new Thread(new ThreadStart(ThreadUpdate));
+        _updateThread.Start();
     }
 
     public override void Draw() {}
+    public override void Update() {}
 
-    public override void Update()
+    private void ThreadUpdate()
     {
-        if (!_running)
+        for (;;)
         {
-            return;
-        }
-        _barnesHutTree.Update(_context);
-        ApplyGravityForces();
-    }
-
-    private void ApplyGravityForces()
-    {
-        foreach (var shape in _context.MassShapes)
-        {
-            _barnesHutTree.CalculateGravity(shape, this);
+            Thread.Sleep(UpdateIntervalMs);
+            if (!_running || _context._simPaused)
+            {
+                continue;
+            }
+            _barnesHutTree.Update(_context);
         }
     }
 }

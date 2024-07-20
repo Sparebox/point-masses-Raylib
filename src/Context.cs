@@ -197,16 +197,16 @@ public class Context
     private Tool[] CreateTools()
     {
         var tools = new Tool[Tool.ToolTypes.Length];
-        tools[(int) ToolType.PullCom] = new PullCom(this);
-        tools[(int) ToolType.Pull] = new Pull(this);
-        tools[(int) ToolType.Wind] = new Wind(this);
-        tools[(int) ToolType.Rotate] = new Rotate(this);
-        tools[(int) ToolType.Spawn] = new Spawn(this);
-        tools[(int) ToolType.Ruler] = new Ruler(this);
-        tools[(int) ToolType.Delete] = new Delete(this);
-        tools[(int) ToolType.Editor] = new Editor(this);
-        tools[(int) ToolType.GravityWell] = new GravityWell(this);
-        tools[(int) ToolType.NbodySim] = new NbodySim(this);
+        tools[(int) ToolType.PullCom]       = new PullCom(this);
+        tools[(int) ToolType.Pull]          = new Pull(this);
+        tools[(int) ToolType.Wind]          = new Wind(this);
+        tools[(int) ToolType.Rotate]        = new Rotate(this);
+        tools[(int) ToolType.Spawn]         = new Spawn(this);
+        tools[(int) ToolType.Ruler]         = new Ruler(this);
+        tools[(int) ToolType.Delete]        = new Delete(this);
+        tools[(int) ToolType.Editor]        = new Editor(this);
+        tools[(int) ToolType.GravityWell]   = new GravityWell(this);
+        tools[(int) ToolType.NbodySim]      = new NbodySim(this);
         return tools;
     }
     
