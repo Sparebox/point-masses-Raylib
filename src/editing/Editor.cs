@@ -37,9 +37,9 @@ public class Editor : Tool
         Freeform
     }
 
-    public Editor(Context context)
+    public Editor(Context ctx)
     {
-        _context = context;
+        _ctx = ctx;
         _grid = new Grid(5);
         ActionComboString = GetActionComboString();
         _selectedActionIndex = 0;
@@ -63,7 +63,7 @@ public class Editor : Tool
 
     public override void Update()
     {
-        if (!_context._toolEnabled)
+        if (!_ctx._toolEnabled)
         {
             return;
         }
@@ -146,15 +146,15 @@ public class Editor : Tool
                 gridPoint._pos.X,
                 gridPoint._pos.Y,
                 PointMass.RadiusToMass(Radius),
-                _context
+                _ctx
             ));
         }
-        _context.AddMassShapes(particles);  
+        _ctx.AddMassShapes(particles);  
     }
 
     private void CreateLoopFromIndices(float mass)
     {
-        MassShape loop = new(_context, _inflateLoop)
+        MassShape loop = new(_ctx, _inflateLoop)
         {
             _gasAmount = _gasAmount
         };
@@ -162,36 +162,36 @@ public class Editor : Tool
         foreach (var index in _grid.SelectedPointIndices)
         {
             Vector2 pos = _grid.GridPoints[index]._pos;
-            loop._points.Add(new(pos.X, pos.Y, mass, false, _context));
+            loop._points.Add(new(pos.X, pos.Y, mass, false, _ctx));
         }
         // Constraints
         for (int i = 0; i < (_connectLoop ? loop._points.Count : loop._points.Count - 1); i++)
         {
-            Constraint c = new DistanceConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count], _stiffness, _context);
+            Constraint c = new DistanceConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count], _stiffness, _ctx);
             loop._constraints.Add(c);
         }
-        _context.AddMassShape(loop);
+        _ctx.AddMassShape(loop);
     }
 
     private void CreateFreeformShape(float mass)
     {
-        MassShape shape = new(_context, _inflateLoop);
+        MassShape shape = new(_ctx, _inflateLoop);
         // Points
         foreach (var gridIndex in _grid.SelectedPointIndices)
         {
             Vector2 pos = _grid.GridPoints[gridIndex]._pos;
             bool isPinned = _grid.GridPoints[gridIndex].IsPinned;
-            shape._points.Add(new(pos.X, pos.Y, mass, isPinned, _context));
+            shape._points.Add(new(pos.X, pos.Y, mass, isPinned, _ctx));
         }
         // Constraints
         foreach (var pair in _grid.ConstrainedPointIndexPairs)
         {
             PointMass a = shape._points.Find(p => p.Pos == _grid.GridPoints[pair.Item1]._pos);
             PointMass b = shape._points.Find(p => p.Pos == _grid.GridPoints[pair.Item2]._pos);
-            Constraint c = new DistanceConstraint(a, b, _stiffness, _context);
+            Constraint c = new DistanceConstraint(a, b, _stiffness, _ctx);
             shape._constraints.Add(c);
         }
-        _context.AddMassShape(shape);
+        _ctx.AddMassShape(shape);
     }
 
     private static string GetActionComboString()

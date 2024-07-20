@@ -22,11 +22,11 @@ public abstract class Entity
     public abstract Vector2 CenterOfMass { get; }
 
     private static uint _idCounter;
-    protected Context Context { get; init; }
+    protected Context Ctx { get; init; }
     protected float? _mass;
     protected float _invMass;
 
-    public Entity(Context context, float mass, uint? id = null)
+    public Entity(Context ctx, float mass, uint? id = null)
     {
         if (id.HasValue)
         {
@@ -37,10 +37,10 @@ public abstract class Entity
             Id = _idCounter++;
         }
         Mass = mass;
-        Context = context;
+        Ctx = ctx;
     }
 
-    public Entity(Context context, uint? id = null)
+    public Entity(Context ctx, uint? id = null)
     {
         if (id.HasValue)
         {
@@ -50,7 +50,7 @@ public abstract class Entity
         {
             Id = _idCounter++;
         }
-        Context = context;
+        Ctx = ctx;
     }
 
     public Entity() {}

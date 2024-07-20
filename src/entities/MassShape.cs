@@ -81,7 +81,7 @@ public partial class MassShape : Entity
     {
         get
         {
-            float angVel = AngVel / Context.SubStep;
+            float angVel = AngVel / Ctx.SubStep;
             return 0.5f * Inertia * angVel * angVel;
         }
     }
@@ -90,7 +90,7 @@ public partial class MassShape : Entity
     {
         get
         {
-            return 0.5f * Mass * Vel.LengthSquared() / Context.SubStep;
+            return 0.5f * Mass * Vel.LengthSquared() / Ctx.SubStep;
         }
     }
     
@@ -213,7 +213,7 @@ public partial class MassShape : Entity
     private PressureVis _pressureVis;
     private float _lastAngle;
 
-    public MassShape(Context context, bool inflated = false) : base(context)
+    public MassShape(Context ctx, bool inflated = false) : base(ctx)
     {
         _inflated = inflated;
         _toBeDeleted = false;
@@ -222,7 +222,7 @@ public partial class MassShape : Entity
     }
 
     // Copy constructor
-    public MassShape(in MassShape shape) : base(shape.Context, shape.Mass)
+    public MassShape(in MassShape shape) : base(shape.Ctx, shape.Mass)
     {
         _inflated = shape._inflated;
         _gasAmount = shape._gasAmount;
@@ -249,7 +249,7 @@ public partial class MassShape : Entity
             _toBeDeleted = true;
             return;
         }
-        if (Context._drawBodyInfo)
+        if (Ctx._drawBodyInfo)
         {
             _lastCenterOfMass = CenterOfMass;
             _lastAngle = Angle;
@@ -278,7 +278,7 @@ public partial class MassShape : Entity
         {
             p.Draw();
         }
-        if (Context._drawAABBS)
+        if (Ctx._drawAABBS)
         {
             BoundingBox aabb = Aabb;
             DrawRectangleLines(
@@ -289,7 +289,7 @@ public partial class MassShape : Entity
                 Color.Red
             );
         }
-        if (Context._drawForces)
+        if (Ctx._drawForces)
         {
             if (_inflated && _pressureVis._lines != null)
             {
@@ -305,7 +305,7 @@ public partial class MassShape : Entity
             totalVisForce = Raymath.Vector2ClampValue(totalVisForce, 0f, 150f);
             Graphics.DrawArrow(COM, COM + totalVisForce, Color.Magenta);
         }
-        if (Context._drawBodyInfo)
+        if (Ctx._drawBodyInfo)
         {
             DrawInfo();
         }
@@ -349,7 +349,7 @@ public partial class MassShape : Entity
             Vector2 force = faceLength * GasAmountMult * _gasAmount / Volume / 2f * normal;
             p1.ApplyForce(force);
             p2.ApplyForce(force);
-            if (Context._drawForces)
+            if (Ctx._drawForces)
             {   
                 _pressureVis._lines ??= new VisLine[_points.Count];
                 if (_pressureVis._lines.Length != _points.Count)
@@ -451,17 +451,17 @@ public partial class MassShape : Entity
                 var collisionResult = pointA.CheckPointToPointCollision(pointB);
                 if (collisionResult.HasValue)
                 {
-                    PointMass.HandlePointToPointCollision(collisionResult.Value, Context);
+                    PointMass.HandlePointToPointCollision(collisionResult.Value, Ctx);
                 }
             }
         }
     }
 
-    public static void HandleCollisions(Context context)
+    public static void HandleCollisions(Context ctx)
     {
-        foreach (var shapeA in context.MassShapes)
+        foreach (var shapeA in ctx.MassShapes)
         {
-            var nearShapes = context.GetMassShapes(shapeA.Aabb);
+            var nearShapes = ctx.GetMassShapes(shapeA.Aabb);
             foreach (var shapeB in nearShapes)
             {
                 if (shapeA.Equals(shapeB) || !CheckCollisionBoxes(shapeA.Aabb, shapeB.Aabb))
@@ -503,7 +503,7 @@ public partial class MassShape : Entity
 
         // Apply impulse
         float combinedMass = closestA.Mass + closestB.Mass;
-        float impulseMag = -(1f + Context._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / combinedMass + pointMass.InvMass);
+        float impulseMag = -(1f + Ctx._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / combinedMass + pointMass.InvMass);
         Vector2 impulse = impulseMag * normal;
         pointMass.Vel = preVel + impulse * pointMass.InvMass;
         closestA.Vel = closestApreVel - impulse * 0.5f / (combinedMass - closestB.Mass);
@@ -543,15 +543,15 @@ public partial class MassShape : Entity
         ImGui.SetWindowPos(UnitConv.MetersToPixels(Centroid) + new Vector2(25f, 0f));
         ImGui.SetWindowSize(new (250f, 130f));
         ImGui.Text(string.Format("Mass: {0} kg", Mass));
-        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel / Context.SubStep));
-        ImGui.Text(string.Format("Momentum: {0:0.0} kgm/s", Momentum / Context.SubStep));
+        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel / Ctx.SubStep));
+        ImGui.Text(string.Format("Momentum: {0:0.0} kgm/s", Momentum / Ctx.SubStep));
         ImGui.Text(string.Format("Moment of inertia: {0:0} kgm^2", Inertia));
-        ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel / Context.SubStep * RAD2DEG));
+        ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel / Ctx.SubStep * RAD2DEG));
         ImGui.Text(string.Format("Linear energy: {0:0.##} J", LinEnergy));
         ImGui.Text(string.Format("Rot energy: {0:0.##} J", RotEnergy));
         ImGui.End();
-        Vector2 offset = new(-Context.TextureManager.CenterOfMassIcon.Width / 2f, -Context.TextureManager.CenterOfMassIcon.Height / 2f);
-        DrawTextureEx(Context.TextureManager.CenterOfMassIcon, UnitConv.MetersToPixels(Centroid) + 0.5f * offset, 0f, 0.5f, Color.White);
+        Vector2 offset = new(-Ctx.TextureManager.CenterOfMassIcon.Width / 2f, -Ctx.TextureManager.CenterOfMassIcon.Height / 2f);
+        DrawTextureEx(Ctx.TextureManager.CenterOfMassIcon, UnitConv.MetersToPixels(Centroid) + 0.5f * offset, 0f, 0.5f, Color.White);
     }
 
     public static bool operator == (MassShape a, MassShape b)

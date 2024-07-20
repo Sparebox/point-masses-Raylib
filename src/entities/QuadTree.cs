@@ -36,18 +36,17 @@ public class QuadTree
         MaxDepth = maxDepth;
     }
 
-    public void Update(Context context)
+    public void Update(Context ctx)
     {
         Lock.EnterWriteLock();
         Clear();
-        context.Lock.EnterReadLock();
-        foreach (var shape in context.MassShapes)
+        ctx.Lock.EnterReadLock();
+        foreach (var shape in ctx.MassShapes)
         {
             Insert(shape);
         }
-        context.Lock.ExitReadLock();
+        ctx.Lock.ExitReadLock();
         Lock.ExitWriteLock();
-        
     }
 
     public void Insert(MassShape shape)
@@ -198,9 +197,9 @@ public class QuadTree
         }
     }
 
-    public static void ThreadUpdate(object data)
+    public static void ThreadUpdate(object _ctx)
     {
-        Context ctx = (Context) data;
+        Context ctx = (Context) _ctx;
         for (;;)
         {
             Thread.Sleep(Program.QuadTreeUpdateMs);

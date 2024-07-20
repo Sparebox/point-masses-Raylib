@@ -19,11 +19,14 @@ public class Program
 
     private static float _accumulator;
     private static Context _context;
-    private static Thread _quadTreeUpdateThread;
 
     public static void Main() 
     {
         _context = Init();
+        var _quadTreeUpdateThread = new Thread(new ParameterizedThreadStart(QuadTree.ThreadUpdate), 0)
+        {
+            IsBackground = true
+        };
         _quadTreeUpdateThread.Start(_context);
         rlImGui.Setup(true);
         while (!WindowShouldClose())
@@ -43,10 +46,7 @@ public class Program
     {
         InitWindow(WinW, WinH, "Point-masses");
         SetTargetFPS(TargetFPS);
-        _quadTreeUpdateThread = new Thread(new ParameterizedThreadStart(QuadTree.ThreadUpdate))
-        {
-            IsBackground = true
-        };
+        
         float winWidthMeters = UnitConv.PixelsToMeters(WinW);
         float winHeightMeters = UnitConv.PixelsToMeters(WinH);
         Context context = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f))
@@ -158,7 +158,7 @@ public class Program
         }
         if (IsKeyPressed(KeyboardKey.B))
         {
-            _context.LoadBenchmark(500, 1f, 20f, new(WinW / 2f - 200f, 200f));
+            _context.LoadBenchmark(1000, 1f, 20f, new(WinW / 2f - 200f, 200f));
         }
         // Mouse
         if (GetMouseWheelMoveV().Y > 0f)

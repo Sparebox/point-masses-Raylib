@@ -11,15 +11,15 @@ public class DistanceConstraint : Constraint
 {
     public float Length { get; init; }
     public float Stiffness { get; init; }
-    private readonly Context _context;
+    private readonly Context _ctx;
 
-    public DistanceConstraint(in PointMass a, in PointMass b, float stiffness, Context context)
+    public DistanceConstraint(in PointMass a, in PointMass b, float stiffness, Context ctx)
     {
         PointA = a;
         PointB = b;
         Length = Vector2.Distance(PointA.Pos, PointB.Pos);
         Stiffness = stiffness;
-        _context = context;
+        _ctx = ctx;
         Id = _idCounter++;
     }
 
@@ -29,7 +29,7 @@ public class DistanceConstraint : Constraint
         PointB = c.PointB;
         Length = c.Length;
         Stiffness = c.Stiffness;
-        _context = c._context;
+        _ctx = c._ctx;
         Id = _idCounter++;
     }
 
@@ -45,7 +45,7 @@ public class DistanceConstraint : Constraint
         Vector2 correctionVector = AtoB / dist * error;
         Vector2 correctionA;
         Vector2 correctionB;
-        float stiffnessCoeff = 1f - MathF.Pow(1f - Stiffness, 1f / _context.Substeps);
+        float stiffnessCoeff = 1f - MathF.Pow(1f - Stiffness, 1f / _ctx.Substeps);
         if (!PointA.Pinned)
         {
             correctionA = -PointA.InvMass / (PointA.InvMass + PointB.InvMass) * correctionVector;

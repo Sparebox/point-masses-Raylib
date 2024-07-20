@@ -36,7 +36,7 @@ public class PointMass : Entity
     public override Vector2 Centroid => Pos;
     public override Vector2 CenterOfMass => Pos;
     
-    public PointMass(float x, float y, float mass, bool pinned, Context context) : base(context, mass)
+    public PointMass(float x, float y, float mass, bool pinned, Context ctx) : base(ctx, mass)
     {
         Pos = new(x, y);
         PrevPos = Pos;
@@ -46,7 +46,7 @@ public class PointMass : Entity
     }
 
     // Copy constructor
-    public PointMass(PointMass p) : base(p.Context, p.Mass, p.Id)
+    public PointMass(PointMass p) : base(p.Ctx, p.Mass, p.Id)
     {
         Pos = p.Pos;
         PrevPos = Pos;
@@ -61,15 +61,15 @@ public class PointMass : Entity
         {
             return;
         }
-        if (Context._gravityEnabled)
+        if (Ctx._gravityEnabled)
         {
-            ApplyForce(Mass * Context.Gravity);
+            ApplyForce(Mass * Ctx.Gravity);
         }
         SolveLineCollisions();
         Vector2 acc = Force * _invMass;
         Vector2 vel = Vel; // Save the velocity before previous position is reset
         PrevPos = Pos;
-        Pos += vel + acc * Context.SubStep * Context.SubStep;
+        Pos += vel + acc * Ctx.SubStep * Ctx.SubStep;
         VisForce = Force;
         PrevForce = Force;
         Force = Vector2.Zero;
@@ -88,12 +88,12 @@ public class PointMass : Entity
 
     public void SolveLineCollisions()
     {
-        foreach (LineCollider c in Context.LineColliders)
+        foreach (LineCollider c in Ctx.LineColliders)
         {
             CollisionData? collisionResult = c.CheckCollision(this);
             if (collisionResult.HasValue)
             {
-                LineCollider.SolvePointCollision(collisionResult.Value, Context);
+                LineCollider.SolvePointCollision(collisionResult.Value, Ctx);
             }
         }
     }
@@ -121,7 +121,7 @@ public class PointMass : Entity
         return null;
     }
 
-    public static void HandlePointToPointCollision(in CollisionData colData, Context context)
+    public static void HandlePointToPointCollision(in CollisionData colData, Context ctx)
     {   
         // Save pre-collision velocities
         Vector2 thisPreVel = colData.PointMassA.Vel;
@@ -132,7 +132,7 @@ public class PointMass : Entity
         colData.PointMassA.Pos += -offsetVector;
         colData.PointMassB.Pos += offsetVector;
         // Apply impulse
-        float impulseMag = -(1f + context._globalRestitutionCoeff) * Vector2.Dot(relVel, colData.Normal) / (colData.PointMassA.InvMass + colData.PointMassB.InvMass);
+        float impulseMag = -(1f + ctx._globalRestitutionCoeff) * Vector2.Dot(relVel, colData.Normal) / (colData.PointMassA.InvMass + colData.PointMassB.InvMass);
         Vector2 impulse = impulseMag * colData.Normal;
         colData.PointMassA.Vel = thisPreVel -impulse * colData.PointMassA.InvMass;
         colData.PointMassB.Vel = otherPreVel + impulse * colData.PointMassB.InvMass;
@@ -166,7 +166,7 @@ public class PointMass : Entity
             // The total force is not towards the normal
             return;
         }
-        if (PrevForce.LengthSquared() < MathF.Pow(Context._globalStaticFrictionCoeff * -normalForce, 2f))
+        if (PrevForce.LengthSquared() < MathF.Pow(Ctx._globalStaticFrictionCoeff * -normalForce, 2f))
         {
             // Apply static friction
             Vel -= perpVel;
@@ -174,7 +174,7 @@ public class PointMass : Entity
         }
         // Apply kinetic friction
         perpVel = Vector2.Normalize(perpVel);
-        ApplyForce(perpVel * Context._globalKineticFrictionCoeff * normalForce);
+        ApplyForce(perpVel * Ctx._globalKineticFrictionCoeff * normalForce);
     }
 
     public override bool Equals(object obj)

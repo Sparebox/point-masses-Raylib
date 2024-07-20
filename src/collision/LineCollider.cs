@@ -64,19 +64,19 @@ public class LineCollider : Entity
     private BoundingBox? _aabb;
     private Vector2? _center;
 
-    public LineCollider(float x0, float y0, float x1, float y1, Context context) : base(context)
+    public LineCollider(float x0, float y0, float x1, float y1, Context ctx) : base(ctx)
     {
         StartPos = new(x0, y0);
         EndPos = new(x1, y1);
     }
 
-    public LineCollider(in Vector2 start, in Vector2 end, Context context) : base(context)
+    public LineCollider(in Vector2 start, in Vector2 end, Context ctx) : base(ctx)
     {
         StartPos = start;
         EndPos = end;
     }
 
-    public LineCollider(LineCollider c) : base(c.Context)
+    public LineCollider(LineCollider c) : base(c.Ctx)
     {
         StartPos = c.StartPos;
         EndPos = c.EndPos;
@@ -89,7 +89,7 @@ public class LineCollider : Entity
 
     public override void Draw()
     {
-        if (Context._drawAABBS)
+        if (Ctx._drawAABBS)
         {
             DrawRectangleLines(
                 UnitConv.MetersToPixels(Aabb.Min.X),
@@ -106,7 +106,7 @@ public class LineCollider : Entity
         );
     }
 
-    public static void SolvePointCollision(in CollisionData colData, Context context)
+    public static void SolvePointCollision(in CollisionData colData, Context ctx)
     {
         PointMass p = colData.PointMassA;
         // Collision
@@ -114,7 +114,7 @@ public class LineCollider : Entity
         // Affect only velocity parallel to the normal
         Vector2 reflectedNormalVel = Vector2.Dot(reflectedVel, colData.Normal) * colData.Normal;
         Vector2 parallelVel = reflectedVel - reflectedNormalVel;
-        reflectedNormalVel *= context._globalRestitutionCoeff;
+        reflectedNormalVel *= ctx._globalRestitutionCoeff;
         // Correct penetration
         p.Pos += colData.Separation * colData.Normal;
         p.Vel = parallelVel + reflectedNormalVel; 

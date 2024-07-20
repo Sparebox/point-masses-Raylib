@@ -9,7 +9,8 @@ using Entities;
 namespace GravitySim;
 
 public class BarnesHutTree
-{
+{   
+    public const int MaxDepth = 10;
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
     private readonly Vector2 _size;
@@ -33,16 +34,17 @@ public class BarnesHutTree
         _depth = 0;
     }
 
-    public void Update(Context context)
+    public void Update(Context ctx)
     {
         Clear();
-        context.Lock.EnterReadLock();
-        foreach (var shape in context.MassShapes)
+        ctx.Lock.EnterReadLock();
+        IEnumerable<MassShape> massShapes = ctx.MassShapes;
+        ctx.Lock.ExitReadLock();
+        foreach (var shape in massShapes)
         {
             Insert(shape);
         }
-        context.Lock.ExitReadLock();
-        ApplyGravityForces(context.NbodySim);
+        ApplyGravityForces(ctx.NbodySim);
     }
 
     private void ApplyGravityForces(NbodySim nbodySim)
@@ -59,7 +61,7 @@ public class BarnesHutTree
         {
             return false;
         }
-        if (_massShapes.Count == 0) // External node
+        if (_massShapes.Count == 0 || _depth == MaxDepth) // External node or maximum depth reached
         {
             // Insert into this quad
             _massShapes.Add(shape);

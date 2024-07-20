@@ -6,9 +6,9 @@ namespace Collision;
 
 public class RotatingCollider : LineCollider
 {
-    public RotatingCollider(float x0, float y0, float x1, float y1, Context context) : base(x0, y0, x1, y1, context) {}
+    public RotatingCollider(float x0, float y0, float x1, float y1, Context ctx) : base(x0, y0, x1, y1, ctx) {}
 
-    public RotatingCollider(RotatingCollider r, Context context) : base(r.StartPos.X, r.StartPos.Y, r.EndPos.X, r.EndPos.Y, context) {}
+    public RotatingCollider(RotatingCollider r, Context ctx) : base(r.StartPos.X, r.StartPos.Y, r.EndPos.X, r.EndPos.Y, ctx) {}
 
     public void Raise(float amount)
     {

@@ -10,105 +10,105 @@ namespace UI;
 
 public class Gui
 {
-    public static void DrawInfo(Context context)
+    public static void DrawInfo(Context ctx)
     {
         ImGui.Begin("Simulation info", ImGuiWindowFlags.NoMove);
         ImGui.SetWindowPos(Vector2.Zero);
         ImGui.Text(string.Format("FPS: {0}", GetFPS()));
-        ImGui.PushStyleColor(ImGuiCol.Text, context._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
-        ImGui.Checkbox(context._simPaused ? "PAUSE" : "RUNNING", ref context._simPaused);
+        ImGui.PushStyleColor(ImGuiCol.Text, ctx._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
+        ImGui.Checkbox(ctx._simPaused ? "PAUSE" : "RUNNING", ref ctx._simPaused);
         ImGui.PopStyleColor();
-        ImGui.Text(string.Format("Masses: {0}", context.MassCount));
-        ImGui.Text(string.Format("Constraints: {0}", context.ConstraintCount));
-        ImGui.Text(string.Format("Shapes: {0}", context.MassShapes.Count));
-        ImGui.Text(string.Format("Substeps: {0}", context.Substeps));
-        ImGui.Text(string.Format("Step: {0:0.0000} ms", context.TimeStep * 1e3f));
-        ImGui.Text(string.Format("Substep: {0:0.0000} ms", context.SubStep * 1e3f));
-        if (context._drawBodyInfo)
+        ImGui.Text(string.Format("Masses: {0}", ctx.MassCount));
+        ImGui.Text(string.Format("Constraints: {0}", ctx.ConstraintCount));
+        ImGui.Text(string.Format("Shapes: {0}", ctx.MassShapes.Count));
+        ImGui.Text(string.Format("Substeps: {0}", ctx.Substeps));
+        ImGui.Text(string.Format("Step: {0:0.0000} ms", ctx.TimeStep * 1e3f));
+        ImGui.Text(string.Format("Substep: {0:0.0000} ms", ctx.SubStep * 1e3f));
+        if (ctx._drawBodyInfo)
         {
-            ImGui.Text(string.Format("System energy: {0} kJ", context.SystemEnergy / 1e3f));
+            ImGui.Text(string.Format("System energy: {0} kJ", ctx.SystemEnergy / 1e3f));
         }
-        ImGui.Checkbox("Gravity", ref context._gravityEnabled);
-        ImGui.Checkbox("Draw forces", ref context._drawForces);
-        ImGui.Checkbox("Draw AABBs", ref context._drawAABBS);
-        ImGui.Checkbox("Draw quadtree", ref context._drawQuadTree);
-        ImGui.Checkbox("Draw body info", ref context._drawBodyInfo);
+        ImGui.Checkbox("Gravity", ref ctx._gravityEnabled);
+        ImGui.Checkbox("Draw forces", ref ctx._drawForces);
+        ImGui.Checkbox("Draw AABBs", ref ctx._drawAABBS);
+        ImGui.Checkbox("Draw quadtree", ref ctx._drawQuadTree);
+        ImGui.Checkbox("Draw body info", ref ctx._drawBodyInfo);
         ImGui.PushItemWidth(50f);
-        ImGui.InputFloat("Global restitution coeff", ref context._globalRestitutionCoeff);
-        ImGui.InputFloat("Global kinetic friction coeff", ref context._globalKineticFrictionCoeff);
-        ImGui.InputFloat("Global static friction coeff", ref context._globalStaticFrictionCoeff);
+        ImGui.InputFloat("Global restitution coeff", ref ctx._globalRestitutionCoeff);
+        ImGui.InputFloat("Global kinetic friction coeff", ref ctx._globalKineticFrictionCoeff);
+        ImGui.InputFloat("Global static friction coeff", ref ctx._globalStaticFrictionCoeff);
         ImGui.PushItemWidth(100f);
-        if (ImGui.Combo("Tool", ref context._selectedToolIndex, Tool.ToolComboString))
+        if (ImGui.Combo("Tool", ref ctx._selectedToolIndex, Tool.ToolComboString))
         {
-            Tool.ChangeToolType(context);
+            Tool.ChangeToolType(ctx);
         }
         ImGui.Separator();
         ImGui.Spacing();
-        switch (context.SelectedTool)
+        switch (ctx.SelectedTool)
         {
             case Spawn :
-                ShowSpawnToolOptions(context);
+                ShowSpawnToolOptions(ctx);
                 break;
             case Editor :
-                ShowEditorOptions(context);
+                ShowEditorOptions(ctx);
                 break;
             case Pull :
-                ImGui.InputFloat("Force coefficient", ref ((Pull) context.SelectedTool)._forceCoeff);
+                ImGui.InputFloat("Force coefficient", ref ((Pull) ctx.SelectedTool)._forceCoeff);
                 break;
             case PullCom :
-                ImGui.InputFloat("Force coefficient", ref ((PullCom) context.SelectedTool)._forceCoeff);
+                ImGui.InputFloat("Force coefficient", ref ((PullCom) ctx.SelectedTool)._forceCoeff);
                 break;
             case GravityWell :
-                ImGui.InputFloat("Gravitational constant", ref ((GravityWell) context.SelectedTool)._gravConstant);
-                ImGui.InputFloat("Minimum distance", ref ((GravityWell) context.SelectedTool)._minDist);
+                ImGui.InputFloat("Gravitational constant", ref ((GravityWell) ctx.SelectedTool)._gravConstant);
+                ImGui.InputFloat("Minimum distance", ref ((GravityWell) ctx.SelectedTool)._minDist);
                 break;
             case NbodySim :
-                ImGui.Checkbox("Running", ref ((NbodySim) context.SelectedTool)._running);
-                ImGui.Checkbox("Collisions enabled", ref ((NbodySim) context.SelectedTool)._collisionsEnabled);
-                ImGui.InputFloat("Gravitational constant", ref ((NbodySim) context.SelectedTool)._gravConstant);
-                ImGui.InputFloat("Minimum distance", ref ((NbodySim) context.SelectedTool)._minDist);
-                ImGui.InputFloat("Threshold", ref ((NbodySim) context.SelectedTool)._threshold);
+                ImGui.Checkbox("Running", ref ((NbodySim) ctx.SelectedTool)._running);
+                ImGui.Checkbox("Collisions enabled", ref ((NbodySim) ctx.SelectedTool)._collisionsEnabled);
+                ImGui.InputFloat("Gravitational constant", ref ((NbodySim) ctx.SelectedTool)._gravConstant);
+                ImGui.InputFloat("Minimum distance", ref ((NbodySim) ctx.SelectedTool)._minDist);
+                ImGui.InputFloat("Threshold", ref ((NbodySim) ctx.SelectedTool)._threshold);
                 break;
         }
         ImGui.Spacing();
         ImGui.Separator();
         if (ImGui.Button("Delete all shapes"))
         {
-            context.Lock.EnterWriteLock();
-            foreach (var shape in context.MassShapes)
+            ctx.Lock.EnterWriteLock();
+            foreach (var shape in ctx.MassShapes)
             {
                 shape._toBeDeleted = true;
             }
-            context.Lock.ExitWriteLock();
+            ctx.Lock.ExitWriteLock();
         }
         if (ImGui.Button("Save current state"))
         {
-            context.SaveCurrentState();
+            ctx.SaveCurrentState();
         }
-        if (context.SavedShapeCount > 0)
+        if (ctx.SavedShapeCount > 0)
         {
-            if (ImGui.Button($"Load saved state ({context.SavedShapeCount} shapes saved)"))
+            if (ImGui.Button($"Load saved state ({ctx.SavedShapeCount} shapes saved)"))
             {
-                context.LoadSavedState();
+                ctx.LoadSavedState();
             }
         }
         // Disable tool if mouse is over info window
         Vector2 margin = new(500f, 500f);
         if (ImGui.IsMouseHoveringRect(ImGui.GetWindowContentRegionMin() - margin, ImGui.GetWindowContentRegionMax() + margin))
         {
-            context._toolEnabled = false;
+            ctx._toolEnabled = false;
         }
         else
         {
-            context._toolEnabled = true;
+            ctx._toolEnabled = true;
         }
         ImGui.End();
     }
 
-    private static void ShowSpawnToolOptions(Context context)
+    private static void ShowSpawnToolOptions(Context ctx)
     {
-        var spawnTool = (Spawn) context.SelectedTool;
-        if (ImGui.Combo("Spawn target", ref context._selectedSpawnTargetIndex, TargetsToComboString()))
+        var spawnTool = (Spawn) ctx.SelectedTool;
+        if (ImGui.Combo("Spawn target", ref ctx._selectedSpawnTargetIndex, TargetsToComboString()))
         {
             spawnTool.UpdateSpawnTarget();
         }
@@ -143,11 +143,11 @@ public class Gui
         }
     }
 
-    private static void ShowEditorOptions(Context context)
+    private static void ShowEditorOptions(Context ctx)
     {
         ImGui.Text("EDITOR OPTIONS");
         ImGui.Spacing();
-        var editor = (Editor) context.SelectedTool;
+        var editor = (Editor) ctx.SelectedTool;
         if (ImGui.InputInt("Points per meter", ref editor._grid._pointsPerMeter))
         {
             editor._grid._pointsPerMeter = Math.Max(editor._grid._pointsPerMeter, 1);

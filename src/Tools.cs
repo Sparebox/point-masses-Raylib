@@ -36,7 +36,7 @@ public abstract class Tool
     public static Vector2 Direction { get; set; } = new(1f, 0f);
     public static string ToolComboString { get; } = ToolsToComboString();
 
-    protected Context _context;
+    protected Context _ctx;
 
     abstract public void Update();
     abstract public void Draw();
@@ -74,39 +74,39 @@ public abstract class Tool
         Direction = newDirection;
     }
 
-    public static void ChangeToolType(Context context)
+    public static void ChangeToolType(Context ctx)
     {
-        switch (ToolTypes[context._selectedToolIndex])
+        switch (ToolTypes[ctx._selectedToolIndex])
         {
             case ToolType.PullCom :
-                context.SelectedTool = context.Tools[(int) ToolType.PullCom];
+                ctx.SelectedTool = ctx.Tools[(int) ToolType.PullCom];
                 break;
             case ToolType.Pull :
-                context.SelectedTool = context.Tools[(int) ToolType.Pull];
+                ctx.SelectedTool = ctx.Tools[(int) ToolType.Pull];
                 break;
             case ToolType.Wind :
-                context.SelectedTool = context.Tools[(int) ToolType.Wind];
+                ctx.SelectedTool = ctx.Tools[(int) ToolType.Wind];
                 break;
             case ToolType.Rotate :
-                context.SelectedTool = context.Tools[(int) ToolType.Rotate];
+                ctx.SelectedTool = ctx.Tools[(int) ToolType.Rotate];
                 break;
             case ToolType.Spawn :
-                context.SelectedTool = context.Tools[(int) ToolType.Spawn];
+                ctx.SelectedTool = ctx.Tools[(int) ToolType.Spawn];
                 break;
             case ToolType.Ruler :
-                context.SelectedTool = context.Tools[(int) ToolType.Ruler];
+                ctx.SelectedTool = ctx.Tools[(int) ToolType.Ruler];
                 break;
             case ToolType.Delete :
-                context.SelectedTool = context.Tools[(int) ToolType.Delete];
+                ctx.SelectedTool = ctx.Tools[(int) ToolType.Delete];
                 break;
             case ToolType.Editor :
-                context.SelectedTool = context.Tools[(int) ToolType.Editor];
+                ctx.SelectedTool = ctx.Tools[(int) ToolType.Editor];
                 break;
             case ToolType.GravityWell :
-                context.SelectedTool = context.Tools[(int) ToolType.GravityWell];
+                ctx.SelectedTool = ctx.Tools[(int) ToolType.GravityWell];
                 break;
             case ToolType.NbodySim :
-                context.SelectedTool = context.Tools[(int) ToolType.NbodySim];
+                ctx.SelectedTool = ctx.Tools[(int) ToolType.NbodySim];
                 break;
         }
     }
@@ -162,16 +162,16 @@ public class Spawn : Tool
         Particle
     }
 
-    public Spawn(Context context)
+    public Spawn(Context ctx)
     {
-        _context = context;
+        _ctx = ctx;
         _currentTarget = SpawnTarget.Box;
         _mass = DefaultMass;
         _resolution = DefaultRes;
         _stiffness = DefaultStiffness;
         _gasAmount = DefaultGasAmt;
         Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
-        _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, _mass, _context);
+        _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, _mass, _ctx);
     }
 
     public override void Update() 
@@ -184,7 +184,7 @@ public class Spawn : Tool
         {
             return;
         }
-        _context.AddMassShape(_shapeToSpawn);
+        _ctx.AddMassShape(_shapeToSpawn);
         _shapeToSpawn = new MassShape(_shapeToSpawn);
     }
 
@@ -203,7 +203,7 @@ public class Spawn : Tool
     public void UpdateSpawnTarget()
     {
         SpawnTarget[] spawnTargets = (SpawnTarget[]) Enum.GetValues(typeof(SpawnTarget));
-        _currentTarget = spawnTargets[_context._selectedSpawnTargetIndex];
+        _currentTarget = spawnTargets[_ctx._selectedSpawnTargetIndex];
         if (_shapeToSpawn is null)
         {
             return;
@@ -212,19 +212,19 @@ public class Spawn : Tool
         switch (_currentTarget)
         {
             case SpawnTarget.Box:
-                _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, _mass, _context);
+                _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, _mass, _ctx);
                 break;
             case SpawnTarget.SoftBox:
-                _shapeToSpawn = MassShape.SoftBox(mousePos.X, mousePos.Y, Radius, _mass, _stiffness, _context);
+                _shapeToSpawn = MassShape.SoftBox(mousePos.X, mousePos.Y, Radius, _mass, _stiffness, _ctx);
                 break;
             case SpawnTarget.Ball:
-                _shapeToSpawn = MassShape.HardBall(mousePos.X, mousePos.Y, Radius, _mass, _resolution, _context);
+                _shapeToSpawn = MassShape.HardBall(mousePos.X, mousePos.Y, Radius, _mass, _resolution, _ctx);
                 break;
             case SpawnTarget.SoftBall:
-                _shapeToSpawn = MassShape.SoftBall(mousePos.X, mousePos.Y, Radius, _mass, _resolution, _stiffness, _gasAmount, _context);
+                _shapeToSpawn = MassShape.SoftBall(mousePos.X, mousePos.Y, Radius, _mass, _resolution, _stiffness, _gasAmount, _ctx);
                 break;
             case SpawnTarget.Particle:
-                _shapeToSpawn = MassShape.Particle(mousePos.X, mousePos.Y, PointMass.RadiusToMass(Radius), _context);
+                _shapeToSpawn = MassShape.Particle(mousePos.X, mousePos.Y, PointMass.RadiusToMass(Radius), _ctx);
                 break;
         }
     }
@@ -243,10 +243,8 @@ public class Spawn : Tool
 
 public class Delete : Tool
 {   
-    public Delete(Context context)
-    {
-        _context = context;
-    }
+    public Delete(Context ctx) => _ctx = ctx;
+    
 
     public override void Update()
     {
@@ -256,7 +254,7 @@ public class Delete : Tool
         }
         Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-        var shapes = _context.GetMassShapes(area).ToHashSet();
+        var shapes = _ctx.GetMassShapes(area).ToHashSet();
         if (!shapes.Any())
         {
             return;
@@ -292,10 +290,7 @@ public class PullCom : Tool
     private bool _shouldVisualize = false;
     private Vector2 _centerOfMass;
 
-    public PullCom(Context context)
-    {
-        _context = context;
-    }
+    public PullCom(Context ctx) =>_ctx = ctx;
 
     public override void Update()
     {
@@ -305,7 +300,7 @@ public class PullCom : Tool
         }
         Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-        var shapes = _context.GetMassShapes(area);
+        var shapes = _ctx.GetMassShapes(area);
         if (!shapes.Any())
         {
             return;
@@ -340,9 +335,9 @@ public class Pull : Tool
     private readonly HashSet<Vector2> _positions;
     private bool _shouldVisualize;
 
-    public Pull(Context context)
+    public Pull(Context ctx)
     {
-        _context = context;
+        _ctx = ctx;
         _positions = new();
     }
 
@@ -354,7 +349,7 @@ public class Pull : Tool
         }
         Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
         BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-        var points = _context.GetPointMasses(area);
+        var points = _ctx.GetPointMasses(area);
         if (!points.Any())
         {
             return;
@@ -393,9 +388,9 @@ public class Wind : Tool
     private const int MinForce = (int) 1e1;
     private const int MaxForce = (int) 1e2; 
 
-    public Wind(Context context)
+    public Wind(Context ctx)
     {
-        _context = context;
+        _ctx = ctx;
         Direction = new(1f, 0f);
     }
 
@@ -405,7 +400,7 @@ public class Wind : Tool
         {
             return;
         }
-        foreach (var s in _context.MassShapes)
+        foreach (var s in _ctx.MassShapes)
         {
             foreach (var p in s._points)
             {
@@ -426,10 +421,8 @@ public class Rotate : Tool
 {
     private const float ForceAmount = 1e2f;
 
-    public Rotate(Context context)
-    {
-        _context = context;
-    }
+    public Rotate(Context ctx) => _ctx = ctx;
+    
 
     public override void Update()
     {
@@ -438,7 +431,7 @@ public class Rotate : Tool
             return;
         }
         Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
-        var shapes = _context.GetMassShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
+        var shapes = _ctx.GetMassShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
         if (!shapes.Any())
         {
             return;
@@ -471,10 +464,7 @@ public class Ruler : Tool
     private Vector2 _startPos;
     private bool _shouldVisualize;
 
-    public Ruler(Context context)
-    {
-        _context = context;
-    }
+    public Ruler(Context ctx) => _ctx = ctx;
 
     public override void Draw()
     {
@@ -490,7 +480,7 @@ public class Ruler : Tool
 
     public override void Update()
     {
-        _shouldVisualize = IsMouseButtonDown(MouseButton.Left) && _context._toolEnabled;
+        _shouldVisualize = IsMouseButtonDown(MouseButton.Left) && _ctx._toolEnabled;
         if (IsMouseButtonReleased(MouseButton.Left) || IsMouseButtonPressed(MouseButton.Left))
         {
             _startPos = GetMousePosition();
@@ -505,7 +495,7 @@ public class GravityWell : Tool
     public float _minDist = 0.01f;
     private Vector2 _pos;
 
-    public GravityWell(Context context) => _context = context;
+    public GravityWell(Context ctx) => _ctx = ctx;
 
     public override void Draw()
     {
@@ -524,7 +514,7 @@ public class GravityWell : Tool
 
     private void ApplyGravityForces()
     {
-        foreach (var shape in _context.MassShapes)
+        foreach (var shape in _ctx.MassShapes)
         {
             Vector2 dir = _pos - shape.CenterOfMass;
             float dist = dir.Length();
@@ -546,18 +536,18 @@ public class NbodySim : Tool
     public float _threshold = 0.01f;
     public bool _running;
     public bool _collisionsEnabled;
-    private const int UpdateIntervalMs = 100;
+    private const int UpdateIntervalMs = 50;
     private readonly BarnesHutTree _barnesHutTree;
     private Thread _updateThread;
 
-    public NbodySim(Context context)
+    public NbodySim(Context ctx)
     {
-        _context = context;
+        _ctx = ctx;
         _barnesHutTree = new(
             UnitConv.PixelsToMeters(new Vector2(Program.WinW / 2f, Program.WinH / 2f)),
             UnitConv.PixelsToMeters(new Vector2(Program.WinW, Program.WinH))
         );
-        _updateThread = new Thread(new ThreadStart(ThreadUpdate))
+        _updateThread = new Thread(new ThreadStart(ThreadUpdate), 0)
         {
             IsBackground = true
         };
@@ -572,11 +562,11 @@ public class NbodySim : Tool
         for (;;)
         {
             Thread.Sleep(UpdateIntervalMs);
-            if (!_running || _context._simPaused)
+            if (!_running || _ctx._simPaused)
             {
                 continue;
             }
-            _barnesHutTree.Update(_context);
+            _barnesHutTree.Update(_ctx);
         }
     }
 }
