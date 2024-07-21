@@ -14,7 +14,7 @@ public class Program
     public const int WinW = 1600;
     public const int WinH = 900;
     public const int PauseThresholdFPS = 10;
-    public const int QuadTreeUpdateMs = 100;
+    public const int QuadTreeUpdateMs = 50;
     public static readonly int TargetFPS = GetMonitorRefreshRate(GetCurrentMonitor());
 
     private static float _accumulator;
@@ -158,7 +158,7 @@ public class Program
         }
         if (IsKeyPressed(KeyboardKey.B))
         {
-            _context.LoadBenchmark(1000, 1f, 20f, new(WinW / 2f - 200f, 200f));
+            _context.LoadBenchmark(1000, 3f, 20f, new(WinW / 2f - 200f, 200f));
         }
         // Mouse
         if (GetMouseWheelMoveV().Y > 0f)

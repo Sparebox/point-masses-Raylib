@@ -203,6 +203,7 @@ public partial class MassShape : Entity
         }
     }
     
+    public const int ConstraintIterations = 3;
     public const float GasAmountMult = 1f;
     public List<Constraint> _constraints;
     public List<PointMass> _points;
@@ -254,9 +255,12 @@ public partial class MassShape : Entity
             _lastCenterOfMass = CenterOfMass;
             _lastAngle = Angle;
         }
-        foreach (Constraint c in _constraints)
+        for (int i = 0; i < ConstraintIterations; i++)
         {
-            c.Update();
+            foreach (Constraint c in _constraints.OrderBy(_ => Rng.Gen.Next(_constraints.Count))) // Iterate in random order to prevent ghost torque
+            {
+                c.Update();
+            }
         }
         foreach (PointMass p in _points)
         {

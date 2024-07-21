@@ -82,6 +82,11 @@ namespace Utils
         }
     }
 
+    public static class Rng
+    {
+        public static Random Gen { get; } = new Random();
+    }
+
 }
 
 
