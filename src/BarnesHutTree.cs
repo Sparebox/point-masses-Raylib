@@ -36,15 +36,14 @@ public class BarnesHutTree
 
     public void Update(Context ctx)
     {
-        Clear();
         ctx.Lock.EnterReadLock();
-        IEnumerable<MassShape> massShapes = ctx.MassShapes;
-        ctx.Lock.ExitReadLock();
-        foreach (var shape in massShapes)
+        Clear();
+        foreach (var shape in ctx.MassShapes)
         {
             Insert(shape);
         }
         ApplyGravityForces(ctx.NbodySim);
+        ctx.Lock.ExitReadLock();
     }
 
     private void ApplyGravityForces(NbodySim nbodySim)

@@ -92,9 +92,17 @@ public class Program
                 }
             }
             _context.NbodySim.Update();
-            _context.Lock.EnterWriteLock();
-            _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
-            _context.Lock.ExitWriteLock();
+            // Remove deleted mass shapes if any deleted
+            _context.Lock.EnterUpgradeableReadLock();
+            if (_context.MassShapes.Where(s => s._toBeDeleted).Any())
+            {
+                if (_context.Lock.TryEnterWriteLock(0))
+                {
+                    _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
+                    _context.Lock.ExitWriteLock();
+                }
+            }
+            _context.Lock.ExitUpgradeableReadLock();
             _accumulator -= _context.TimeStep;
         }
     }
