@@ -231,8 +231,8 @@ public class Context
             height: UnitConv.PixelsToMeters(500f),
             mass: 0.7f,
             res: 42,
-            stiffness: 0.8f,
-            true,
+            stiffness: 0.9f,
+            false,
             this
         ));
     }

@@ -142,8 +142,8 @@ public abstract class Tool
 public class Spawn : Tool
 {
     public const float DefaultStiffness = 1f;
-    public const float DefaultGasAmt = 100f;
-    private const float DefaultMass = 10f;
+    public const float DefaultGasAmt = 300f;
+    private const float DefaultMass = 30f;
     private const int DefaultRes = 15;
 
     public SpawnTarget _currentTarget;

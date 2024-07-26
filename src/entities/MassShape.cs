@@ -554,8 +554,9 @@ public partial class MassShape : Entity
         ImGui.Text(string.Format("Linear energy: {0:0.##} J", LinEnergy));
         ImGui.Text(string.Format("Rot energy: {0:0.##} J", RotEnergy));
         ImGui.End();
-        Vector2 offset = new(-Ctx.TextureManager.CenterOfMassIcon.Width / 2f, -Ctx.TextureManager.CenterOfMassIcon.Height / 2f);
-        DrawTextureEx(Ctx.TextureManager.CenterOfMassIcon, UnitConv.MetersToPixels(Centroid) + 0.5f * offset, 0f, 0.5f, Color.White);
+        var centerOfMassIcon = Ctx.TextureManager.GetTexture("center_of_mass.png");
+        Vector2 offset = new(-centerOfMassIcon.Width * 0.5f, -centerOfMassIcon.Height * 0.5f);
+        DrawTextureEx(centerOfMassIcon, UnitConv.MetersToPixels(Centroid) + offset * 0.5f, 0f, 0.5f, Color.White);
     }
 
     public static bool operator == (MassShape a, MassShape b)

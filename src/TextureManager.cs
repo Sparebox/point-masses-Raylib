@@ -5,26 +5,43 @@ namespace Textures;
 
 public class TextureManager
 {
-    public Texture2D CenterOfMassIcon { get; init; }
+    private readonly IDictionary<string, Texture2D> _textures;
+    private readonly string _resourcesPath;
 
     public TextureManager()
     {
-        string resourcesPath;
         #if DEBUG
             Console.WriteLine("Point-masses is running in DEBUG mode");
-            resourcesPath = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName + "/res/";
+            _resourcesPath = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName + "/res/";
         #else
             Console.WriteLine("Point-masses is running in RELEASE mode");
-            resourcesPath = Directory.GetCurrentDirectory() + "/res/";
+            _resourcesPath = Directory.GetCurrentDirectory() + "/res/";
         #endif
-        Image centerOfMassIcon = LoadImage(resourcesPath + "center_of_mass_icon.png");
-        CenterOfMassIcon = LoadTextureFromImage(centerOfMassIcon);
-        UnloadImage(centerOfMassIcon);
+        _textures = new Dictionary<string, Texture2D>();
     }
 
     ~TextureManager()
     {
-        UnloadTexture(CenterOfMassIcon);
+        foreach (var texture in _textures.Values)
+        {
+            UnloadTexture(texture);
+        }
         Console.WriteLine("Unloaded textures");
+    }
+
+    public void LoadTexture(string fileName)
+    {
+        Image loadedImage = LoadImage(_resourcesPath + fileName);
+        _textures.Add(fileName, LoadTextureFromImage(loadedImage));
+        UnloadImage(loadedImage);
+    }
+
+    public Texture2D GetTexture(string fileName)
+    {;
+        if (_textures.TryGetValue(fileName, out Texture2D texture))
+        {
+            return texture;
+        }
+        throw new KeyNotFoundException(fileName);
     }
 }

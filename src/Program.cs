@@ -13,7 +13,7 @@ public class Program
 {   
     public const int WinW = 1600;
     public const int WinH = 900;
-    public const int PauseThresholdFPS = 10;
+    public const int PauseThresholdFPS = 15;
     public const int QuadTreeUpdateMs = 50;
     public static readonly int TargetFPS = GetMonitorRefreshRate(GetCurrentMonitor());
 
@@ -49,7 +49,7 @@ public class Program
         
         float winWidthMeters = UnitConv.PixelsToMeters(WinW);
         float winHeightMeters = UnitConv.PixelsToMeters(WinH);
-        Context context = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f))
+        Context ctx = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f))
         {
             QuadTree = new(
                 UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
@@ -58,15 +58,17 @@ public class Program
                 6
             )
         };
-        context.LineColliders = new() {
-            new(0f, 0f, winWidthMeters, 0f, context),
-            new(0f, 0f, 0f, winHeightMeters, context),
-            new(winWidthMeters, 0f, winWidthMeters, winHeightMeters, context),
-            new(0f, winHeightMeters, winWidthMeters, winHeightMeters, context)
+        ctx.LineColliders = new() {
+            new(0f, 0f, winWidthMeters, 0f, ctx),
+            new(0f, 0f, 0f, winHeightMeters, ctx),
+            new(winWidthMeters, 0f, winWidthMeters, winHeightMeters, ctx),
+            new(0f, winHeightMeters, winWidthMeters, winHeightMeters, ctx)
         };
-        context.SelectedTool = new PullCom(context);
-        context.SaveCurrentState();
-        return context;
+        ctx.SelectedTool = ctx.Tools[(int) ToolType.PullCom];
+        ctx.SaveCurrentState();
+        // Load textures
+        ctx.TextureManager.LoadTexture("center_of_mass.png");
+        return ctx;
     }
 
     private static void Update()
@@ -76,8 +78,7 @@ public class Program
             Console.WriteLine("Running too slow. Pausing sim");
             _context._simPaused = true;
         }
-        float frameTime = GetFrameTime();
-        _accumulator += frameTime;
+        _accumulator += GetFrameTime();
         while (_accumulator >= _context.TimeStep)
         {
             for (int i = 0; i < _context.Substeps; i++)
@@ -96,7 +97,7 @@ public class Program
             _context.Lock.EnterUpgradeableReadLock();
             if (_context.MassShapes.Where(s => s._toBeDeleted).Any())
             {
-                if (_context.Lock.TryEnterWriteLock(0))
+                if (_context.Lock.TryEnterWriteLock(0)) // Do not block the main thread if the lock is unavailable
                 {
                     _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
                     _context.Lock.ExitWriteLock();
