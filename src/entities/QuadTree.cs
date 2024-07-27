@@ -39,8 +39,8 @@ public class QuadTree
     public void Update(Context ctx)
     {
         Lock.EnterWriteLock();
-        Clear();
         ctx.Lock.EnterReadLock();
+        Clear();
         foreach (var shape in ctx.MassShapes)
         {
             Insert(shape);

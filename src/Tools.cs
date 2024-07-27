@@ -332,7 +332,7 @@ public class Pull : Tool
 {
     public float _forceCoeff = DefaultForceCoeff;
     private const float DefaultForceCoeff = 1e3f;
-    private readonly HashSet<Vector2> _positions;
+    private readonly List<Vector2> _positions;
     private bool _shouldVisualize;
 
     public Pull(Context ctx)
@@ -491,23 +491,37 @@ public class Ruler : Tool
 
 public class GravityWell : Tool
 {
-    public float _gravConstant = 1f;
+    public float _gravConstant = 0.1f;
     public float _minDist = 0.01f;
-    private Vector2 _pos;
+    private readonly List<Vector2> _positions;
 
-    public GravityWell(Context ctx) => _ctx = ctx;
+    public GravityWell(Context ctx)
+    {
+        _ctx = ctx;
+        _positions = new();
+    }
 
     public override void Draw()
     {
-        Vector2 pixelPos = UnitConv.MetersToPixels(_pos);
-        DrawText("G", (int) pixelPos.X, (int) pixelPos.Y, 20, Color.Yellow);
+        var mousePos = GetMousePosition();
+        foreach (var pos in _positions)
+        {
+            Vector2 pixelPos = UnitConv.MetersToPixels(pos);
+            DrawText("G", (int) pixelPos.X, (int) pixelPos.Y, 20, Color.Yellow);
+        }
+        DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
     }
 
     public override void Update()
     {
+        var mousePosMeters = UnitConv.PixelsToMeters(GetMousePosition());
         if (IsMouseButtonPressed(MouseButton.Left))
         {
-            _pos = UnitConv.PixelsToMeters(GetMousePosition());
+            _positions.Add(mousePosMeters);
+        }
+        if (IsMouseButtonPressed(MouseButton.Right))
+        {
+            _positions.RemoveAll(pos => Vector2.DistanceSquared(pos, mousePosMeters) < Radius * Radius);
         }
         ApplyGravityForces();
     }
@@ -516,15 +530,18 @@ public class GravityWell : Tool
     {
         foreach (var shape in _ctx.MassShapes)
         {
-            Vector2 dir = _pos - shape.CenterOfMass;
-            float dist = dir.Length();
-            if (dist == 0f || dist < _minDist)
+            foreach (var pos in _positions)
             {
-                continue;
+                Vector2 dir = pos - shape.CenterOfMass;
+                float dist = dir.Length();
+                if (dist == 0f || dist < _minDist)
+                {
+                    continue;
+                }
+                dir /= dist;
+                Vector2 gravForce = dir * _gravConstant * shape.Mass / (dist * dist);
+                shape.ApplyForceCOM(gravForce);
             }
-            dir /= dist;
-            Vector2 gravForce = dir * _gravConstant * shape.Mass / (dist * dist);
-            shape.ApplyForceCOM(gravForce);
         }
     }
 }

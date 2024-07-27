@@ -305,9 +305,7 @@ public partial class MassShape : Entity
                 }
             }
             Vector2 COM = UnitConv.MetersToPixels(CenterOfMass);
-            Vector2 totalVisForce = UnitConv.MetersToPixels(TotalVisForce);
-            totalVisForce = Raymath.Vector2ClampValue(totalVisForce, 0f, 150f);
-            Graphics.DrawArrow(COM, COM + totalVisForce, Color.Magenta);
+            Graphics.DrawArrow(COM, COM + Raymath.Vector2ClampValue(TotalVisForce, 0f, 150f), Color.Magenta);
         }
         if (Ctx._drawBodyInfo)
         {
