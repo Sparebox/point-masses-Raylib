@@ -6,35 +6,24 @@ using Utils;
 using Tools;
 using Editing;
 using Raylib_cs;
+using SimSystems;
 
 namespace Sim;
 
 public class Context
 {
+    // Properties
     public ReaderWriterLockSlim Lock { get; set; }
     public float TimeStep { get; init; }
     public float SubStep { get; init; }
     public int Substeps { get; init; }
     public Vector2 Gravity { get; init; }
     public TextureManager TextureManager { get; init; }
-
-    private SaveState _saveState;
-    public bool _gravityEnabled;
-    public bool _drawForces;
-    public bool _drawAABBS;
-    public bool _drawQuadTree;
-    public bool _drawBodyInfo;
-    public bool _simPaused;
-    public bool _toolEnabled;
-    public float _globalRestitutionCoeff = 0.3f;
-    public float _globalKineticFrictionCoeff = 1f;
-    public float _globalStaticFrictionCoeff = 1.1f;
     public QuadTree QuadTree { get; set; }
     public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; init; }
+    public List<ISystem> Systems { get; init; }
     public Tool SelectedTool { get; set; }
-    public int _selectedToolIndex;
-    public int _selectedSpawnTargetIndex;
     public Tool[] Tools { get; init; }
     public NbodySim NbodySim
     {
@@ -43,7 +32,6 @@ public class Context
             return Tools[(int) ToolType.NbodySim] as NbodySim;
         }
     }
-    public int SavedShapeCount => _saveState.MassShapes.Count;
     public int MassCount 
     {
         get 
@@ -74,6 +62,22 @@ public class Context
             return energy;
         }
     }
+    public int SavedShapeCount => _saveState.MassShapes.Count;
+
+    // Fields
+    private SaveState _saveState;
+    public bool _gravityEnabled;
+    public bool _drawForces;
+    public bool _drawAABBS;
+    public bool _drawQuadTree;
+    public bool _drawBodyInfo;
+    public bool _simPaused;
+    public bool _toolEnabled;
+    public float _globalRestitutionCoeff = 0.3f;
+    public float _globalKineticFrictionCoeff = 1f;
+    public float _globalStaticFrictionCoeff = 1.1f;
+    public int _selectedToolIndex;
+    public int _selectedSpawnTargetIndex;
 
     public Context(float timeStep, int subSteps, Vector2 gravity)
     {
@@ -90,6 +94,7 @@ public class Context
         _simPaused = true;
         MassShapes = new();
         LineColliders = new();
+        Systems = new();
         Tools = CreateTools();
     }
 

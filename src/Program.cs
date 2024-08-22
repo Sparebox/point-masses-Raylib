@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Entities;
+using Particles;
 using Raylib_cs;
 using rlImGui_cs;
 using Tools;
@@ -65,6 +66,14 @@ public class Program
             new(0f, winHeightMeters, winWidthMeters, winHeightMeters, ctx)
         };
         ctx.SelectedTool = ctx.Tools[(int) ToolType.PullCom];
+        ParticleSystem _particleSystem = new (
+            5,
+            UnitConv.PixelsToMeters(10f),
+            2f,
+            UnitConv.PixelsToMeters(new Vector2(WinW * 0.5f, WinH * 0.5f)),
+            UnitConv.PixelsToMeters(new Vector2(0f, -3f))
+        );
+        ctx.Systems.Add(_particleSystem);
         ctx.SaveCurrentState();
         // Load textures
         ctx.TextureManager.LoadTexture("center_of_mass.png");
@@ -91,6 +100,10 @@ public class Program
                 {
                     MassShape.HandleCollisions(_context);
                 }
+            }
+            foreach (var system in _context.Systems)
+            {
+                system.Update();
             }
             _context.NbodySim.Update();
             // Remove deleted mass shapes if any deleted
@@ -121,6 +134,10 @@ public class Program
         foreach (var l in _context.LineColliders)
         {
             l.Draw();
+        }
+        foreach (var system in _context.Systems)
+        {
+            system.Draw();
         }
         if (_context._drawQuadTree)
         {
