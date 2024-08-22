@@ -201,11 +201,11 @@ public class QuadTree
     public static void ThreadUpdate(object _ctx)
     {
         Context ctx = (Context) _ctx;
-        var toolSystem = ctx.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem);
+        var nBodySystem = ctx.GetSystem<NbodySystem>(Context.SystemsEnum.NbodySystem);
         for (;;)
         {
             Thread.Sleep(Program.QuadTreeUpdateMs);
-            if (toolSystem.NbodySim._running && !toolSystem.NbodySim._collisionsEnabled)
+            if (nBodySystem._running && !nBodySystem._collisionsEnabled)
             {
                 continue;
             }

@@ -1,5 +1,3 @@
-using Sim;
-
 namespace SimSystems;
 
 public interface ISystem

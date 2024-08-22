@@ -42,15 +42,15 @@ public class BarnesHutTree
         {
             Insert(shape);
         }
-        ApplyGravityForces(ctx.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem).NbodySim);
+        ApplyGravityForces(ctx.GetSystem<NbodySystem>(Context.SystemsEnum.NbodySystem));
         ctx.Lock.ExitReadLock();
     }
 
-    private void ApplyGravityForces(NbodySim nbodySim)
+    private void ApplyGravityForces(NbodySystem nBodySystem)
     {
         foreach (var shape in _massShapes)
         {
-            ApplyGravityForce(shape, nbodySim);
+            ApplyGravityForce(shape, nBodySystem);
         }
     }
 
@@ -154,7 +154,7 @@ public class BarnesHutTree
         _centerOfMass /= _totalMass;
     }
 
-    private void ApplyGravityForce(MassShape shapeA, NbodySim nbodySim)
+    private void ApplyGravityForce(MassShape shapeA, NbodySystem nBodySystem)
     {   
         Vector2 dir;
         float dist;
@@ -171,11 +171,11 @@ public class BarnesHutTree
             }
             dir = shapeB.CenterOfMass - shapeA.CenterOfMass;
             dist = dir.Length();
-            if (dist == 0f || dist < nbodySim._minDist)
+            if (dist == 0f || dist < nBodySystem._minDist)
             {
                 return;
             }
-            Vector2 gravForce = GetGravForce(dir, nbodySim._gravConstant, dist, shapeA.Mass, shapeB.Mass);
+            Vector2 gravForce = GetGravForce(dir, nBodySystem._gravConstant, dist, shapeA.Mass, shapeB.Mass);
             shapeA.ApplyForce(gravForce);
             return;
         }
@@ -186,22 +186,22 @@ public class BarnesHutTree
             dist += float.Epsilon;
         }
         float quotient = _size.X / dist;
-        if (quotient < nbodySim._threshold) // Far away -> treating as a single body
+        if (quotient < nBodySystem._threshold) // Far away -> treating as a single body
         {
-            if (dist < nbodySim._minDist)
+            if (dist < nBodySystem._minDist)
             {
                 return;
             }
             dir /= dist;
-            Vector2 gravForce = GetGravForce(dir, nbodySim._gravConstant, dist, shapeA.Mass, _totalMass);
+            Vector2 gravForce = GetGravForce(dir, nBodySystem._gravConstant, dist, shapeA.Mass, _totalMass);
             shapeA.ApplyForce(gravForce);
         }
         else // Close to a center of mass
         {
-            _northEast.ApplyGravityForce(shapeA, nbodySim);
-            _southEast.ApplyGravityForce(shapeA, nbodySim);
-            _southWest.ApplyGravityForce(shapeA, nbodySim);
-            _northWest.ApplyGravityForce(shapeA, nbodySim);
+            _northEast.ApplyGravityForce(shapeA, nBodySystem);
+            _southEast.ApplyGravityForce(shapeA, nBodySystem);
+            _southWest.ApplyGravityForce(shapeA, nBodySystem);
+            _northWest.ApplyGravityForce(shapeA, nBodySystem);
         }
     }
 

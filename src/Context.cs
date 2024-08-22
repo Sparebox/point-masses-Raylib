@@ -71,7 +71,8 @@ public class Context
 
     public enum SystemsEnum
     {
-        ToolSystem
+        ToolSystem,
+        NbodySystem
     }
 
     public Context(float timeStep, int subSteps, Vector2 gravity)
@@ -244,5 +245,6 @@ public class Context
     private void LoadSystems()
     {
         Systems.Add(new ToolSystem(this));
+        Systems.Add(new NbodySystem(this));
     }
 }

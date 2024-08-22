@@ -88,10 +88,7 @@ public class Program
                 {
                     s.Update();
                 }
-                // if (!_context.NbodySim._running || (_context.NbodySim._running && _context.NbodySim._collisionsEnabled))
-                // {
-                    MassShape.HandleCollisions(_context);
-                //}
+                 MassShape.HandleCollisions(_context);
             }
             foreach (var system in _context.Systems)
             {
@@ -134,7 +131,7 @@ public class Program
         {
             _context.QuadTree.Draw();
         }
-        Gui.DrawInfo(_context); // GUI
+        Gui.Draw(_context); // GUI
         
         rlImGui.End();
         EndDrawing(); // raylib
@@ -166,7 +163,7 @@ public class Program
             _context._simPaused = !_context._simPaused;
         }
         // Handle mouse input
-        if (IsMouseButtonPressed(MouseButton.Left))
+        if (IsMouseButtonDown(MouseButton.Left))
         {
             if (toolSystem.ToolEnabled)
             {

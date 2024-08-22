@@ -24,22 +24,13 @@ namespace Systems
             Ruler,
             Delete,
             Editor,
-            GravityWell,
-            NbodySim,
+            GravityWell
         }
 
         public static ToolType[] ToolTypes => (ToolType[]) Enum.GetValues(typeof(ToolType));
         public static string ToolComboString { get; } = ToolsToComboString();
         public Tool SelectedTool { get; set; }
         public Tool[] Tools { get; init; }
-        public NbodySim NbodySim
-        {
-            get
-            {
-                return Tools[(int) ToolType.NbodySim] as NbodySim;
-            }
-        }
-
         public bool ToolEnabled { get; set; }
         private readonly Context _ctx;
 
@@ -92,9 +83,6 @@ namespace Systems
                 case ToolType.GravityWell :
                     SelectedTool = Tools[(int) ToolType.GravityWell];
                     break;
-                case ToolType.NbodySim :
-                    SelectedTool = Tools[(int) ToolType.NbodySim];
-                    break;
             }
         }
 
@@ -137,7 +125,6 @@ namespace Systems
             tools[(int) ToolType.Delete]        = new Delete(_ctx);
             tools[(int) ToolType.Editor]        = new Editor(_ctx);
             tools[(int) ToolType.GravityWell]   = new GravityWell(_ctx);
-            tools[(int) ToolType.NbodySim]      = new NbodySim(_ctx);
             return tools;
         }
     }
@@ -157,7 +144,6 @@ namespace Tools
         public static Vector2 Direction { get; set; } = new(1f, 0f);
 
         protected Context _ctx;
-        protected ToolSystem _toolSystem;
 
         abstract public void Update();
         abstract public void Draw();
@@ -537,7 +523,7 @@ namespace Tools
 
         public override void Update()
         {
-            _shouldVisualize = IsMouseButtonDown(MouseButton.Left) && _toolSystem.ToolEnabled;
+            _shouldVisualize = IsMouseButtonDown(MouseButton.Left) && _ctx.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem).ToolEnabled;
             if (IsMouseButtonReleased(MouseButton.Left) || IsMouseButtonPressed(MouseButton.Left))
             {
                 _startPos = GetMousePosition();
@@ -599,48 +585,6 @@ namespace Tools
                     Vector2 gravForce = dir * _gravConstant * shape.Mass / (dist * dist);
                     shape.ApplyForceCOM(gravForce);
                 }
-            }
-        }
-    }
-
-    public class NbodySim : Tool
-    {
-        public float _gravConstant = 0.01f;
-        public float _minDist = 0f;
-        public float _threshold = 0.01f;
-        public bool _running;
-        public bool _collisionsEnabled;
-        private const int UpdateIntervalMs = 50;
-        private readonly BarnesHutTree _barnesHutTree;
-        private readonly Thread _updateThread;
-
-        public NbodySim(Context ctx)
-        {
-            _ctx = ctx;
-            _barnesHutTree = new(
-                UnitConv.PixelsToMeters(new Vector2(Program.WinW / 2f, Program.WinH / 2f)),
-                UnitConv.PixelsToMeters(new Vector2(Program.WinW, Program.WinH))
-            );
-            _updateThread = new Thread(new ThreadStart(ThreadUpdate), 0)
-            {
-                IsBackground = true
-            };
-            _updateThread.Start();
-        }
-
-        public override void Draw() {}
-        public override void Update() {}
-
-        private void ThreadUpdate()
-        {
-            for (;;)
-            {
-                Thread.Sleep(UpdateIntervalMs);
-                if (!_running || _ctx._simPaused)
-                {
-                    continue;
-                }
-                _barnesHutTree.Update(_ctx);
             }
         }
     }

@@ -11,11 +11,34 @@ namespace UI;
 
 public class Gui
 {
-    public static void DrawInfo(Context ctx)
+    
+    public static void Draw(Context ctx)
     {
         ToolSystem toolSystem = ctx.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem);
-        ImGui.Begin("Simulation info", ImGuiWindowFlags.NoMove);
-        ImGui.SetWindowPos(Vector2.Zero);
+        toolSystem.ToolEnabled = !ImGui.IsAnyItemHovered();
+        if (ImGui.BeginMainMenuBar())
+        {
+            if (ImGui.BeginMenu("Simulation info"))
+            {
+                ShowSimulationInfo(ctx, toolSystem);
+                ImGui.EndMenu();
+            }
+            if (ImGui.BeginMenu("Tools"))
+            {
+                ShowTools(ctx, toolSystem);
+                ImGui.EndMenu();
+            }
+            if (ImGui.BeginMenu("N-Body Sim"))
+            {
+                ShowNbodySimOptions(ctx);
+                ImGui.EndMenu();
+            }
+            ImGui.EndMainMenuBar();
+        }
+    }
+
+    private static void ShowSimulationInfo(Context ctx, ToolSystem toolSystem)
+    {
         ImGui.Text(string.Format("FPS: {0}", GetFPS()));
         ImGui.PushStyleColor(ImGuiCol.Text, ctx._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
         ImGui.Checkbox(ctx._simPaused ? "PAUSE" : "RUNNING", ref ctx._simPaused);
@@ -39,6 +62,32 @@ public class Gui
         ImGui.InputFloat("Global restitution coeff", ref ctx._globalRestitutionCoeff);
         ImGui.InputFloat("Global kinetic friction coeff", ref ctx._globalKineticFrictionCoeff);
         ImGui.InputFloat("Global static friction coeff", ref ctx._globalStaticFrictionCoeff);
+        ImGui.Spacing();
+        ImGui.Separator();
+        if (ImGui.Button("Delete all shapes"))
+        {
+            ctx.Lock.EnterWriteLock();
+            foreach (var shape in ctx.MassShapes)
+            {
+                shape._toBeDeleted = true;
+            }
+            ctx.Lock.ExitWriteLock();
+        }
+        if (ImGui.Button("Save current state"))
+        {
+            ctx.SaveCurrentState();
+        }
+        if (ctx.SavedShapeCount > 0)
+        {
+            if (ImGui.Button($"Load saved state ({ctx.SavedShapeCount} shapes saved)"))
+            {
+                ctx.LoadSavedState();
+            }
+        }
+    }
+
+    private static void ShowTools(Context ctx, ToolSystem toolSystem)
+    {
         ImGui.PushItemWidth(100f);
         if (ImGui.Combo("Tool", ref ctx._selectedToolIndex, ToolSystem.ToolComboString))
         {
@@ -64,49 +113,9 @@ public class Gui
                 ImGui.InputFloat("Gravitational constant", ref ((GravityWell) toolSystem.SelectedTool)._gravConstant);
                 ImGui.InputFloat("Minimum distance", ref ((GravityWell) toolSystem.SelectedTool)._minDist);
                 break;
-            case NbodySim :
-                ImGui.Checkbox("Running", ref ((NbodySim) toolSystem.SelectedTool)._running);
-                ImGui.Checkbox("Collisions enabled", ref ((NbodySim) toolSystem.SelectedTool)._collisionsEnabled);
-                ImGui.InputFloat("Gravitational constant", ref ((NbodySim) toolSystem.SelectedTool)._gravConstant);
-                ImGui.InputFloat("Minimum distance", ref ((NbodySim) toolSystem.SelectedTool)._minDist);
-                ImGui.InputFloat("Threshold", ref ((NbodySim) toolSystem.SelectedTool)._threshold);
-                break;
         }
-        ImGui.Spacing();
-        ImGui.Separator();
-        if (ImGui.Button("Delete all shapes"))
-        {
-            ctx.Lock.EnterWriteLock();
-            foreach (var shape in ctx.MassShapes)
-            {
-                shape._toBeDeleted = true;
-            }
-            ctx.Lock.ExitWriteLock();
-        }
-        if (ImGui.Button("Save current state"))
-        {
-            ctx.SaveCurrentState();
-        }
-        if (ctx.SavedShapeCount > 0)
-        {
-            if (ImGui.Button($"Load saved state ({ctx.SavedShapeCount} shapes saved)"))
-            {
-                ctx.LoadSavedState();
-            }
-        }
-        // Disable tool if mouse is over info window
-        Vector2 margin = new(500f, 500f);
-        if (ImGui.IsMouseHoveringRect(ImGui.GetWindowContentRegionMin() - margin, ImGui.GetWindowContentRegionMax() + margin))
-        {
-            toolSystem.ToolEnabled = false;
-        }
-        else
-        {
-            toolSystem.ToolEnabled = true;
-        }
-        ImGui.End();
     }
-
+    
     private static void ShowSpawnToolOptions(Context ctx)
     {
         var toolSystem = ctx.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem);
@@ -194,5 +203,15 @@ public class Gui
         {
             editor.BuildShape();
         }
+    }
+
+    private static void ShowNbodySimOptions(Context ctx)
+    {
+        var nBodySystem = ctx.GetSystem<NbodySystem>(Context.SystemsEnum.NbodySystem);
+        ImGui.Checkbox("Running", ref nBodySystem._running);
+        ImGui.Checkbox("Collisions enabled", ref nBodySystem._collisionsEnabled);
+        ImGui.InputFloat("Gravitational constant", ref nBodySystem._gravConstant);
+        ImGui.InputFloat("Minimum distance", ref nBodySystem._minDist);
+        ImGui.InputFloat("Threshold", ref nBodySystem._threshold);
     }
 }
