@@ -3,6 +3,7 @@ using Entities;
 using Particles;
 using Raylib_cs;
 using rlImGui_cs;
+using Systems;
 using Tools;
 using UI;
 using Utils;
@@ -65,15 +66,6 @@ public class Program
             new(winWidthMeters, 0f, winWidthMeters, winHeightMeters, ctx),
             new(0f, winHeightMeters, winWidthMeters, winHeightMeters, ctx)
         };
-        ctx.SelectedTool = ctx.Tools[(int) ToolType.PullCom];
-        ParticleSystem _particleSystem = new (
-            5,
-            UnitConv.PixelsToMeters(10f),
-            2f,
-            UnitConv.PixelsToMeters(new Vector2(WinW * 0.5f, WinH * 0.5f)),
-            UnitConv.PixelsToMeters(new Vector2(0f, -3f))
-        );
-        ctx.Systems.Add(_particleSystem);
         ctx.SaveCurrentState();
         // Load textures
         ctx.TextureManager.LoadTexture("center_of_mass.png");
@@ -96,16 +88,15 @@ public class Program
                 {
                     s.Update();
                 }
-                if (!_context.NbodySim._running || (_context.NbodySim._running && _context.NbodySim._collisionsEnabled))
-                {
+                // if (!_context.NbodySim._running || (_context.NbodySim._running && _context.NbodySim._collisionsEnabled))
+                // {
                     MassShape.HandleCollisions(_context);
-                }
+                //}
             }
             foreach (var system in _context.Systems)
             {
                 system.Update();
             }
-            _context.NbodySim.Update();
             // Remove deleted mass shapes if any deleted
             _context.Lock.EnterUpgradeableReadLock();
             if (_context.MassShapes.Where(s => s._toBeDeleted).Any())
@@ -143,7 +134,6 @@ public class Program
         {
             _context.QuadTree.Draw();
         }
-        _context.SelectedTool.Draw();
         Gui.DrawInfo(_context); // GUI
         
         rlImGui.End();
@@ -152,6 +142,8 @@ public class Program
 
     private static void HandleInput()
     {
+        ToolSystem toolSystem = _context.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem);
+        Tool selectedTool = toolSystem.SelectedTool;
         // Keys
         if (IsKeyPressed(KeyboardKey.G))
         {
@@ -173,9 +165,33 @@ public class Program
         {
             _context._simPaused = !_context._simPaused;
         }
-        if (_context._toolEnabled && _context.SelectedTool.GetType() != typeof(NbodySim))
+        // Handle mouse input
+        if (IsMouseButtonPressed(MouseButton.Left))
         {
-            _context.SelectedTool.Update();
+            if (toolSystem.ToolEnabled)
+            {
+                selectedTool.Update();
+            }
+        }
+        if (GetMouseWheelMoveV().Y > 0f)
+        {
+            selectedTool.ChangeRadius(Tool.BaseRadiusChange);
+            selectedTool.ChangeDirection(DEG2RAD * Tool.BaseAngleChange);
+            if (selectedTool.GetType() == typeof(Spawn))
+            {
+                var spawnTool = (Spawn) selectedTool;
+                spawnTool.UpdateSpawnTarget();
+            }
+        } 
+        else if (GetMouseWheelMoveV().Y < 0f)
+        {
+            selectedTool.ChangeRadius(-Tool.BaseRadiusChange);
+            selectedTool.ChangeDirection(DEG2RAD * -Tool.BaseAngleChange);
+            if (selectedTool.GetType() == typeof(Spawn))
+            {
+                var spawnTool = (Spawn) selectedTool;
+                spawnTool.UpdateSpawnTarget();
+            }
         }
         // Temporary demo keys
         if (IsKeyPressed(KeyboardKey.C))
@@ -185,27 +201,6 @@ public class Program
         if (IsKeyPressed(KeyboardKey.B))
         {
             _context.LoadBenchmark(1000, 3f, 20f, new(WinW / 2f - 200f, 200f));
-        }
-        // Mouse
-        if (GetMouseWheelMoveV().Y > 0f)
-        {
-            _context.SelectedTool.ChangeRadius(Tool.BaseRadiusChange);
-            _context.SelectedTool.ChangeDirection(DEG2RAD * Tool.BaseAngleChange);
-            if (_context.SelectedTool.GetType() == typeof(Spawn))
-            {
-                var spawnTool = (Spawn) _context.SelectedTool;
-                spawnTool.UpdateSpawnTarget();
-            }
-        } 
-        else if (GetMouseWheelMoveV().Y < 0f)
-        {
-            _context.SelectedTool.ChangeRadius(-Tool.BaseRadiusChange);
-            _context.SelectedTool.ChangeDirection(DEG2RAD * -Tool.BaseAngleChange);
-            if (_context.SelectedTool.GetType() == typeof(Spawn))
-            {
-                var spawnTool = (Spawn) _context.SelectedTool;
-                spawnTool.UpdateSpawnTarget();
-            }
         }
     }
 }

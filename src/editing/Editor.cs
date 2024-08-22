@@ -4,6 +4,7 @@ using Entities;
 using Physics;
 using Raylib_cs;
 using Sim;
+using Systems;
 using Tools;
 using Utils;
 using static Raylib_cs.Raylib;
@@ -63,7 +64,7 @@ public class Editor : Tool
 
     public override void Update()
     {
-        if (!_ctx._toolEnabled)
+        if (!_toolSystem.ToolEnabled)
         {
             return;
         }

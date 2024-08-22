@@ -3,10 +3,9 @@ using Collision;
 using Entities;
 using Textures;
 using Utils;
-using Tools;
-using Editing;
 using Raylib_cs;
 using SimSystems;
+using Systems;
 
 namespace Sim;
 
@@ -23,15 +22,7 @@ public class Context
     public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; init; }
     public List<ISystem> Systems { get; init; }
-    public Tool SelectedTool { get; set; }
-    public Tool[] Tools { get; init; }
-    public NbodySim NbodySim
-    {
-        get
-        {
-            return Tools[(int) ToolType.NbodySim] as NbodySim;
-        }
-    }
+
     public int MassCount 
     {
         get 
@@ -72,12 +63,16 @@ public class Context
     public bool _drawQuadTree;
     public bool _drawBodyInfo;
     public bool _simPaused;
-    public bool _toolEnabled;
     public float _globalRestitutionCoeff = 0.3f;
     public float _globalKineticFrictionCoeff = 1f;
     public float _globalStaticFrictionCoeff = 1.1f;
     public int _selectedToolIndex;
     public int _selectedSpawnTargetIndex;
+
+    public enum SystemsEnum
+    {
+        ToolSystem
+    }
 
     public Context(float timeStep, int subSteps, Vector2 gravity)
     {
@@ -87,7 +82,6 @@ public class Context
         Gravity = gravity;
         Lock = new ReaderWriterLockSlim();
         TextureManager = new TextureManager();
-        _toolEnabled = true;
         _gravityEnabled = false;
         _drawAABBS = false;
         _drawForces = false;
@@ -95,7 +89,7 @@ public class Context
         MassShapes = new();
         LineColliders = new();
         Systems = new();
-        Tools = CreateTools();
+        LoadSystems();
     }
 
     public void AddMassShape(MassShape shape)
@@ -198,22 +192,6 @@ public class Context
         QuadTree.Lock.ExitReadLock();
         return found;
     }
-
-    private Tool[] CreateTools()
-    {
-        var tools = new Tool[Tool.ToolTypes.Length];
-        tools[(int) ToolType.PullCom]       = new PullCom(this);
-        tools[(int) ToolType.Pull]          = new Pull(this);
-        tools[(int) ToolType.Wind]          = new Wind(this);
-        tools[(int) ToolType.Rotate]        = new Rotate(this);
-        tools[(int) ToolType.Spawn]         = new Spawn(this);
-        tools[(int) ToolType.Ruler]         = new Ruler(this);
-        tools[(int) ToolType.Delete]        = new Delete(this);
-        tools[(int) ToolType.Editor]        = new Editor(this);
-        tools[(int) ToolType.GravityWell]   = new GravityWell(this);
-        tools[(int) ToolType.NbodySim]      = new NbodySim(this);
-        return tools;
-    }
     
     private struct SaveState
     {
@@ -256,5 +234,15 @@ public class Context
             }
         }
         AddMassShapes(particles);
+    }
+
+    public SystemType GetSystem<SystemType>(SystemsEnum systemType)
+    {
+        return (SystemType) Systems[(int) systemType];
+    }
+
+    private void LoadSystems()
+    {
+        Systems.Add(new ToolSystem(this));
     }
 }

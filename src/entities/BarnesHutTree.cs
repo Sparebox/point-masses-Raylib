@@ -2,11 +2,11 @@
 using Raylib_cs;
 using static Raylib_cs.Raylib;
 using Sim;
-using Tools;
 using Utils;
-using Entities;
+using Systems;
+using Tools;
 
-namespace GravitySim;
+namespace Entities;
 
 public class BarnesHutTree
 {   
@@ -42,7 +42,7 @@ public class BarnesHutTree
         {
             Insert(shape);
         }
-        ApplyGravityForces(ctx.NbodySim);
+        ApplyGravityForces(ctx.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem).NbodySim);
         ctx.Lock.ExitReadLock();
     }
 

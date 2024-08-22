@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using Raylib_cs;
 using Sim;
+using Systems;
 using Utils;
 using static Raylib_cs.Raylib;
 
@@ -200,10 +201,11 @@ public class QuadTree
     public static void ThreadUpdate(object _ctx)
     {
         Context ctx = (Context) _ctx;
+        var toolSystem = ctx.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem);
         for (;;)
         {
             Thread.Sleep(Program.QuadTreeUpdateMs);
-            if (ctx.NbodySim._running && !ctx.NbodySim._collisionsEnabled)
+            if (toolSystem.NbodySim._running && !toolSystem.NbodySim._collisionsEnabled)
             {
                 continue;
             }

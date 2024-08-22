@@ -2,6 +2,7 @@
 using Editing;
 using ImGuiNET;
 using Sim;
+using Systems;
 using Tools;
 using static Raylib_cs.Raylib;
 using static Tools.Spawn;
@@ -12,6 +13,7 @@ public class Gui
 {
     public static void DrawInfo(Context ctx)
     {
+        ToolSystem toolSystem = ctx.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem);
         ImGui.Begin("Simulation info", ImGuiWindowFlags.NoMove);
         ImGui.SetWindowPos(Vector2.Zero);
         ImGui.Text(string.Format("FPS: {0}", GetFPS()));
@@ -38,13 +40,13 @@ public class Gui
         ImGui.InputFloat("Global kinetic friction coeff", ref ctx._globalKineticFrictionCoeff);
         ImGui.InputFloat("Global static friction coeff", ref ctx._globalStaticFrictionCoeff);
         ImGui.PushItemWidth(100f);
-        if (ImGui.Combo("Tool", ref ctx._selectedToolIndex, Tool.ToolComboString))
+        if (ImGui.Combo("Tool", ref ctx._selectedToolIndex, ToolSystem.ToolComboString))
         {
-            Tool.ChangeToolType(ctx);
+            toolSystem.ChangeToolType(ctx);
         }
         ImGui.Separator();
         ImGui.Spacing();
-        switch (ctx.SelectedTool)
+        switch (toolSystem.SelectedTool)
         {
             case Spawn :
                 ShowSpawnToolOptions(ctx);
@@ -53,21 +55,21 @@ public class Gui
                 ShowEditorOptions(ctx);
                 break;
             case Pull :
-                ImGui.InputFloat("Force coefficient", ref ((Pull) ctx.SelectedTool)._forceCoeff);
+                ImGui.InputFloat("Force coefficient", ref ((Pull) toolSystem.SelectedTool)._forceCoeff);
                 break;
             case PullCom :
-                ImGui.InputFloat("Force coefficient", ref ((PullCom) ctx.SelectedTool)._forceCoeff);
+                ImGui.InputFloat("Force coefficient", ref ((PullCom) toolSystem.SelectedTool)._forceCoeff);
                 break;
             case GravityWell :
-                ImGui.InputFloat("Gravitational constant", ref ((GravityWell) ctx.SelectedTool)._gravConstant);
-                ImGui.InputFloat("Minimum distance", ref ((GravityWell) ctx.SelectedTool)._minDist);
+                ImGui.InputFloat("Gravitational constant", ref ((GravityWell) toolSystem.SelectedTool)._gravConstant);
+                ImGui.InputFloat("Minimum distance", ref ((GravityWell) toolSystem.SelectedTool)._minDist);
                 break;
             case NbodySim :
-                ImGui.Checkbox("Running", ref ((NbodySim) ctx.SelectedTool)._running);
-                ImGui.Checkbox("Collisions enabled", ref ((NbodySim) ctx.SelectedTool)._collisionsEnabled);
-                ImGui.InputFloat("Gravitational constant", ref ((NbodySim) ctx.SelectedTool)._gravConstant);
-                ImGui.InputFloat("Minimum distance", ref ((NbodySim) ctx.SelectedTool)._minDist);
-                ImGui.InputFloat("Threshold", ref ((NbodySim) ctx.SelectedTool)._threshold);
+                ImGui.Checkbox("Running", ref ((NbodySim) toolSystem.SelectedTool)._running);
+                ImGui.Checkbox("Collisions enabled", ref ((NbodySim) toolSystem.SelectedTool)._collisionsEnabled);
+                ImGui.InputFloat("Gravitational constant", ref ((NbodySim) toolSystem.SelectedTool)._gravConstant);
+                ImGui.InputFloat("Minimum distance", ref ((NbodySim) toolSystem.SelectedTool)._minDist);
+                ImGui.InputFloat("Threshold", ref ((NbodySim) toolSystem.SelectedTool)._threshold);
                 break;
         }
         ImGui.Spacing();
@@ -96,18 +98,19 @@ public class Gui
         Vector2 margin = new(500f, 500f);
         if (ImGui.IsMouseHoveringRect(ImGui.GetWindowContentRegionMin() - margin, ImGui.GetWindowContentRegionMax() + margin))
         {
-            ctx._toolEnabled = false;
+            toolSystem.ToolEnabled = false;
         }
         else
         {
-            ctx._toolEnabled = true;
+            toolSystem.ToolEnabled = true;
         }
         ImGui.End();
     }
 
     private static void ShowSpawnToolOptions(Context ctx)
     {
-        var spawnTool = (Spawn) ctx.SelectedTool;
+        var toolSystem = ctx.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem);
+        var spawnTool = (Spawn) toolSystem.SelectedTool;
         if (ImGui.Combo("Spawn target", ref ctx._selectedSpawnTargetIndex, TargetsToComboString()))
         {
             spawnTool.UpdateSpawnTarget();
@@ -145,9 +148,10 @@ public class Gui
 
     private static void ShowEditorOptions(Context ctx)
     {
+        ToolSystem toolSystem = ctx.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem);
         ImGui.Text("EDITOR OPTIONS");
         ImGui.Spacing();
-        var editor = (Editor) ctx.SelectedTool;
+        var editor = (Editor) toolSystem.SelectedTool;
         if (ImGui.InputInt("Points per meter", ref editor._grid._pointsPerMeter))
         {
             editor._grid._pointsPerMeter = Math.Max(editor._grid._pointsPerMeter, 1);
