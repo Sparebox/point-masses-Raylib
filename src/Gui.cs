@@ -58,6 +58,7 @@ public class Gui
         ImGui.Checkbox("Draw AABBs", ref ctx._drawAABBS);
         ImGui.Checkbox("Draw quadtree", ref ctx._drawQuadTree);
         ImGui.Checkbox("Draw body info", ref ctx._drawBodyInfo);
+        ImGui.Checkbox("Collisions enabled", ref ctx._collisionsEnabled);
         ImGui.PushItemWidth(50f);
         ImGui.InputFloat("Global restitution coeff", ref ctx._globalRestitutionCoeff);
         ImGui.InputFloat("Global kinetic friction coeff", ref ctx._globalKineticFrictionCoeff);
@@ -209,7 +210,6 @@ public class Gui
     {
         var nBodySystem = ctx.GetSystem<NbodySystem>(Context.SystemsEnum.NbodySystem);
         ImGui.Checkbox("Running", ref nBodySystem._running);
-        ImGui.Checkbox("Collisions enabled", ref nBodySystem._collisionsEnabled);
         ImGui.InputFloat("Gravitational constant", ref nBodySystem._gravConstant);
         ImGui.InputFloat("Minimum distance", ref nBodySystem._minDist);
         ImGui.InputFloat("Threshold", ref nBodySystem._threshold);

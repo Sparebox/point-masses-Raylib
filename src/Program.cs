@@ -88,7 +88,10 @@ public class Program
                 {
                     s.Update();
                 }
-                 MassShape.HandleCollisions(_context);
+                if (_context._collisionsEnabled)
+                {
+                    MassShape.HandleCollisions(_context);
+                }
             }
             foreach (var system in _context.Systems)
             {

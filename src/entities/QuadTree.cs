@@ -205,7 +205,7 @@ public class QuadTree
         for (;;)
         {
             Thread.Sleep(Program.QuadTreeUpdateMs);
-            if (nBodySystem._running && !nBodySystem._collisionsEnabled)
+            if (!ctx._collisionsEnabled)
             {
                 continue;
             }

@@ -12,7 +12,6 @@ namespace Systems
         public float _minDist = 0f;
         public float _threshold = 0.01f;
         public bool _running;
-        public bool _collisionsEnabled;
         private const int UpdateIntervalMs = 50;
         private readonly BarnesHutTree _barnesHutTree;
         private readonly Thread _updateThread;

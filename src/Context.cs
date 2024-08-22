@@ -58,6 +58,7 @@ public class Context
     // Fields
     private SaveState _saveState;
     public bool _gravityEnabled;
+    public bool _collisionsEnabled;
     public bool _drawForces;
     public bool _drawAABBS;
     public bool _drawQuadTree;
@@ -87,6 +88,7 @@ public class Context
         _drawAABBS = false;
         _drawForces = false;
         _simPaused = true;
+        _collisionsEnabled = true;
         MassShapes = new();
         LineColliders = new();
         Systems = new();
