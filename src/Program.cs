@@ -88,6 +88,10 @@ public class Program
                 {
                     s.Update();
                 }
+                foreach (var system in _context.SubStepSystems)
+                {
+                    system.Update();
+                }
                 if (_context._collisionsEnabled)
                 {
                     MassShape.HandleCollisions(_context);

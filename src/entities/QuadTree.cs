@@ -12,6 +12,7 @@ public class QuadTree
     public static uint MaxDepth { get; set; }
     public static uint NodeCapacity { get; set; }
 
+    public ManualResetEventSlim PauseEvent { get; init; }
     public ReaderWriterLockSlim Lock { get; init; }
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
@@ -32,6 +33,7 @@ public class QuadTree
         _massShapes = new();
         _subdivided  = false;
         Lock = new ReaderWriterLockSlim();
+        PauseEvent = new ManualResetEventSlim(true);
         NodeCapacity = nodeCapacity;
         _depth = 0;
         MaxDepth = maxDepth;
@@ -142,7 +144,7 @@ public class QuadTree
         return;
     }
 
-     public void QueryPoints(in BoundingBox area, HashSet<PointMass> found)
+    public void QueryPoints(in BoundingBox area, HashSet<PointMass> found)
     {
         found ??= new();
         if (!CheckCollisionBoxes(_boundary, area))
@@ -201,14 +203,14 @@ public class QuadTree
     public static void ThreadUpdate(object _ctx)
     {
         Context ctx = (Context) _ctx;
-        var nBodySystem = ctx.GetSystem<NbodySystem>(Context.SystemsEnum.NbodySystem);
         for (;;)
         {
+            ctx.QuadTree.PauseEvent.Wait();
             Thread.Sleep(Program.QuadTreeUpdateMs);
-            if (!ctx._collisionsEnabled)
-            {
-                continue;
-            }
+            // if (!ctx._collisionsEnabled)
+            // {
+            //     continue;
+            // }
             ctx.QuadTree.Update(ctx);
         }
     }

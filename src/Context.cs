@@ -22,6 +22,7 @@ public class Context
     public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; init; }
     public List<ISystem> Systems { get; init; }
+    public List<ISystem> SubStepSystems { get; init;}
 
     public int MassCount 
     {
@@ -92,6 +93,7 @@ public class Context
         MassShapes = new();
         LineColliders = new();
         Systems = new();
+        SubStepSystems = new();
         LoadSystems();
     }
 
