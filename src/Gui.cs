@@ -41,7 +41,10 @@ public class Gui
     {
         ImGui.Text(string.Format("FPS: {0}", GetFPS()));
         ImGui.PushStyleColor(ImGuiCol.Text, ctx._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
-        ImGui.Checkbox(ctx._simPaused ? "PAUSE" : "RUNNING", ref ctx._simPaused);
+        if (ImGui.Checkbox(ctx._simPaused ? "PAUSE" : "RUNNING", ref ctx._simPaused))
+        {
+            ctx.GetSystem<NbodySystem>(Context.SystemsEnum.NbodySystem).PauseEvent.Reset();
+        }
         ImGui.PopStyleColor();
         ImGui.Text(string.Format("Masses: {0}", ctx.MassCount));
         ImGui.Text(string.Format("Constraints: {0}", ctx.ConstraintCount));

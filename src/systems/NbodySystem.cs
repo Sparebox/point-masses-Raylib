@@ -8,6 +8,7 @@ namespace Systems
 {
     public class NbodySystem : ISystem
     {
+        public ManualResetEventSlim PauseEvent { get; init; }
         public float _gravConstant = 0.01f;
         public float _minDist = 0f;
         public float _threshold = 0.01f;
@@ -24,6 +25,7 @@ namespace Systems
                 UnitConv.PixelsToMeters(new Vector2(Program.WinW / 2f, Program.WinH / 2f)),
                 UnitConv.PixelsToMeters(new Vector2(Program.WinW, Program.WinH))
             );
+            PauseEvent = new ManualResetEventSlim(false);
             _updateThread = new Thread(new ThreadStart(ThreadUpdate), 0)
             {
                 IsBackground = true
@@ -35,16 +37,23 @@ namespace Systems
         {
             for (;;)
             {
+                PauseEvent.Wait(Timeout.Infinite);
                 Thread.Sleep(UpdateIntervalMs);
-                if (!_running || _ctx._simPaused)
-                {
-                    continue;
-                }
                 _barnesHutTree.Update(_ctx);
             }
         }
 
-        public void Update() {}
+        public void Update() 
+        {
+            if (_running)
+            {
+                PauseEvent.Set();
+            }
+            else
+            {
+                PauseEvent.Reset();
+            }
+        }
 
         public void Draw() {}
 
