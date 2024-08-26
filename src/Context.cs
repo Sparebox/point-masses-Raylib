@@ -250,5 +250,6 @@ public class Context
     {
         Systems.Add(new ToolSystem(this));
         Systems.Add(new NbodySystem(this));
+        SubStepSystems.Add(new CollisionSystem(this));
     }
 }

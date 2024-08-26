@@ -10,43 +10,43 @@ namespace Systems
 {
     public class CollisionSystem : ISystem
     {
-        private Context _ctx;
+        private readonly Context _ctx;
 
         public CollisionSystem(Context ctx) => _ctx = ctx;
 
         public void Update()
         {
-            
-        }
-
-        public void Draw()
-        {
-            
-        }
-
-        private void HandleCollisions(Context ctx)
-        {
-            foreach (var shapeA in ctx.MassShapes)
+            if (_ctx._collisionsEnabled)
             {
-                var nearShapes = ctx.GetMassShapes(shapeA.Aabb);
+                HandleCollisions();
+            }
+        }
+
+        public void Draw() {}
+
+        private void HandleCollisions()
+        {
+            foreach (var shapeA in _ctx.MassShapes)
+            {
+                var nearShapes = _ctx.GetMassShapes(shapeA.Aabb);
                 foreach (var shapeB in nearShapes)
                 {
                     if (shapeA.Equals(shapeB) || !CheckCollisionBoxes(shapeA.Aabb, shapeB.Aabb))
                     {
                         continue;
                     }
-                    shapeA.HandlePointOnPointCollisions(shapeB);
-                    shapeA.HandleLineCollisions(shapeB);
+                    HandlePointOnPointCollisions(shapeA, shapeB, _ctx);
+                    HandleLineCollisions(shapeA, shapeB, _ctx);
                 }
             }
         }
 
-        private bool CheckLineCollision(PointMass otherPoint)
+        private static bool CheckLineCollision(MassShape shape, PointMass otherPoint)
         {
-            for (int i = 0; i < _points.Count; i++)
+            for (int i = 0; i < shape._points.Count; i++)
             {
-                Vector2 startPos = _points[i].Pos;
-                Vector2 endPos = _points[(i + 1) % _points.Count].Pos;
+                Vector2 startPos =shape. _points[i].Pos;
+                Vector2 endPos = shape._points[(i + 1) % shape._points.Count].Pos;
                 Vector2 towardsClosestPoint = Geometry.ClosestPointOnLine(startPos, endPos, otherPoint.Pos) - otherPoint.Pos;
                 float distSq = towardsClosestPoint.LengthSquared();
                 if (distSq <= otherPoint.Radius * otherPoint.Radius)
@@ -57,7 +57,7 @@ namespace Systems
             return false;
         }
 
-        private static void HandleLineCollisions(MassShape shapeA, MassShape shapeB)
+        private static void HandleLineCollisions(MassShape shapeA, MassShape shapeB, Context ctx)
         {
             if (shapeA._points.Count == 1 && shapeB._points.Count == 1)
             {
@@ -70,31 +70,31 @@ namespace Systems
                 {
                     continue;
                 }
-                if (CheckLineCollision(point))
+                if (CheckLineCollision(shapeA, point))
                 {
-                    HandleLineCollision(point);
+                    HandleLineCollision(shapeA, point, ctx);
                 }
             }
         }
 
-        private void HandlePointOnPointCollisions(MassShape otherShape)
+        private static void HandlePointOnPointCollisions(MassShape shapeA, MassShape shapeB, Context ctx)
         {
-            foreach (var pointA in _points)
+            foreach (var pointA in shapeA._points)
             {
-                foreach (var pointB in otherShape._points)
+                foreach (var pointB in shapeB._points)
                 {
                     var collisionResult = pointA.CheckPointToPointCollision(pointB);
                     if (collisionResult.HasValue)
                     {
-                        PointMass.HandlePointToPointCollision(collisionResult.Value, Ctx);
+                        PointMass.HandlePointToPointCollision(collisionResult.Value, ctx);
                     }
                 }
             }
         }
 
-        private void HandleLineCollision(PointMass pointMass)
+        private static void HandleLineCollision(MassShape shape, PointMass pointMass, Context ctx)
         {
-            (PointMass closestA, PointMass closestB, Vector2 closestPointOnLine) = FindClosestPoints(pointMass.Pos);
+            (PointMass closestA, PointMass closestB, Vector2 closestPointOnLine) = FindClosestPoints(shape, pointMass.Pos);
             Vector2 pointToClosest = closestPointOnLine - pointMass.Pos;
             float totalOffset = pointMass.Radius - pointToClosest.Length();
             if (totalOffset == 0f)
@@ -121,7 +121,7 @@ namespace Systems
 
             // Apply impulse
             float combinedMass = closestA.Mass + closestB.Mass;
-            float impulseMag = -(1f + Ctx._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / combinedMass + pointMass.InvMass);
+            float impulseMag = -(1f + ctx._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / combinedMass + pointMass.InvMass);
             Vector2 impulse = impulseMag * normal;
             pointMass.Vel = preVel + impulse * pointMass.InvMass;
             closestA.Vel = closestApreVel - impulse * 0.5f / (combinedMass - closestB.Mass);
@@ -132,16 +132,16 @@ namespace Systems
             closestB.ApplyFriction(normal);
         }
 
-        private (PointMass closestA, PointMass closestB, Vector2 closestPoint) FindClosestPoints(Vector2 pos)
+        private static (PointMass closestA, PointMass closestB, Vector2 closestPoint) FindClosestPoints(MassShape shape, Vector2 pos)
         {
             float closestDistSq = float.MaxValue;
             PointMass closestA = null;
             PointMass closestB = null;
             Vector2 closestPoint = new();
-            for (int i = 0; i < _points.Count; i++)
+            for (int i = 0; i < shape._points.Count; i++)
             {
-                PointMass lineStart = _points[i];
-                PointMass lineEnd = _points[(i + 1) % _points.Count];
+                PointMass lineStart = shape._points[i];
+                PointMass lineEnd = shape._points[(i + 1) % shape._points.Count];
                 Vector2 pointOnLine = Geometry.ClosestPointOnLine(lineStart.Pos, lineEnd.Pos, pos);
                 float distSq = Vector2.DistanceSquared(pointOnLine, pos);
                 if (distSq < closestDistSq)
