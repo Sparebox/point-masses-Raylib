@@ -223,6 +223,7 @@ public class Gui
     {
         var nBodySystem = ctx.GetSystem<NbodySystem>(Context.SystemsEnum.NbodySystem);
         ImGui.Checkbox("Running", ref nBodySystem._running);
+        ImGui.Checkbox("Post-Newtonian relativistic corrections", ref nBodySystem._postNewtonianEnabled);
         ImGui.InputFloat("Gravitational constant", ref nBodySystem._gravConstant);
         ImGui.InputFloat("Minimum distance", ref nBodySystem._minDist);
         ImGui.InputFloat("Threshold", ref nBodySystem._threshold);

@@ -49,6 +49,12 @@ namespace Utils
         }
     }
 
+    public static class Constants
+    {
+        public const float SpeedOfLight = 299_792_458f;
+        public const float GravConstant = 6.67430e-11f;
+    }
+
     public static class Graphics
     {
         public const float ArrowBranchLength = 10f;

@@ -42,15 +42,15 @@ public class BarnesHutTree
         {
             Insert(shape);
         }
-        ApplyGravityForces(ctx.GetSystem<NbodySystem>(Context.SystemsEnum.NbodySystem));
+        ApplyGravityForces(ctx.GetSystem<NbodySystem>(Context.SystemsEnum.NbodySystem), ctx.TimeStep);
         ctx.Lock.ExitReadLock();
     }
 
-    private void ApplyGravityForces(NbodySystem nBodySystem)
+    private void ApplyGravityForces(NbodySystem nBodySystem, float stepSize)
     {
         foreach (var shape in _massShapes)
         {
-            ApplyGravityForce(shape, nBodySystem);
+            ApplyGravityForce(shape, nBodySystem, stepSize);
         }
     }
 
@@ -154,7 +154,7 @@ public class BarnesHutTree
         _centerOfMass /= _totalMass;
     }
 
-    private void ApplyGravityForce(MassShape shapeA, NbodySystem nBodySystem)
+    private void ApplyGravityForce(MassShape shapeA, NbodySystem nBodySystem, float stepSize)
     {   
         Vector2 dir;
         float dist;
@@ -175,7 +175,15 @@ public class BarnesHutTree
             {
                 return;
             }
-            Vector2 gravForce = GetGravForce(dir, nBodySystem._gravConstant, dist, shapeA.Mass, shapeB.Mass);
+            Vector2 gravForce;
+            if (nBodySystem._postNewtonianEnabled)
+            {
+                gravForce = GetPostNewtonianGravForce(dir, nBodySystem._gravConstant, dist, shapeA, shapeB.Mass, stepSize);
+            }
+            else
+            {
+                gravForce = GetNewtonianGravForce(dir, nBodySystem._gravConstant, dist, shapeA.Mass, shapeB.Mass);
+            }
             shapeA.ApplyForce(gravForce);
             return;
         }
@@ -193,21 +201,37 @@ public class BarnesHutTree
                 return;
             }
             dir /= dist;
-            Vector2 gravForce = GetGravForce(dir, nBodySystem._gravConstant, dist, shapeA.Mass, _totalMass);
+            Vector2 gravForce;
+            if (nBodySystem._postNewtonianEnabled)
+            {
+                gravForce = GetPostNewtonianGravForce(dir, nBodySystem._gravConstant, dist, shapeA, _totalMass, stepSize);
+            }
+            else
+            {
+                gravForce = GetNewtonianGravForce(dir, nBodySystem._gravConstant, dist, shapeA.Mass, _totalMass);
+            }
             shapeA.ApplyForce(gravForce);
         }
         else // Close to a center of mass
         {
-            _northEast.ApplyGravityForce(shapeA, nBodySystem);
-            _southEast.ApplyGravityForce(shapeA, nBodySystem);
-            _southWest.ApplyGravityForce(shapeA, nBodySystem);
-            _northWest.ApplyGravityForce(shapeA, nBodySystem);
+            _northEast.ApplyGravityForce(shapeA, nBodySystem, stepSize);
+            _southEast.ApplyGravityForce(shapeA, nBodySystem, stepSize);
+            _southWest.ApplyGravityForce(shapeA, nBodySystem, stepSize);
+            _northWest.ApplyGravityForce(shapeA, nBodySystem, stepSize);
         }
     }
 
-    private static Vector2 GetGravForce(Vector2 dir, float gravConst, float dist, float massA, float massb)
+    private static Vector2 GetNewtonianGravForce(Vector2 dir, float gravConst, float dist, float massA, float massB)
     {
-        return dir * gravConst * massA * massb / (dist * dist);
+        return dir * gravConst * massA * massB / (dist * dist);
+    }
+
+    private static Vector2 GetPostNewtonianGravForce(Vector2 dir, float gravConst, float dist, MassShape shapeA, float massB, float stepSize)
+    {
+        Vector2 newtonianForce = GetNewtonianGravForce(dir, gravConst, dist, shapeA.Mass, massB);
+        const float speedOfLightSq = Constants.SpeedOfLight * Constants.SpeedOfLight;
+        float relativisticCorrection = 1f + 3f * shapeA.Vel.LengthSquared() / stepSize / speedOfLightSq - 4f * gravConst * massB / (speedOfLightSq * dist);
+        return relativisticCorrection * newtonianForce;
     }
 
     public void Draw()

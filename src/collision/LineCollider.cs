@@ -82,10 +82,7 @@ public class LineCollider : Entity
         EndPos = c.EndPos;
     }
 
-    public override void Update()
-    {
-
-    }
+    public override void Update() {}
 
     public override void Draw()
     {
