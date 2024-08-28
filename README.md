@@ -8,6 +8,7 @@ Current features:
 - Interactive simulation tools
 - Basic shape editor
 - Gas inflated shapes
+- N-body simulation with relativistic gravity correction option
 
 Libraries:
 - raylib C# binding
