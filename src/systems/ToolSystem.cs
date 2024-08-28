@@ -24,7 +24,8 @@ namespace Systems
             Ruler,
             Delete,
             Editor,
-            GravityWell
+            GravityWell,
+            Stop
         }
 
         public static ToolType[] ToolTypes => (ToolType[]) Enum.GetValues(typeof(ToolType));
@@ -42,10 +43,7 @@ namespace Systems
             ToolEnabled = true;
         }
 
-        public void Update()
-        {
-        
-        }
+        public void Update() {}
 
         public void Draw()
         {
@@ -82,6 +80,9 @@ namespace Systems
                     break;
                 case ToolType.GravityWell :
                     SelectedTool = Tools[(int) ToolType.GravityWell];
+                    break;
+                case ToolType.Stop :
+                    SelectedTool = Tools[(int) ToolType.Stop];
                     break;
             }
         }
@@ -125,6 +126,7 @@ namespace Systems
             tools[(int) ToolType.Delete]        = new Delete(_ctx);
             tools[(int) ToolType.Editor]        = new Editor(_ctx);
             tools[(int) ToolType.GravityWell]   = new GravityWell(_ctx);
+            tools[(int) ToolType.Stop]          = new Stop(_ctx);
             return tools;
         }
     }
@@ -587,5 +589,41 @@ namespace Tools
                 }
             }
         }
+    }
+
+    public class Stop : Tool
+    {
+
+        public Stop(Context ctx) => _ctx = ctx;
+
+        public override void Update()
+        {
+            if (!IsMouseButtonDown(MouseButton.Left))
+            {
+                return;
+            }
+            Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
+            BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
+            var points = _ctx.GetPointMasses(area);
+            if (!points.Any())
+            {
+                return;
+            }
+            foreach (var p in points)
+            {
+                if (!CheckCollisionPointCircle(p.Pos, mousePos, Radius))
+                {
+                    continue;
+                }
+                p.Vel = Vector2.Zero;
+            }
+        }
+
+        public override void Draw() 
+        {
+            Vector2 mousePos = GetMousePosition();
+            DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
+        }
+
     }
 }
