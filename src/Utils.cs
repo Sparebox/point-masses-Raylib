@@ -67,6 +67,16 @@ namespace Utils
         public const float GlobalStaticFrictionCoeffDefault = .0f;
         public const int BarnesHutMaxDepth = 10;
         public const float DefaultSpringDamping = 5e4f;
+        // Pull tool
+        public const float DefaultPullForceCoeff = 1e2f;
+        // Wind tool
+        public const int MaxWindForce = 100;
+        public const int MinWindForce = 10;
+        // Rotate tool
+        public const float RotationForce = 1e2f;
+        // Gravitywell tool
+        public const float DefaultGravityWellConstant = 0.1f;
+        public const float DefaultGravityWellMinDist = 0.01f;
     }
 
     public static class Graphics

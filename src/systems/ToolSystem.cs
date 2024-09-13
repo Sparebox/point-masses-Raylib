@@ -293,7 +293,6 @@ namespace Tools
     {   
         public Delete(Context ctx) => _ctx = ctx;
         
-
         public override void Update()
         {
             if (!IsMouseButtonDown(MouseButton.Left))
@@ -333,8 +332,7 @@ namespace Tools
 
     public class PullCom : Tool
     {
-        public float _forceCoeff = DefaultForceCoeff;
-        private const float DefaultForceCoeff = 1e2f;
+        public float _forceCoeff = Constants.DefaultPullForceCoeff;
         private bool _shouldVisualize = false;
         private Vector2 _centerOfMass;
 
@@ -378,8 +376,7 @@ namespace Tools
 
     public class Pull : Tool
     {
-        public float _forceCoeff = DefaultForceCoeff;
-        private const float DefaultForceCoeff = 1e3f;
+        public float _forceCoeff = Constants.DefaultPullForceCoeff;
         private readonly List<Vector2> _positions;
         private bool _shouldVisualize;
 
@@ -433,9 +430,6 @@ namespace Tools
 
     public class Wind : Tool
     {
-        private const int MinForce = (int) 1e1;
-        private const int MaxForce = (int) 1e2; 
-
         public Wind(Context ctx)
         {
             _ctx = ctx;
@@ -452,7 +446,7 @@ namespace Tools
             {
                 foreach (var p in s._points)
                 {
-                    float force = GetRandomValue(MinForce, MaxForce);
+                    float force = GetRandomValue(Constants.MinWindForce, Constants.MaxWindForce);
                     p.ApplyForce(force * Direction);
                 }
             }
@@ -467,14 +461,11 @@ namespace Tools
 
     public class Rotate : Tool
     {
-        private const float ForceAmount = 1e2f;
-
-        public Rotate(Context ctx) => _ctx = ctx;
-        
+        public Rotate(Context ctx) => _ctx = ctx;   
 
         public override void Update()
         {
-            if (!IsMouseButtonDown(MouseButton.Left))
+            if (!IsMouseButtonDown(MouseButton.Left) && !IsMouseButtonDown(MouseButton.Right))
             {
                 return;
             }
@@ -495,16 +486,11 @@ namespace Tools
                     continue;
                 }
                 Vector2 normal = new(comToPoint.Y / radius, -comToPoint.X / radius);
-                float sign = IsMouseButtonDown(MouseButton.Right) ? -1f : 1f;
-                p.ApplyForce(sign * ForceAmount * normal);
+                p.ApplyForce((IsMouseButtonDown(MouseButton.Right) ? -1f : 1f) * Constants.RotationForce * normal);
             }
         }
 
-        public override void Draw()
-        {
-            Vector2 mousePos = GetMousePosition();
-            DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
-        }
+        public override void Draw() {}
     }
 
     public class Ruler : Tool
@@ -539,8 +525,8 @@ namespace Tools
 
     public class GravityWell : Tool
     {
-        public float _gravConstant = 0.1f;
-        public float _minDist = 0.01f;
+        public float _gravConstant = Constants.DefaultGravityWellConstant;
+        public float _minDist = Constants.DefaultGravityWellMinDist;
         private readonly List<Vector2> _positions;
 
         public GravityWell(Context ctx)
