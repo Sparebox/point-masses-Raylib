@@ -53,6 +53,20 @@ namespace Utils
     {
         public const float SpeedOfLight = 299_792_458f;
         public const float GravConstant = 6.67430e-11f;
+        public const int WinW = 1600;
+        public const int WinH = 900;
+        public const int PauseThresholdFPS = 15;
+        public const int QuadTreeUpdateMs = 50;
+        // Point mass
+        public const float RadiusPerMassRatio = 0.01f; // aka inverse density
+        // Mass shape
+        public const int ConstraintIterations = 3;
+        public const float GasAmountMult = 1f;
+        public const float GlobalRestitutionCoeffDefault = .3f;
+        public const float GlobalKineticFrictionCoeffDefault = .1f;
+        public const float GlobalStaticFrictionCoeffDefault = .0f;
+        public const int BarnesHutMaxDepth = 10;
+        public const float DefaultSpringDamping = 5e4f;
     }
 
     public static class Graphics

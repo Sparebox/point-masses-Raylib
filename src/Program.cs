@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using Entities;
-using Particles;
 using Raylib_cs;
 using rlImGui_cs;
 using Systems;
@@ -13,10 +12,6 @@ namespace Sim;
 
 public class Program 
 {   
-    public const int WinW = 1600;
-    public const int WinH = 900;
-    public const int PauseThresholdFPS = 15;
-    public const int QuadTreeUpdateMs = 50;
     public static readonly int TargetFPS = GetMonitorRefreshRate(GetCurrentMonitor());
 
     private static float _accumulator;
@@ -46,16 +41,16 @@ public class Program
 
     private static Context Init()
     {
-        InitWindow(WinW, WinH, "Point-masses");
+        InitWindow(Constants.WinW, Constants.WinH, "Point-masses");
         SetTargetFPS(TargetFPS);
         
-        float winWidthMeters = UnitConv.PixelsToMeters(WinW);
-        float winHeightMeters = UnitConv.PixelsToMeters(WinH);
+        float winWidthMeters = UnitConv.PixelsToMeters(Constants.WinW);
+        float winHeightMeters = UnitConv.PixelsToMeters(Constants.WinH);
         Context ctx = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f))
         {
             QuadTree = new(
-                UnitConv.PixelsToMeters(new Vector2(WinW / 2f, WinH / 2f)),
-                UnitConv.PixelsToMeters(new Vector2(WinW, WinH)),
+                UnitConv.PixelsToMeters(new Vector2(Constants.WinW / 2f, Constants.WinH / 2f)),
+                UnitConv.PixelsToMeters(new Vector2(Constants.WinW, Constants.WinH)),
                 1,
                 6
             )
@@ -74,7 +69,7 @@ public class Program
 
     private static void Update()
     {
-        if (GetFPS() < PauseThresholdFPS) // Pause if running too slow
+        if (GetFPS() < Constants.PauseThresholdFPS) // Pause if running too slow
         {
             Console.WriteLine("Running too slow. Pausing sim");
             _context._simPaused = true;
@@ -200,7 +195,7 @@ public class Program
         }
         if (IsKeyPressed(KeyboardKey.B))
         {
-            _context.LoadBenchmark(1000, 3f, 20f, new(WinW / 2f - 200f, 200f));
+            _context.LoadBenchmark(1000, 3f, 20f, new(Constants.WinW / 2f - 200f, 200f));
         }
     }
 }

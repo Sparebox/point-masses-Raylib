@@ -65,9 +65,9 @@ public class Context
     public bool _drawQuadTree;
     public bool _drawBodyInfo;
     public bool _simPaused;
-    public float _globalRestitutionCoeff = 0.3f;
-    public float _globalKineticFrictionCoeff = 1f;
-    public float _globalStaticFrictionCoeff = 1.1f;
+    public float _globalRestitutionCoeff = Constants.GlobalRestitutionCoeffDefault;
+    public float _globalKineticFrictionCoeff = Constants.GlobalKineticFrictionCoeffDefault;
+    public float _globalStaticFrictionCoeff = Constants.GlobalStaticFrictionCoeffDefault;
     public int _selectedToolIndex;
     public int _selectedSpawnTargetIndex;
 
@@ -244,6 +244,11 @@ public class Context
     public SystemType GetSystem<SystemType>(SystemsEnum systemType)
     {
         return (SystemType) Systems[(int) systemType];
+    }
+
+    public SystemType GetSubSystem<SystemType>(SystemsEnum systemType)
+    {
+        return (SystemType) SubStepSystems[(int) systemType];
     }
 
     private void LoadSystems()

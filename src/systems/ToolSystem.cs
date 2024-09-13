@@ -43,7 +43,10 @@ namespace Systems
             ToolEnabled = true;
         }
 
-        public void Update() {}
+        public void Update() 
+        {
+            SelectedTool.Update();
+        }
 
         public void Draw()
         {
@@ -621,8 +624,7 @@ namespace Tools
 
         public override void Draw() 
         {
-            Vector2 mousePos = GetMousePosition();
-            DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
+            DrawCircleLinesV(GetMousePosition(), UnitConv.MetersToPixels(Radius), Color.Yellow);
         }
 
     }

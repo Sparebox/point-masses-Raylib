@@ -8,7 +8,6 @@ namespace Physics;
 
 public class SpringConstraint : Constraint
 {
-    public const float DefaultDamping = 5e4f;
     public readonly float SpringConstant;
     public readonly float RestLength;
     public readonly float DampingCoeff;

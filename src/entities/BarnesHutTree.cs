@@ -10,7 +10,6 @@ namespace Entities;
 
 public class BarnesHutTree
 {   
-    public const int MaxDepth = 10;
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
     private readonly Vector2 _size;
@@ -60,7 +59,7 @@ public class BarnesHutTree
         {
             return false;
         }
-        if (_massShapes.Count == 0 || _depth == MaxDepth) // External node or maximum depth reached
+        if (_massShapes.Count == 0 || _depth == Constants.BarnesHutMaxDepth) // External node or maximum depth reached
         {
             // Insert into this quad
             _massShapes.Add(shape);

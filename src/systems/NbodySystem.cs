@@ -23,8 +23,8 @@ namespace Systems
         {
             _ctx = ctx;
             _barnesHutTree = new(
-                UnitConv.PixelsToMeters(new Vector2(Program.WinW / 2f, Program.WinH / 2f)),
-                UnitConv.PixelsToMeters(new Vector2(Program.WinW, Program.WinH))
+                UnitConv.PixelsToMeters(new Vector2(Constants.WinW / 2f, Constants.WinH / 2f)),
+                UnitConv.PixelsToMeters(new Vector2(Constants.WinW, Constants.WinH))
             );
             PauseEvent = new ManualResetEventSlim(false);
             _updateThread = new Thread(new ThreadStart(ThreadUpdate), 0)

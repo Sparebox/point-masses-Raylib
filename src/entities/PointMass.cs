@@ -9,8 +9,6 @@ namespace Entities;
 
 public class PointMass : Entity
 {
-    public const float RadiusPerMassRatio = 0.01f; // aka inverse density
-
     public bool Pinned { get; init; }
     public Vector2 VisForce { get; set; } // For force visualization
     public Vector2 Pos { get; set; }
@@ -65,7 +63,7 @@ public class PointMass : Entity
         {
             ApplyForce(Mass * Ctx.Gravity);
         }
-        SolveLineCollisions();
+        //SolveLineCollisions();
         Vector2 acc = Force * _invMass;
         Vector2 vel = Vel; // Save the velocity before previous position is reset
         PrevPos = Pos;
@@ -86,66 +84,14 @@ public class PointMass : Entity
         VisForce += force;
     }
 
-    public void SolveLineCollisions()
-    {
-        foreach (LineCollider c in Ctx.LineColliders)
-        {
-            CollisionData? collisionResult = c.CheckCollision(this);
-            if (collisionResult.HasValue)
-            {
-                LineCollider.SolvePointCollision(collisionResult.Value, Ctx);
-            }
-        }
-    }
-
-    public CollisionData? CheckPointToPointCollision(PointMass otherPoint)
-    {
-        Vector2 normal = otherPoint.Pos - Pos;
-        float dist = normal.LengthSquared();
-        if (dist <= MathF.Pow(Radius + otherPoint.Radius, 2f))
-        {
-            dist = MathF.Sqrt(dist);
-            if (dist == 0f)
-            {
-                return null;
-            }
-            var result = new CollisionData()
-            {
-                PointMassA = this,
-                PointMassB = otherPoint,
-                Normal = normal / dist,
-                Separation = Radius + otherPoint.Radius - dist,
-            };
-            return result;
-        }
-        return null;
-    }
-
-    public static void HandlePointToPointCollision(in CollisionData colData, Context ctx)
-    {   
-        // Save pre-collision velocities
-        Vector2 thisPreVel = colData.PointMassA.Vel;
-        Vector2 otherPreVel = colData.PointMassB.Vel;
-        Vector2 relVel = otherPreVel - thisPreVel;
-        // Correct penetration
-        Vector2 offsetVector = 0.5f * colData.Separation * colData.Normal;
-        colData.PointMassA.Pos += -offsetVector;
-        colData.PointMassB.Pos += offsetVector;
-        // Apply impulse
-        float impulseMag = -(1f + ctx._globalRestitutionCoeff) * Vector2.Dot(relVel, colData.Normal) / (colData.PointMassA.InvMass + colData.PointMassB.InvMass);
-        Vector2 impulse = impulseMag * colData.Normal;
-        colData.PointMassA.Vel = thisPreVel -impulse * colData.PointMassA.InvMass;
-        colData.PointMassB.Vel = otherPreVel + impulse * colData.PointMassB.InvMass;
-    }
-
     public static float RadiusToMass(float radius)
     {
-        return radius / RadiusPerMassRatio;
+        return radius / Constants.RadiusPerMassRatio;
     }
 
     public static float MassToRadius(float mass)
     {
-        return mass * RadiusPerMassRatio;
+        return mass * Constants.RadiusPerMassRatio;
     }
 
     public void ApplyFriction(in Vector2 normal)

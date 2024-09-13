@@ -68,52 +68,8 @@ public class Editor : Tool
         {
             return;
         }
-        if (IsMouseButtonDown(MouseButton.Left) && !IsKeyDown(KeyboardKey.LeftAlt))
-        {
-            try {
-                var mousePos = GetMousePosition();
-                if (IsKeyDown(KeyboardKey.LeftShift))
-                {
-                    _grid.ToggleGridPoint((int) mousePos.X, (int) mousePos.Y, false, _pinPoint);
-                }
-                else
-                {
-                    _grid.ToggleGridPoint((int) mousePos.X, (int) mousePos.Y, true, _pinPoint);
-                }
-            }
-            catch (IndexOutOfRangeException e)
-            {
-                Console.Error.WriteLine(e);
-            }
-        }
-        if (IsMouseButtonPressed(MouseButton.Left))
-        {
-            var mousePos = GetMousePosition();
-            try {
-                if (SelectedAction == EditorAction.Freeform && IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint start point
-                {
-                    SetClickedPoint(mousePos, true);
-                }
-            }
-            catch (IndexOutOfRangeException e)
-            {
-                Console.Error.WriteLine(e);
-            }
-        }
-        if (IsMouseButtonReleased(MouseButton.Left))
-        {
-            try {
-                var mousePos = GetMousePosition();
-                if (SelectedAction == EditorAction.Freeform && IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint end point
-                {
-                    SetClickedPoint(mousePos, false);
-                }
-            }
-            catch (IndexOutOfRangeException e)
-            {
-                Console.Error.WriteLine(e);
-            }
-        }
+        HandleSelect();
+        HandleConstraint();
     }
 
     public void BuildShape()
@@ -222,6 +178,59 @@ public class Editor : Tool
                 _grid.GridPoints[_clickedPointIndices.Item2].IsConstrained = true;
                 _grid.ConstrainedPointIndexPairs.Add(_clickedPointIndices);
             }   
+        }
+    }
+
+    private void HandleConstraint()
+    {
+        if (IsMouseButtonPressed(MouseButton.Left))
+        {
+            try {
+                if (SelectedAction == EditorAction.Freeform && IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint start point
+                {
+                    SetClickedPoint(GetMousePosition(), true);
+                }
+            }
+            catch (IndexOutOfRangeException e)
+            {
+                Console.Error.WriteLine(e);
+            }
+        }
+        
+        if (IsMouseButtonReleased(MouseButton.Left))
+        {
+            try {
+                if (SelectedAction == EditorAction.Freeform && IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint end point
+                {
+                    SetClickedPoint(GetMousePosition(), false);
+                }
+            }
+            catch (IndexOutOfRangeException e)
+            {
+                Console.Error.WriteLine(e);
+            }
+        }
+    }
+
+    private void HandleSelect()
+    {
+        if (IsMouseButtonDown(MouseButton.Left) && !IsKeyDown(KeyboardKey.LeftAlt))
+        {
+            try {
+                var mousePos = GetMousePosition();
+                if (IsKeyDown(KeyboardKey.LeftShift))
+                {
+                    _grid.SetGridPoint((int) mousePos.X, (int) mousePos.Y, false, _pinPoint);
+                }
+                else
+                {
+                    _grid.SetGridPoint((int) mousePos.X, (int) mousePos.Y, true, _pinPoint);
+                }
+            }
+            catch (IndexOutOfRangeException e)
+            {
+                Console.Error.WriteLine(e);
+            }
         }
     }
 }

@@ -1,5 +1,5 @@
-using System;
 using System.Numerics;
+using Collision;
 using Entities;
 using Sim;
 using SimSystems;
@@ -18,6 +18,7 @@ namespace Systems
         {
             if (_ctx._collisionsEnabled)
             {
+                HandleLineColliders();
                 HandleCollisions();
             }
         }
@@ -57,6 +58,25 @@ namespace Systems
             return false;
         }
 
+        public void HandleLineColliders()
+        {
+            // TODO: Optimize with quad tree
+            foreach (LineCollider c in _ctx.LineColliders)
+            {
+                foreach (MassShape shape in _ctx.MassShapes)
+                {
+                    foreach (PointMass point in shape._points)
+                    {
+                        CollisionData? collisionResult = c.CheckCollision(point);
+                        if (collisionResult.HasValue)
+                        {
+                            LineCollider.SolvePointCollision(collisionResult.Value, _ctx);
+                        }
+                    }
+                }
+            }
+        }
+
         private static void HandleLineCollisions(MassShape shapeA, MassShape shapeB, Context ctx)
         {
             if (shapeA._points.Count == 1 && shapeB._points.Count == 1)
@@ -83,13 +103,55 @@ namespace Systems
             {
                 foreach (var pointB in shapeB._points)
                 {
-                    var collisionResult = pointA.CheckPointToPointCollision(pointB);
+                    var collisionResult = CheckPointToPointCollision(pointA, pointB);
                     if (collisionResult.HasValue)
                     {
-                        PointMass.HandlePointToPointCollision(collisionResult.Value, ctx);
+                        HandlePointToPointCollision(collisionResult.Value, ctx);
                     }
                 }
             }
+        }
+
+        private static CollisionData? CheckPointToPointCollision(PointMass pointA, PointMass pointB)
+        {
+            Vector2 normal = pointB.Pos - pointA.Pos;
+            float dist = normal.LengthSquared();
+            if (dist <= MathF.Pow(pointA.Radius + pointB.Radius, 2f))
+            {
+                dist = MathF.Sqrt(dist);
+                if (dist == 0f)
+                {
+                    return null;
+                }
+                return new CollisionData()
+                {
+                    PointMassA = pointA,
+                    PointMassB = pointB,
+                    Normal = normal / dist,
+                    Separation = pointA.Radius + pointB.Radius - dist,
+                };
+            }
+            return null;
+        }
+
+        private static void HandlePointToPointCollision(in CollisionData colData, Context ctx)
+        {   
+            // Save pre-collision velocities
+            Vector2 preVelA = colData.PointMassA.Vel;
+            Vector2 preVelB = colData.PointMassB.Vel;
+            Vector2 relVel = preVelB - preVelA;
+            // Correct penetration
+            Vector2 offsetVector = 0.5f * colData.Separation * colData.Normal;
+            colData.PointMassA.Pos += -offsetVector;
+            colData.PointMassB.Pos += offsetVector;
+            // Apply impulse
+            float impulseMag = -(1f + ctx._globalRestitutionCoeff) * Vector2.Dot(relVel, colData.Normal) / (colData.PointMassA.InvMass + colData.PointMassB.InvMass);
+            Vector2 impulse = impulseMag * colData.Normal;
+            colData.PointMassA.Vel = preVelA - impulse * colData.PointMassA.InvMass;
+            colData.PointMassB.Vel = preVelB + impulse * colData.PointMassB.InvMass;
+            // Apply friction
+            colData.PointMassA.ApplyFriction(-colData.Normal);
+            colData.PointMassB.ApplyFriction(colData.Normal);
         }
 
         private static void HandleLineCollision(MassShape shape, PointMass pointMass, Context ctx)
@@ -115,10 +177,10 @@ namespace Systems
             Vector2 closestApreVel = closestA.Vel;
             Vector2 closestBpreVel = closestB.Vel;
             Vector2 relVel = preVel - avgVel;
+            // Penetration correction
             pointMass.Pos += totalOffset * -normal;
             closestA.Pos += aOffset * normal;
             closestB.Pos += bOffset * normal;
-
             // Apply impulse
             float combinedMass = closestA.Mass + closestB.Mass;
             float impulseMag = -(1f + ctx._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / combinedMass + pointMass.InvMass);
@@ -132,7 +194,8 @@ namespace Systems
             closestB.ApplyFriction(normal);
         }
 
-        private static (PointMass closestA, PointMass closestB, Vector2 closestPoint) FindClosestPoints(MassShape shape, Vector2 pos)
+        private static (PointMass closestA, PointMass closestB, Vector2 closestPoint) 
+        FindClosestPoints(MassShape shape, Vector2 pos)
         {
             float closestDistSq = float.MaxValue;
             PointMass closestA = null;

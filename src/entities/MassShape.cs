@@ -203,8 +203,6 @@ public partial class MassShape : Entity
         }
     }
     
-    public const int ConstraintIterations = 3;
-    public const float GasAmountMult = 1f;
     public List<Constraint> _constraints;
     public List<PointMass> _points;
     public bool _toBeDeleted;
@@ -255,7 +253,7 @@ public partial class MassShape : Entity
             _lastCenterOfMass = CenterOfMass;
             _lastAngle = Angle;
         }
-        for (int i = 0; i < ConstraintIterations; i++)
+        for (int i = 0; i < Constants.ConstraintIterations; i++)
         {
             foreach (Constraint c in _constraints.OrderBy(_ => Rng.Gen.Next(_constraints.Count))) // Iterate in random order to prevent ghost torque
             {
@@ -348,7 +346,7 @@ public partial class MassShape : Entity
             float faceLength = P1ToP2.Length();
             Vector2 normal = new(P1ToP2.Y, -P1ToP2.X);
             normal /= faceLength;
-            Vector2 force = faceLength * GasAmountMult * _gasAmount / Volume / 2f * normal;
+            Vector2 force = faceLength * Constants.GasAmountMult * _gasAmount / Volume / 2f * normal;
             p1.ApplyForce(force);
             p2.ApplyForce(force);
             if (Ctx._drawForces)

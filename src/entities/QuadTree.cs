@@ -206,11 +206,7 @@ public class QuadTree
         for (;;)
         {
             ctx.QuadTree.PauseEvent.Wait();
-            Thread.Sleep(Program.QuadTreeUpdateMs);
-            // if (!ctx._collisionsEnabled)
-            // {
-            //     continue;
-            // }
+            Thread.Sleep(Constants.QuadTreeUpdateMs);
             ctx.QuadTree.Update(ctx);
         }
     }

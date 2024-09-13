@@ -114,7 +114,9 @@ public class LineCollider : Entity
         reflectedNormalVel *= ctx._globalRestitutionCoeff;
         // Correct penetration
         p.Pos += colData.Separation * colData.Normal;
+        // Impulse
         p.Vel = parallelVel + reflectedNormalVel; 
+        // Friction
         p.ApplyFriction(colData.Normal);
     }
 

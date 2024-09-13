@@ -1,6 +1,5 @@
 using System.Numerics;
 using Raylib_cs;
-using Sim;
 using Tools;
 using Utils;
 using static Raylib_cs.Raylib;
@@ -87,8 +86,8 @@ public class Grid
     public void SetGridScale(int pointsPerMeter)
     {
         _pointsPerMeter = pointsPerMeter;
-        _pointsX = (uint) float.Ceiling(UnitConv.PixelsToMeters(Program.WinW) * _pointsPerMeter);
-        _pointsY = (uint) float.Ceiling(UnitConv.PixelsToMeters(Program.WinH) * _pointsPerMeter);
+        _pointsX = (uint) float.Ceiling(UnitConv.PixelsToMeters(Constants.WinW) * _pointsPerMeter);
+        _pointsY = (uint) float.Ceiling(UnitConv.PixelsToMeters(Constants.WinH) * _pointsPerMeter);
 
         GridPoints = new GridPoint[_pointsX * _pointsY];
         SelectedPointIndices.Clear();
@@ -116,7 +115,7 @@ public class Grid
         ConstrainedPointIndexPairs.Clear();
     }
 
-    public void ToggleGridPoint(int xPixels, int yPixels, bool select, bool pin)
+    public void SetGridPoint(int xPixels, int yPixels, bool select, bool pin)
     {
         ref var closestGridPoint = ref GetClosestGridPoint(xPixels, yPixels);
         uint gridIndex = GetIndexFromPixel(xPixels, yPixels);
