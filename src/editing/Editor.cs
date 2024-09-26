@@ -64,10 +64,6 @@ public class Editor : Tool
 
     public override void Update()
     {
-        if (!_ctx.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem).ToolEnabled)
-        {
-            return;
-        }
         HandleSelect();
         HandleConstraint();
     }

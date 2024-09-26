@@ -11,7 +11,6 @@ namespace Sim;
 
 public class Context
 {
-    // Properties
     public ReaderWriterLockSlim Lock { get; set; }
     public float TimeStep { get; init; }
     public float SubStep { get; init; }
@@ -71,11 +70,6 @@ public class Context
     public int _selectedToolIndex;
     public int _selectedSpawnTargetIndex;
 
-    public enum SystemsEnum
-    {
-        ToolSystem,
-        NbodySystem
-    }
 
     public Context(float timeStep, int subSteps, Vector2 gravity)
     {
@@ -241,14 +235,16 @@ public class Context
         AddMassShapes(particles);
     }
 
-    public SystemType GetSystem<SystemType>(SystemsEnum systemType)
+    public ISystem GetSystem(Type systemType)
     {
-        return (SystemType) Systems[(int) systemType];
-    }
-
-    public SystemType GetSubSystem<SystemType>(SystemsEnum systemType)
-    {
-        return (SystemType) SubStepSystems[(int) systemType];
+        foreach (var system in Systems)
+        {
+            if (system.GetType() == systemType)
+            {
+                return system;
+            }
+        }
+        return null;
     }
 
     private void LoadSystems()

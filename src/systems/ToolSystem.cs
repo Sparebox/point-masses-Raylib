@@ -43,10 +43,7 @@ namespace Systems
             ToolEnabled = true;
         }
 
-        public void Update() 
-        {
-            SelectedTool.Update();
-        }
+        public void Update() {}
 
         public void Draw()
         {
@@ -514,7 +511,7 @@ namespace Tools
 
         public override void Update()
         {
-            _shouldVisualize = IsMouseButtonDown(MouseButton.Left) && _ctx.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem).ToolEnabled;
+            _shouldVisualize = IsMouseButtonDown(MouseButton.Left) && ((ToolSystem) _ctx.GetSystem(typeof(ToolSystem))).ToolEnabled;
             if (IsMouseButtonReleased(MouseButton.Left) || IsMouseButtonPressed(MouseButton.Left))
             {
                 _startPos = GetMousePosition();

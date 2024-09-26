@@ -137,7 +137,7 @@ public class Program
 
     private static void HandleInput()
     {
-        ToolSystem toolSystem = _context.GetSystem<ToolSystem>(Context.SystemsEnum.ToolSystem);
+        var toolSystem = (ToolSystem) _context.GetSystem(typeof(ToolSystem));
         Tool selectedTool = toolSystem.SelectedTool;
         // Keys
         if (IsKeyPressed(KeyboardKey.G))
