@@ -46,15 +46,15 @@ public class Program
         
         float winWidthMeters = UnitConv.PixelsToMeters(Constants.WinW);
         float winHeightMeters = UnitConv.PixelsToMeters(Constants.WinH);
-        Context ctx = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f))
-        {
-            QuadTree = new(
-                UnitConv.PixelsToMeters(new Vector2(Constants.WinW / 2f, Constants.WinH / 2f)),
-                UnitConv.PixelsToMeters(new Vector2(Constants.WinW, Constants.WinH)),
-                1,
-                6
-            )
-        };
+        
+        Context ctx = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f));
+        var quadTree = new QuadTree(
+            UnitConv.PixelsToMeters(new Vector2(Constants.WinW / 2f, Constants.WinH / 2f)),
+            UnitConv.PixelsToMeters(new Vector2(Constants.WinW, Constants.WinH)),
+            1,
+            3
+        );
+        ctx.QuadTree = quadTree;
         ctx.LineColliders = new() {
             new(0f, 0f, winWidthMeters, 0f, ctx),
             new(0f, 0f, 0f, winHeightMeters, ctx),

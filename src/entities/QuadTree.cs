@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
 using Raylib_cs;
 using Sim;
-using Systems;
 using Utils;
 using static Raylib_cs.Raylib;
 
@@ -14,28 +13,19 @@ public class QuadTree
 
     public ManualResetEventSlim PauseEvent { get; init; }
     public ReaderWriterLockSlim Lock { get; init; }
-    private readonly BoundingBox _boundary;
+    
+    private readonly List<Node> _nodes;
     private readonly Vector2 _center;
     private readonly Vector2 _size;
-    private readonly List<MassShape> _massShapes;
-    private bool _subdivided;
-    private QuadTree _northEast;
-    private QuadTree _southEast;
-    private QuadTree _southWest;
-    private QuadTree _northWest;
-    private uint _depth;
 
     public QuadTree(in Vector2 center, in Vector2 size, uint nodeCapacity, uint maxDepth)
-    {
+    { 
         _center = center;
         _size = size;
-        _boundary = new BoundingBox(new(_center.X - _size.X / 2f, _center.Y - _size.Y / 2f, 0f), new(_center.X + _size.X / 2f, _center.Y + _size.Y / 2f, 0f));
-        _massShapes = new();
-        _subdivided  = false;
+        _nodes = new List<Node>();
         Lock = new ReaderWriterLockSlim();
         PauseEvent = new ManualResetEventSlim(true);
         NodeCapacity = nodeCapacity;
-        _depth = 0;
         MaxDepth = maxDepth;
     }
 
@@ -46,114 +36,88 @@ public class QuadTree
         Clear();
         foreach (var shape in ctx.MassShapes)
         {
-            Insert(shape);
+            Insert(shape, 0);
         }
         ctx.Lock.ExitReadLock();
         Lock.ExitWriteLock();
     }
 
-    public void Insert(MassShape shape)
+    public void Insert(MassShape shape, int startNodeId)
     {
-        if (!CheckCollisionBoxes(_boundary, shape.Aabb))
+        for (int i = startNodeId; i < _nodes.Count; i++)
         {
-            return;
-        }
-        if (_subdivided) // Internal node
-        {
-            // Insert into children
-            _northEast.Insert(shape);
-            _southEast.Insert(shape);
-            _southWest.Insert(shape);
-            _northWest.Insert(shape);
-            return;
-        }
-        // External node
-        if (_massShapes.Count < NodeCapacity || _depth >= MaxDepth)
-        {
-            // Insert into this quad
-            _massShapes.Add(shape);
-            return;
-        }
-        if (_depth < MaxDepth)
-        {
-            // This quad is full and can be subdivided
-            Subdivide();
-            // Move the points from this quad to the children
-            _massShapes.Add(shape);
-            foreach (var s in _massShapes)
+            var node = _nodes[i];
+            if (!node.IsLeaf)
             {
-                _northEast.Insert(s);
-                _southEast.Insert(s);
-                _southWest.Insert(s);
-                _northWest.Insert(s);
+                continue;
             }
-            _massShapes.Clear();
+            if (!CheckCollisionBoxes(node._boundingBox, shape.Aabb))
+            {
+                continue;
+            }
+            if (node._massShapes.Count < NodeCapacity || node._depth >= MaxDepth)
+            {
+                node._massShapes.Add(shape);
+                continue;
+            }
+            int childrenIdStart = Subdivide(i, out MassShape shapeToMove);
+            Insert(shapeToMove, childrenIdStart);
         }
-        return;
+        
     }
 
-    private void Subdivide()
+    private int Subdivide(int nodeId, out MassShape shapeToMove)
     {
-        Vector2 newSize = _size / 2f;
-        _northEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
-        _southEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
-        _southWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
-        _northWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
-        uint newDepth = _depth + 1;
-        _northEast._depth = newDepth;
-        _southEast._depth = newDepth;
-        _southWest._depth = newDepth;
-        _northWest._depth = newDepth;
-        _subdivided = true;
+        var node = _nodes[nodeId];
+        shapeToMove = node._massShapes.First();
+        int childrenIdStart = _nodes.Count;
+        node._children = childrenIdStart;
+        node._massShapes.Clear();
+        _nodes[nodeId] = node;
+        var childNodes = node.Subdivide();
+        _nodes.AddRange(childNodes);
+        return childrenIdStart;
     }
 
     private void Clear()
     {
-        _massShapes.Clear();
-        _depth = 0;
-        if (_subdivided)
-        {
-            _northEast.Clear();
-            _southEast.Clear();
-            _southWest.Clear();
-            _northWest.Clear();
-            _subdivided = false;
-        }
+       _nodes.Clear();
+       _nodes.Add(new Node(_center, _size, 0));
     }
 
     public void QueryShapes(in BoundingBox area, HashSet<MassShape> found)
     {
-        if (!CheckCollisionBoxes(_boundary, area))
+        foreach (var node in _nodes)
         {
-            return;
-        }
-        if (!_subdivided) // External node
-        {
-            foreach (var shape in _massShapes)
+            if (!node.IsLeaf)
+            {
+                continue;
+            }
+            if (!CheckCollisionBoxes(node._boundingBox, area))
+            {
+                continue;
+            }
+            foreach (var shape in node._massShapes)
             {
                 found.Add(shape);
             }
         }
-        else
-        {
-            _northEast.QueryShapes(in area, found);
-            _southEast.QueryShapes(in area, found);
-            _southWest.QueryShapes(in area, found);
-            _northWest.QueryShapes(in area, found);
-        }
-        return;
     }
 
     public void QueryPoints(in BoundingBox area, HashSet<PointMass> found)
     {
         found ??= new();
-        if (!CheckCollisionBoxes(_boundary, area))
+        foreach (var node in _nodes)
         {
-            return;
-        }
-        if (!_subdivided)
-        {
-            foreach (var shape in _massShapes)
+            if (!node.IsLeaf)
+            {
+                continue;
+            }
+            if (!CheckCollisionBoxes(node._boundingBox, area))
+            {
+                continue;
+            }
+            foreach (var shape in node._massShapes)
             {
                 foreach (var point in shape._points)
                 {
@@ -161,42 +125,13 @@ public class QuadTree
                 }
             }
         }
-        else
-        {
-            _northEast.QueryPoints(in area, found);
-            _southEast.QueryPoints(in area, found);
-            _southWest.QueryPoints(in area, found);
-            _northWest.QueryPoints(in area, found);
-        }
-        return;
     }
 
     public void Draw()
     {
-        if (_massShapes.Count == 0 && !_subdivided)
+        for (int i = 0; i < _nodes.Count; i++)
         {
-            return;
-        }
-        DrawRectangleLines(
-            UnitConv.MetersToPixels(_center.X - _size.X / 2f),
-            UnitConv.MetersToPixels(_center.Y - _size.Y / 2f),
-            UnitConv.MetersToPixels(_size.X),
-            UnitConv.MetersToPixels(_size.Y),
-            Color.Red
-        );
-        DrawText(
-            _massShapes.Count.ToString(),
-            UnitConv.MetersToPixels(_center.X),
-            UnitConv.MetersToPixels(_center.Y),
-            15,
-            Color.Yellow
-        );
-        if (_subdivided)
-        {
-            _northEast.Draw();
-            _southEast.Draw();
-            _southWest.Draw();
-            _northWest.Draw();
+            _nodes[i].Draw();
         }
     }
 
@@ -208,6 +143,68 @@ public class QuadTree
             ctx.QuadTree.PauseEvent.Wait();
             Thread.Sleep(Constants.QuadTreeUpdateMs);
             ctx.QuadTree.Update(ctx);
+        }
+    }
+
+    private struct Node
+    {
+        public BoundingBox _boundingBox;
+        public int _children;
+        public int _depth;
+        public readonly List<MassShape> _massShapes;
+
+        private readonly Vector2 _center;
+        private readonly Vector2 _size;
+
+        public readonly bool IsLeaf => _children == 0;
+
+        public Node(Vector2 center, Vector2 size, int depth)
+        {
+            _children = 0;
+            _boundingBox = new BoundingBox(new(center.X - size.X * 0.5f, center.Y - size.Y * 0.5f, 0f), new(center.X + size.X * 0.5f, center.Y + size.Y * 0.5f, 0f));
+            _massShapes = new List<MassShape>();
+            _center = center;
+            _size = size;
+            _depth = depth;
+        }
+
+        public readonly Node[] Subdivide()
+        {
+            var nodes = new Node[4];
+            for (int i = 0; i < 4; i++)
+            {
+                // 00 | 01
+                // 10 | 11
+                Vector2 newSize = _size * 0.5f;
+                Vector2 newCenter = new(
+                    _center.X + ((i & 1) - 0.5f) * newSize.X,
+                    _center.Y + ((i >> 1) - 0.5f) * newSize.Y
+                );
+                nodes[i] = new Node(newCenter, newSize, _depth + 1);
+            }
+            return nodes;
+        }
+
+        public readonly void Draw()
+        {
+            if (!IsLeaf)
+            {
+                return;
+            }
+            DrawRectangleLines(
+                UnitConv.MetersToPixels(_center.X - _size.X / 2f),
+                UnitConv.MetersToPixels(_center.Y - _size.Y / 2f),
+                UnitConv.MetersToPixels(_size.X),
+                UnitConv.MetersToPixels(_size.Y),
+                Color.Red
+            );
+            DrawText(
+                _massShapes.Count.ToString(),
+                UnitConv.MetersToPixels(_center.X),
+                UnitConv.MetersToPixels(_center.Y),
+                15,
+                Color.Yellow
+            );
         }
     }
 }
