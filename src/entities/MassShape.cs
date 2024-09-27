@@ -90,7 +90,8 @@ public partial class MassShape : Entity
     {
         get
         {
-            return 0.5f * Mass * Vel.LengthSquared() / Ctx.Substep;
+            var vel = Vel / Ctx.Substep;
+            return 0.5f * Mass * vel.LengthSquared();
         }
     }
     
@@ -208,6 +209,7 @@ public partial class MassShape : Entity
     public bool _toBeDeleted;
     public float _gasAmount;
     public bool _inflated;
+    public bool _showInfo;
     private Vector2 _lastCenterOfMass;
     private PressureVis _pressureVis;
     private float _lastAngle;
@@ -248,7 +250,7 @@ public partial class MassShape : Entity
             _toBeDeleted = true;
             return;
         }
-        if (Ctx._drawBodyInfo)
+        if (_showInfo)
         {
             _lastCenterOfMass = CenterOfMass;
             _lastAngle = Angle;
@@ -305,7 +307,7 @@ public partial class MassShape : Entity
             Vector2 COM = UnitConv.MetersToPixels(CenterOfMass);
             Graphics.DrawArrow(COM, COM + Raymath.Vector2ClampValue(TotalVisForce, 0f, 150f), Color.Magenta);
         }
-        if (Ctx._drawBodyInfo)
+        if (_showInfo)
         {
             DrawInfo();
         }

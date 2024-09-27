@@ -52,15 +52,11 @@ public class Gui
         ImGui.Text(string.Format("Substeps: {0}", ctx._substeps));
         ImGui.Text(string.Format("Step: {0:0.0000} ms", ctx._timestep * 1e3f));
         ImGui.Text(string.Format("Substep: {0:0.0000} ms", ctx.Substep * 1e3f));
-        if (ctx._drawBodyInfo)
-        {
-            ImGui.Text(string.Format("System energy: {0} kJ", ctx.SystemEnergy / 1e3f));
-        }
+        ImGui.Text(string.Format("System energy: {0:0.###} kJ", ctx.SystemEnergy / 1e3f));
         ImGui.Checkbox("Gravity", ref ctx._gravityEnabled);
         ImGui.Checkbox("Draw forces", ref ctx._drawForces);
         ImGui.Checkbox("Draw AABBs", ref ctx._drawAABBS);
         ImGui.Checkbox("Draw quadtree", ref ctx._drawQuadTree);
-        ImGui.Checkbox("Draw body info", ref ctx._drawBodyInfo);
         if (ImGui.Checkbox("Collisions enabled", ref ctx._collisionsEnabled))
         {
             if (ctx._collisionsEnabled && !ctx._simPaused)

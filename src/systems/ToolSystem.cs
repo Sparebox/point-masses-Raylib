@@ -25,7 +25,8 @@ namespace Systems
             Delete,
             Editor,
             GravityWell,
-            Stop
+            Stop,
+            ShowInfo
         }
 
         public static ToolType[] ToolTypes => (ToolType[]) Enum.GetValues(typeof(ToolType));
@@ -84,6 +85,9 @@ namespace Systems
                 case ToolType.Stop :
                     SelectedTool = Tools[(int) ToolType.Stop];
                     break;
+                case ToolType.ShowInfo :
+                    SelectedTool = Tools[(int) ToolType.ShowInfo];
+                    break;
             }
         }
 
@@ -127,6 +131,7 @@ namespace Systems
             tools[(int) ToolType.Editor]        = new Editor(_ctx);
             tools[(int) ToolType.GravityWell]   = new GravityWell(_ctx);
             tools[(int) ToolType.Stop]          = new Stop(_ctx);
+            tools[(int) ToolType.ShowInfo]      = new ShowInfo(_ctx);
             return tools;
         }
     }
@@ -609,6 +614,28 @@ namespace Tools
         {
             DrawCircleLinesV(GetMousePosition(), UnitConv.MetersToPixels(Radius), Color.Yellow);
         }
+    }
 
+    public class ShowInfo : Tool
+    {
+        public ShowInfo(Context ctx) => _ctx = ctx;
+
+        public override void Update()
+        {
+            if (!IsMouseButtonPressed(MouseButton.Left))
+            {
+                return;
+            }
+            var mousePos = UnitConv.PixelsToMeters(GetMousePosition());
+            BoundingBox area = new(new(mousePos.X, mousePos.Y, 0f), new(mousePos.X, mousePos.Y, 0f));
+            var shapes = _ctx.GetMassShapes(area);
+            if (shapes.Any())
+            {
+                var shape = shapes.First();
+                shape._showInfo = !shape._showInfo;
+            }
+        }
+
+        public override void Draw() {}
     }
 }
