@@ -41,7 +41,7 @@ public class BarnesHutTree
         {
             Insert(shape);
         }
-        ApplyGravityForces((NbodySystem) ctx.GetSystem(typeof(NbodySystem)), ctx.TimeStep);
+        ApplyGravityForces((NbodySystem) ctx.GetSystem(typeof(NbodySystem)), ctx._timestep);
         ctx.Lock.ExitReadLock();
     }
 

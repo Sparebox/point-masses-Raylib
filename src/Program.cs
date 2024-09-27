@@ -75,9 +75,9 @@ public class Program
             _context._simPaused = true;
         }
         _accumulator += GetFrameTime();
-        while (_accumulator >= _context.TimeStep)
+        while (_accumulator >= _context._timestep)
         {
-            for (int i = 0; i < _context.Substeps; i++)
+            for (int i = 0; i < _context._substeps; i++)
             {
                 foreach (MassShape s in _context.MassShapes)
                 {
@@ -103,7 +103,7 @@ public class Program
                 }
             }
             _context.Lock.ExitUpgradeableReadLock();
-            _accumulator -= _context.TimeStep;
+            _accumulator -= _context._timestep;
         }
     }
 

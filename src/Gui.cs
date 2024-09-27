@@ -49,9 +49,9 @@ public class Gui
         ImGui.Text(string.Format("Masses: {0}", ctx.MassCount));
         ImGui.Text(string.Format("Constraints: {0}", ctx.ConstraintCount));
         ImGui.Text(string.Format("Shapes: {0}", ctx.MassShapes.Count));
-        ImGui.Text(string.Format("Substeps: {0}", ctx.Substeps));
-        ImGui.Text(string.Format("Step: {0:0.0000} ms", ctx.TimeStep * 1e3f));
-        ImGui.Text(string.Format("Substep: {0:0.0000} ms", ctx.SubStep * 1e3f));
+        ImGui.Text(string.Format("Substeps: {0}", ctx._substeps));
+        ImGui.Text(string.Format("Step: {0:0.0000} ms", ctx._timestep * 1e3f));
+        ImGui.Text(string.Format("Substep: {0:0.0000} ms", ctx.Substep * 1e3f));
         if (ctx._drawBodyInfo)
         {
             ImGui.Text(string.Format("System energy: {0} kJ", ctx.SystemEnergy / 1e3f));
@@ -97,6 +97,23 @@ public class Gui
             {
                 ctx.LoadSavedState();
             }
+        }
+        if (ImGui.Button("Timestep settings"))
+        {
+            ImGui.OpenPopup("TimestepSettings");
+        }
+        if (ImGui.BeginPopup("TimestepSettings"))
+        {
+            ctx._simPaused = true;
+            ImGui.Text("Substep settings displayed here");
+            ImGui.InputFloat("Timestep [s]", ref ctx._timestep);
+            ImGui.InputInt("Substep count", ref ctx._substeps);
+            if (ImGui.Button("Close"))
+            {
+                ctx.UpdateSubstep();
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndPopup();
         }
     }
 
@@ -181,10 +198,6 @@ public class Gui
             editor._grid.SetGridScale(editor._grid._pointsPerMeter);
         }
         ImGui.Combo("Editor action", ref editor._selectedActionIndex, editor.ActionComboString);
-        if (editor.SelectedAction != Editor.EditorAction.CreateParticles)
-        {
-            ImGui.Checkbox("Rigid constraint", ref editor._isRigidConstraint);
-        }
         if (editor.SelectedAction == Editor.EditorAction.CreateLoop)
         {
             ImGui.Checkbox("Connect ends", ref editor._connectLoop);
@@ -197,14 +210,8 @@ public class Gui
                 }
             }
         }
-        if (editor.SelectedAction == Editor.EditorAction.Freeform)
-        {
-            ImGui.Checkbox("Pin point", ref editor._pinPoint);
-        }
-        if (!editor._isRigidConstraint &&
-            (editor.SelectedAction == Editor.EditorAction.CreateLoop || 
+        if (editor.SelectedAction == Editor.EditorAction.CreateLoop || 
             editor.SelectedAction == Editor.EditorAction.Freeform
-            )
         )
         {
             ImGui.InputFloat("Stiffness", ref editor._stiffness);

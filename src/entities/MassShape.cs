@@ -81,7 +81,7 @@ public partial class MassShape : Entity
     {
         get
         {
-            float angVel = AngVel / Ctx.SubStep;
+            float angVel = AngVel / Ctx.Substep;
             return 0.5f * Inertia * angVel * angVel;
         }
     }
@@ -90,7 +90,7 @@ public partial class MassShape : Entity
     {
         get
         {
-            return 0.5f * Mass * Vel.LengthSquared() / Ctx.SubStep;
+            return 0.5f * Mass * Vel.LengthSquared() / Ctx.Substep;
         }
     }
     
@@ -412,10 +412,10 @@ public partial class MassShape : Entity
         ImGui.SetWindowPos(UnitConv.MetersToPixels(Centroid) + new Vector2(25f, 0f));
         ImGui.SetWindowSize(new (250f, 130f));
         ImGui.Text(string.Format("Mass: {0} kg", Mass));
-        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel / Ctx.SubStep));
-        ImGui.Text(string.Format("Momentum: {0:0.0} kgm/s", Momentum / Ctx.SubStep));
+        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel / Ctx.Substep));
+        ImGui.Text(string.Format("Momentum: {0:0.0} kgm/s", Momentum / Ctx.Substep));
         ImGui.Text(string.Format("Moment of inertia: {0:0} kgm^2", Inertia));
-        ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel / Ctx.SubStep * RAD2DEG));
+        ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel / Ctx.Substep * RAD2DEG));
         ImGui.Text(string.Format("Linear energy: {0:0.##} J", LinEnergy));
         ImGui.Text(string.Format("Rot energy: {0:0.##} J", RotEnergy));
         ImGui.End();

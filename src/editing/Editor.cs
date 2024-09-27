@@ -24,8 +24,6 @@ public class Editor : Tool
     public string ActionComboString { get; init; }
     public bool _connectLoop;
     public bool _inflateLoop;
-    public bool _isRigidConstraint;
-    public bool _pinPoint;
     public float _gasAmount = Spawn.DefaultGasAmt;
     public float _stiffness = Spawn.DefaultStiffness;
     public readonly Grid _grid;
@@ -216,11 +214,11 @@ public class Editor : Tool
                 var mousePos = GetMousePosition();
                 if (IsKeyDown(KeyboardKey.LeftShift))
                 {
-                    _grid.SetGridPoint((int) mousePos.X, (int) mousePos.Y, false, _pinPoint);
+                    _grid.SetGridPoint((int) mousePos.X, (int) mousePos.Y, false, IsKeyDown(KeyboardKey.LeftControl));
                 }
                 else
                 {
-                    _grid.SetGridPoint((int) mousePos.X, (int) mousePos.Y, true, _pinPoint);
+                    _grid.SetGridPoint((int) mousePos.X, (int) mousePos.Y, true, IsKeyDown(KeyboardKey.LeftControl));
                 }
             }
             catch (IndexOutOfRangeException e)

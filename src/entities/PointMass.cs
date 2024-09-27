@@ -67,7 +67,7 @@ public class PointMass : Entity
         Vector2 acc = Force * _invMass;
         Vector2 vel = Vel; // Save the velocity before previous position is reset
         PrevPos = Pos;
-        Pos += vel + acc * Ctx.SubStep * Ctx.SubStep;
+        Pos += vel + acc * Ctx.Substep * Ctx.Substep;
         VisForce = Force;
         PrevForce = Force;
         Force = Vector2.Zero;

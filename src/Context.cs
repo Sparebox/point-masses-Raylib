@@ -12,9 +12,9 @@ namespace Sim;
 public class Context
 {
     public ReaderWriterLockSlim Lock { get; set; }
-    public float TimeStep { get; init; }
-    public float SubStep { get; init; }
-    public int Substeps { get; init; }
+    public float _timestep;
+    public float Substep { get; set; }
+    public int _substeps;
     public Vector2 Gravity { get; init; }
     public TextureManager TextureManager { get; init; }
     public QuadTree QuadTree { get; set; }
@@ -73,9 +73,9 @@ public class Context
 
     public Context(float timeStep, int subSteps, Vector2 gravity)
     {
-        TimeStep = timeStep;
-        Substeps = subSteps;
-        SubStep = timeStep / subSteps;
+        _timestep = timeStep;
+        _substeps = subSteps;
+        Substep = timeStep / subSteps;
         Gravity = gravity;
         Lock = new ReaderWriterLockSlim();
         TextureManager = new TextureManager();
@@ -89,6 +89,11 @@ public class Context
         Systems = new();
         SubStepSystems = new();
         LoadSystems();
+    }
+
+    public void UpdateSubstep()
+    {
+        Substep = _timestep / _substeps;
     }
 
     public void AddMassShape(MassShape shape)

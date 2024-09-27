@@ -45,7 +45,7 @@ public class DistanceConstraint : Constraint
         Vector2 correctionVector = AtoB / dist * error;
         Vector2 correctionA;
         Vector2 correctionB;
-        float stiffnessCoeff = 1f - MathF.Pow(1f - Stiffness, 1f / _ctx.Substeps);
+        float stiffnessCoeff = 1f - MathF.Pow(1f - Stiffness, 1f / _ctx._substeps);
         if (!PointA.Pinned)
         {
             correctionA = -PointA.InvMass / (PointA.InvMass + PointB.InvMass) * correctionVector;
