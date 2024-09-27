@@ -160,14 +160,13 @@ public class Program
         {
             _context._simPaused = !_context._simPaused;
         }
-        // Handle mouse input
-        if (IsMouseButtonDown(MouseButton.Left))
+        // Handle tool input
+        if (toolSystem.ToolEnabled)
         {
-            if (toolSystem.ToolEnabled)
-            {
-                selectedTool.Update();
-            }
+            selectedTool.Update();
         }
+        
+        // Handle mouse input
         if (GetMouseWheelMoveV().Y > 0f)
         {
             selectedTool.ChangeRadius(Tool.BaseRadiusChange);
