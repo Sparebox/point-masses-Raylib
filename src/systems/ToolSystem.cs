@@ -4,7 +4,6 @@ using Editing;
 using Entities;
 using Raylib_cs;
 using Sim;
-using SimSystems;
 using Systems;
 using Tools;
 using Utils;
@@ -45,6 +44,8 @@ namespace Systems
         }
 
         public void Update() {}
+
+        public void UpdateInput() {}
 
         public void Draw()
         {

@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
 using Raylib_cs;
-using SimSystems;
+using Systems;
 using Utils;
 using static Raylib_cs.Raylib;
 
@@ -38,6 +38,8 @@ public class ParticleSystem : ISystem
             }
         }
     }
+
+    public void UpdateInput() {}
 
     public void Draw()
     {

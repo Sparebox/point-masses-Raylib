@@ -125,6 +125,10 @@ public class Program
         {
             system.Draw();
         }
+        foreach (var substepSystem in _context.SubStepSystems)
+        {
+            substepSystem.Draw();
+        }
         if (_context._drawQuadTree)
         {
             _context.QuadTree.Draw();
@@ -160,6 +164,17 @@ public class Program
         {
             _context._simPaused = !_context._simPaused;
         }
+
+        // Handle system inputs
+        foreach (var system in _context.Systems)
+        {
+            system.UpdateInput();
+        }
+        foreach (var subStepSystem in _context.SubStepSystems)
+        {
+            subStepSystem.UpdateInput();
+        }
+
         // Handle tool input
         if (toolSystem.ToolEnabled)
         {

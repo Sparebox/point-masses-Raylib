@@ -2,7 +2,6 @@ using System.Numerics;
 using Collision;
 using Entities;
 using Sim;
-using SimSystems;
 using Utils;
 using static Raylib_cs.Raylib;
 
@@ -22,6 +21,8 @@ namespace Systems
                 HandleCollisions();
             }
         }
+
+        public void UpdateInput() {}
 
         public void Draw() {}
 

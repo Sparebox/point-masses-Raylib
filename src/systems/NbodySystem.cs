@@ -1,7 +1,6 @@
 using System.Numerics;
 using Entities;
 using Sim;
-using SimSystems;
 using Utils;
 
 namespace Systems
@@ -55,6 +54,8 @@ namespace Systems
                 PauseEvent.Reset();
             }
         }
+
+        public void UpdateInput() {}
 
         public void Draw() {}
 
