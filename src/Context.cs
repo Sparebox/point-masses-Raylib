@@ -4,8 +4,7 @@ using Entities;
 using Textures;
 using Utils;
 using Raylib_cs;
-using SimSystems;
-using Systems;
+using PointMasses.Systems;
 
 namespace Sim;
 
@@ -257,5 +256,6 @@ public class Context
         Systems.Add(new ToolSystem(this));
         Systems.Add(new NbodySystem(this));
         SubStepSystems.Add(new CollisionSystem(this));
+        SubStepSystems.Add(new FluidSystem(this));
     }
 }

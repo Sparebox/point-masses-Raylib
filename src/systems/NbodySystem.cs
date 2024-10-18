@@ -3,7 +3,7 @@ using Entities;
 using Sim;
 using Utils;
 
-namespace Systems
+namespace PointMasses.Systems
 {
     public class NbodySystem : ISystem
     {

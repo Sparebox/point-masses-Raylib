@@ -1,4 +1,4 @@
-namespace Systems;
+namespace PointMasses.Systems;
 
 public interface ISystem
 {

@@ -5,7 +5,7 @@ using Sim;
 using Utils;
 using static Raylib_cs.Raylib;
 
-namespace Systems
+namespace PointMasses.Systems
 {
     public class CollisionSystem : ISystem
     {

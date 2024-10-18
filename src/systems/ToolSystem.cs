@@ -2,14 +2,14 @@ using System.Numerics;
 using System.Text;
 using Editing;
 using Entities;
+using PointMasses.Systems;
 using Raylib_cs;
 using Sim;
-using Systems;
 using Tools;
 using Utils;
 using static Raylib_cs.Raylib;
 
-namespace Systems
+namespace PointMasses.Systems
 {
     public class ToolSystem : ISystem
     {   
