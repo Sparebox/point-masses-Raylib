@@ -10,7 +10,7 @@ namespace PointMasses.Systems;
 public class FluidSystem : ISystem
 {
     private readonly Grid _grid;
-    private const int IterationCount = 50;
+    private const int IterationCount = 10;
     private const float Overrelaxation = 1.9f;
     private const float FluidDensity = 1f;
     private Vector2 _lastMousePos;
@@ -65,6 +65,14 @@ public class FluidSystem : ISystem
         {
             Grid.DrawVel = !Grid.DrawVel;
         }
+        if (IsKeyDown(KeyboardKey.Right))
+        {
+            _grid.RotateVelocityAt(Grid.NumX / 2, Grid.NumY / 2, 5f);
+        }
+        if (IsKeyDown(KeyboardKey.Left))
+        {
+            _grid.RotateVelocityAt(Grid.NumX / 2, Grid.NumY / 2, -5f);
+        }
     }
 
     public void Draw()
@@ -81,7 +89,7 @@ public class FluidSystem : ISystem
 
         private Cell[,] Cells { get; set; }
         private readonly Context _ctx;
-        
+
         public static bool DrawVel { get; set; } = true;
 
         public Grid(Context ctx)
@@ -126,6 +134,15 @@ public class FluidSystem : ISystem
             Cells[x, y]._vel = vel;
         }
 
+        public void RotateVelocityAt(int x, int y, float angle)
+        {
+            if (x < 0 || x > NumX - 1 || y < 0 || y > NumY - 1)
+            {
+                throw new IndexOutOfRangeException(string.Format("Grid index ({0}, {1}) is out of bounds", x, y));
+            }
+            Cells[x, y]._vel = 2f * Vector2.Normalize(Raymath.Vector2Rotate(Cells[x, y]._vel, angle * _ctx._timestep));
+        }
+
         private void Initialize()
         {
             Cells = new Cell[NumX, NumY];
@@ -138,20 +155,20 @@ public class FluidSystem : ISystem
                     {
                         Cells[x, y].S = 0;
                     }
+                    // if (x == 1 && y > 0 && y < NumY - 1)
+                    // {
+                    //     Cells[x, y]._vel.X = 1f;
+                    // }
                     if (x == NumX / 2 && y == NumY / 2)
                     {
-                        Cells[x, y]._vel.Y = 2f;
+                        Cells[x, y]._vel.X = -1f;
                         Cells[x, y].S = 0;
                     }
                     if (x == NumX - 1)
                     {
                         Cells[x, y].S = 0;
                     }
-                    if (y == 0)
-                    {
-                        Cells[x, y].S = 0;
-                    }
-                    if (y == NumY - 1)
+                    if (y == 0 || y == NumY - 1)
                     {
                         Cells[x, y].S = 0;
                     }
@@ -163,14 +180,14 @@ public class FluidSystem : ISystem
         {   
             for (int i = 0; i < IterationCount; i++)
             {
-                for (int x = 1; x < NumX - 1; x++)
+                for (int x = 0; x < NumX - 1; x++)
                 {
-                    for (int y = 1; y < NumY - 1; y++)
+                    for (int y = 0; y < NumY - 1; y++)
                     {
-                        // if (Cells[x, y].S == 0)
-                        // {
-                        //     continue;
-                        // }
+                        if (Cells[x, y].S == 0)
+                        {
+                            continue;
+                        }
                         int sUp = Cells[x, y - 1].S;
                         int sDown = Cells[x, y + 1].S;
                         int sLeft = Cells[x - 1, y].S;
@@ -209,23 +226,25 @@ public class FluidSystem : ISystem
                     float? sampledVel;
 
                     // Horizontal velocity
-                    velocity = new(Cells[x, y]._vel.X, AvgV(x, y));
-                    pos = IndexToUvelPos(x, y);
-                    prevPos = pos - velocity * _ctx.Substep;
-                    sampledVel = SampleVelocity(prevPos, true);
-                    if (sampledVel.HasValue)
+                    if (Cells[x - 1, y].S != 0)
                     {
-                        Cells[x, y]._vel.X = sampledVel.Value;
+                        velocity = new(Cells[x, y]._vel.X, AvgV(x, y));
+                        pos = IndexToUvelPos(x, y);
+                        prevPos = pos - velocity * _ctx.Substep;
+                        sampledVel = SampleVelocity(prevPos, true);
+                        if (sampledVel.HasValue)
+                            Cells[x, y]._vel.X = sampledVel.Value;
                     }
                         
                     // Vertical velocity
-                    velocity = new(AvgU(x, y), Cells[x, y]._vel.Y);
-                    pos = IndexToVvelPos(x, y);
-                    prevPos = pos - velocity * _ctx.Substep;
-                    sampledVel = SampleVelocity(prevPos, false);
-                    if (sampledVel.HasValue)
+                    if (Cells[x, y + 1].S != 0)
                     {
-                        Cells[x, y]._vel.Y = sampledVel.Value;
+                        velocity = new(AvgU(x, y), Cells[x, y]._vel.Y);
+                        pos = IndexToVvelPos(x, y);
+                        prevPos = pos - velocity * _ctx.Substep;
+                        sampledVel = SampleVelocity(prevPos, false);
+                        if (sampledVel.HasValue)
+                            Cells[x, y]._vel.Y = sampledVel.Value;
                     }
                 }
             }
@@ -254,7 +273,7 @@ public class FluidSystem : ISystem
         private float? SampleVelocity(in Vector2 pos, bool horizontal)
         {   
             (int xIndex, int yIndex) = PosToIndex(pos);
-            if (xIndex < 1 || xIndex > NumX - 2 || yIndex < 1 || yIndex > NumY - 2)
+            if (xIndex < 1 || xIndex >= NumX - 1 || yIndex < 1 || yIndex >= NumY - 1)
             {
                 return null;
             }
@@ -370,16 +389,7 @@ public class FluidSystem : ISystem
             float integralY = MathF.Truncate(fullY);
             float fractionX = fullX - integralX;
             float fractionY = fullY - integralY;
-            if (fractionX > 1f || fractionY > 1f)
-            {
-                throw new ArithmeticException(
-                    string.Format(
-                        "Grid position to percentage result was invalid: fractional x: {0:0.00} fractional y: {1:0.00}",
-                        fractionX, fractionY
-                    )
-                );
-            }
-            return (fullX - integralX, fullY - integralY);
+            return (fractionX, fractionY);
         }
 
     }
@@ -403,13 +413,6 @@ public class FluidSystem : ISystem
 
         public readonly void Draw(int x, int y)
         {
-            Vector2 uVelPos = UnitConv.MetersToPixels(Grid.IndexToUvelPos(x, y));
-            uVelPos.X += Grid.Pos.X;
-            uVelPos.Y += Grid.Pos.Y;
-            Vector2 vVelPos = UnitConv.MetersToPixels(Grid.IndexToVvelPos(x, y));
-            vVelPos.X += Grid.Pos.X;
-            vVelPos.Y += Grid.Pos.Y;
-
             x = (int) Grid.Pos.X + UnitConv.MetersToPixels(x * Grid.CellSize);
             y = (int) Grid.Pos.Y + UnitConv.MetersToPixels(y * Grid.CellSize);
             int GridPixelSize = UnitConv.MetersToPixels(Grid.CellSize);
@@ -417,9 +420,11 @@ public class FluidSystem : ISystem
           
             if (S == 0)
             {
-                DrawRectangle(x, y, GridPixelSize, GridPixelSize, new Color(255, 255, 0, 255));
+                DrawRectangleLines(x, y, GridPixelSize, GridPixelSize, new Color(255, 255, 0, 255));
                 return;
             }
+            DrawRectangle(x, y, GridPixelSize, GridPixelSize, new Color(lightness, lightness, lightness, 255));
+            DrawRectangleLines(x, y, GridPixelSize, GridPixelSize, new Color(255, 0, 255, 50));
             if (Grid.DrawVel) 
             {
                 Graphics.DrawArrow(
@@ -430,8 +435,6 @@ public class FluidSystem : ISystem
                     Color.Yellow
                 );
             }
-            DrawRectangle(x, y, GridPixelSize, GridPixelSize, new Color(lightness, lightness, lightness, 255));
-            DrawRectangleLines(x, y, GridPixelSize, GridPixelSize, new Color(255, 0, 255, 100));
             //DrawText(string.Format("{0:0.0}", Density), x + GridPixelSize / 3, y + GridPixelSize / 3, 10, Color.Green);
             //DrawText(string.Format("{0:0.0}", _vel.Length()), x + GridPixelSize / 3, y + GridPixelSize / 3 + 10, 10, Color.Red);
             //DrawText(string.Format("{0:0.0}", Pressure), x + GridPixelSize / 3, y + GridPixelSize / 3 + 20, 10, Color.Blue);
