@@ -116,9 +116,9 @@ public class Gui
     private static void ShowTools(Context ctx, ToolSystem toolSystem)
     {
         ImGui.PushItemWidth(100f);
-        if (ImGui.Combo("Tool", ref ctx._selectedToolIndex, ToolSystem.ToolComboString))
+        if (ImGui.Combo("Tool", ref toolSystem._selectedToolIndex, ToolSystem.ToolComboString))
         {
-            toolSystem.ChangeToolType(ctx);
+            toolSystem.ChangeToolType();
         }
         ImGui.Separator();
         ImGui.Spacing();
@@ -147,7 +147,7 @@ public class Gui
     {
         var toolSystem = (ToolSystem) ctx.GetSystem(typeof(ToolSystem));
         var spawnTool = (Spawn) toolSystem.SelectedTool;
-        if (ImGui.Combo("Spawn target", ref ctx._selectedSpawnTargetIndex, TargetsToComboString()))
+        if (ImGui.Combo("Spawn target", ref spawnTool._selectedSpawnTargetIndex, TargetsToComboString()))
         {
             spawnTool.UpdateSpawnTarget();
         }

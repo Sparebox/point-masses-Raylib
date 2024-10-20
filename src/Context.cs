@@ -66,9 +66,7 @@ public class Context
     public float _globalRestitutionCoeff = Constants.GlobalRestitutionCoeffDefault;
     public float _globalKineticFrictionCoeff = Constants.GlobalKineticFrictionCoeffDefault;
     public float _globalStaticFrictionCoeff = Constants.GlobalStaticFrictionCoeffDefault;
-    public int _selectedToolIndex;
-    public int _selectedSpawnTargetIndex;
-
+    
 
     public Context(float timeStep, int subSteps, Vector2 gravity)
     {
@@ -255,7 +253,6 @@ public class Context
     {
         Systems.Add(new ToolSystem(this));
         Systems.Add(new NbodySystem(this));
-        Systems.Add(new FluidSystem(this));
         SubStepSystems.Add(new CollisionSystem(this));
     }
 }

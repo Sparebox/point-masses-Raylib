@@ -33,6 +33,7 @@ namespace PointMasses.Systems
         public Tool SelectedTool { get; set; }
         public Tool[] Tools { get; init; }
         public bool ToolEnabled { get; set; }
+        public int _selectedToolIndex;
         private readonly Context _ctx;
 
         public ToolSystem(Context ctx)
@@ -52,9 +53,9 @@ namespace PointMasses.Systems
             SelectedTool.Draw();
         }
 
-        public void ChangeToolType(Context ctx)
+        public void ChangeToolType()
         {
-            switch (ToolTypes[ctx._selectedToolIndex])
+            switch (ToolTypes[_selectedToolIndex])
             {
                 case ToolType.PullCom :
                     SelectedTool = Tools[(int) ToolType.PullCom];
@@ -202,6 +203,7 @@ namespace Tools
         public float _gasAmount;
         public float _stiffness;
         public int _resolution;
+        public int _selectedSpawnTargetIndex;
         private MassShape _shapeToSpawn;
 
         public enum SpawnTarget
@@ -254,7 +256,7 @@ namespace Tools
         public void UpdateSpawnTarget()
         {
             SpawnTarget[] spawnTargets = (SpawnTarget[]) Enum.GetValues(typeof(SpawnTarget));
-            _currentTarget = spawnTargets[_ctx._selectedSpawnTargetIndex];
+            _currentTarget = spawnTargets[_selectedSpawnTargetIndex];
             if (_shapeToSpawn is null)
             {
                 return;
