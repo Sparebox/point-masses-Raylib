@@ -28,6 +28,11 @@ public class Gui
                 ShowTools(ctx, toolSystem);
                 ImGui.EndMenu();
             }
+            if (ImGui.BeginMenu("Camera"))
+            {
+                ShowCameraSettings(ctx);
+                ImGui.EndMenu();
+            }
             if (ImGui.BeginMenu("N-Body Sim"))
             {
                 ShowNbodySimOptions(ctx);
@@ -101,7 +106,7 @@ public class Gui
         if (ImGui.BeginPopup("TimestepSettings"))
         {
             ctx._simPaused = true;
-            ImGui.Text("Substep settings displayed here");
+            ImGui.Text("Substep settings");
             ImGui.InputFloat("Timestep [s]", ref ctx._timestep);
             ImGui.InputInt("Substep count", ref ctx._substeps);
             if (ImGui.Button("Close"))
@@ -230,5 +235,18 @@ public class Gui
         ImGui.InputFloat("Gravitational constant", ref nBodySystem._gravConstant);
         ImGui.InputFloat("Minimum distance", ref nBodySystem._minDist);
         ImGui.InputFloat("Threshold", ref nBodySystem._threshold);
+    }
+
+    private static void ShowCameraSettings(Context ctx)
+    {
+        ImGui.Text("Camera settings");
+        ImGui.Text(string.Format("Current offset: ({0:0}, {1:0})", ctx.Camera.Offset.X, ctx.Camera.Offset.Y));
+        ImGui.PushItemWidth(50f);
+        ImGui.InputFloat("Move speed", ref ctx.Camera._moveSpeed);
+        ImGui.PopItemWidth();
+        if (ImGui.Button("Reset camera"))
+        {
+            ctx.Camera.Reset();
+        }
     }
 }

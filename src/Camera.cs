@@ -6,14 +6,13 @@ namespace point_masses.Camera;
 
 public class Camera
 {
-    public float MoveSpeed { get; init; }
-
-    private Vector2 _offset;
+    public Vector2 Offset { get; private set; }
+    public float _moveSpeed;
 
     public Camera(float moveSpeed)
     {
-        _offset = new();
-        MoveSpeed = moveSpeed;
+        Offset = new();
+        _moveSpeed = moveSpeed;
     }
 
     public void UpdateInput()
@@ -43,22 +42,22 @@ public class Camera
 
     public void Move(in Vector2 dir)
     {
-        _offset += MoveSpeed * dir;
+        Offset += _moveSpeed * dir;
     }
 
     public void Reset()
     {
-        _offset = Vector2.Zero;
+        Offset = Vector2.Zero;
     }
 
     public Vector2 GetOffsetCoords(in Vector2 pos)
     {
-        return pos + _offset;
+        return pos + Offset;
     }
 
     public Vector2 GetOffsetCoords(int x, int y)
     {
-        return new(x + _offset.X, y + _offset.Y);
+        return new(x + Offset.X, y + Offset.Y);
     }
 
 }
