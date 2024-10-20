@@ -410,8 +410,9 @@ public partial class MassShape : Entity
 
     private void DrawInfo()
     {
+        Vector2 centroidDrawPos = Ctx.Camera.GetOffsetCoords(UnitConv.MetersToPixels(Centroid));
         ImGui.Begin(string.Format("Body {0} info", Id), ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
-        ImGui.SetWindowPos(UnitConv.MetersToPixels(Centroid) + new Vector2(25f, 0f));
+        ImGui.SetWindowPos(centroidDrawPos + new Vector2(25f, 0f));
         ImGui.SetWindowSize(new (250f, 130f));
         ImGui.Text(string.Format("Mass: {0} kg", Mass));
         ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel / Ctx.Substep));
@@ -423,7 +424,7 @@ public partial class MassShape : Entity
         ImGui.End();
         var centerOfMassIcon = Ctx.TextureManager.GetTexture("center_of_mass.png");
         Vector2 offset = new(-centerOfMassIcon.Width * 0.5f, -centerOfMassIcon.Height * 0.5f);
-        DrawTextureEx(centerOfMassIcon, UnitConv.MetersToPixels(Centroid) + offset * 0.5f, 0f, 0.5f, Color.White);
+        DrawTextureEx(centerOfMassIcon, centroidDrawPos + offset * 0.5f, 0f, 0.5f, Color.White);
     }
 
     public static bool operator == (MassShape a, MassShape b)

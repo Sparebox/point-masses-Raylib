@@ -5,22 +5,22 @@ using Textures;
 using Utils;
 using Raylib_cs;
 using PointMasses.Systems;
+using point_masses.Camera;
 
 namespace Sim;
 
 public class Context
 {
     public ReaderWriterLockSlim Lock { get; set; }
-    public float _timestep;
     public float Substep { get; set; }
-    public int _substeps;
     public Vector2 Gravity { get; init; }
     public TextureManager TextureManager { get; init; }
     public QuadTree QuadTree { get; set; }
     public HashSet<LineCollider> LineColliders { get; set; }
     public HashSet<MassShape> MassShapes { get; init; }
     public List<ISystem> Systems { get; init; }
-    public List<ISystem> SubStepSystems { get; init;}
+    public List<ISystem> SubStepSystems { get; init; }
+    public Camera Camera { get; init; }
 
     public int MassCount 
     {
@@ -56,6 +56,8 @@ public class Context
 
     // Fields
     private SaveState _saveState;
+    public int _substeps;
+    public float _timestep;
     public bool _gravityEnabled;
     public bool _collisionsEnabled;
     public bool _drawForces;
@@ -74,6 +76,7 @@ public class Context
         _substeps = subSteps;
         Substep = timeStep / subSteps;
         Gravity = gravity;
+        Camera = new Camera(1f);
         Lock = new ReaderWriterLockSlim();
         TextureManager = new TextureManager();
         _gravityEnabled = false;
@@ -130,6 +133,7 @@ public class Context
     {
         Lock.EnterWriteLock();
         _simPaused = true;
+        Camera.Reset();
         LineColliders.Clear();
         MassShapes.Clear();
         foreach (var c in _saveState.LineColliders)

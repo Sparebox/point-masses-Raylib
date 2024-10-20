@@ -1,6 +1,7 @@
 using System.Numerics;
 using Entities;
 using Raylib_cs;
+using Sim;
 using Utils;
 using static Raylib_cs.Raylib;
 
@@ -55,11 +56,9 @@ public class SpringConstraint : Constraint
 
     public override void Draw()
     {
-        DrawLine(
-            UnitConv.MetersToPixels(PointA.Pos.X),
-            UnitConv.MetersToPixels(PointA.Pos.Y),
-            UnitConv.MetersToPixels(PointB.Pos.X),
-            UnitConv.MetersToPixels(PointB.Pos.Y),
+        DrawLineV(
+            UnitConv.MetersToPixels(PointA.Pos),
+            UnitConv.MetersToPixels(PointB.Pos),
             Color.White
         );
     }

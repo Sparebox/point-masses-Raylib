@@ -202,6 +202,9 @@ public class Program
                 spawnTool.UpdateSpawnTarget();
             }
         }
+        // Handle camera
+        _context.Camera.UpdateInput();
+
         // Temporary demo keys
         if (IsKeyPressed(KeyboardKey.C))
         {

@@ -97,8 +97,8 @@ public class LineCollider : Entity
             );
         }
         DrawLineV(
-            UnitConv.MetersToPixels(StartPos),
-            UnitConv.MetersToPixels(EndPos),
+            Ctx.Camera.GetOffsetCoords(UnitConv.MetersToPixels(StartPos)),
+            Ctx.Camera.GetOffsetCoords(UnitConv.MetersToPixels(EndPos)),
             Color.White
         );
     }
