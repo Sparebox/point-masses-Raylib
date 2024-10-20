@@ -230,7 +230,7 @@ public class FluidSystem : ISystem
                     {
                         velocity = new(Cells[x, y]._vel.X, AvgV(x, y));
                         pos = IndexToUvelPos(x, y);
-                        prevPos = pos - velocity * _ctx.Substep;
+                        prevPos = pos - velocity * _ctx._timestep;
                         sampledVel = SampleVelocity(prevPos, true);
                         if (sampledVel.HasValue)
                             Cells[x, y]._vel.X = sampledVel.Value;
@@ -241,7 +241,7 @@ public class FluidSystem : ISystem
                     {
                         velocity = new(AvgU(x, y), Cells[x, y]._vel.Y);
                         pos = IndexToVvelPos(x, y);
-                        prevPos = pos - velocity * _ctx.Substep;
+                        prevPos = pos - velocity * _ctx._timestep;
                         sampledVel = SampleVelocity(prevPos, false);
                         if (sampledVel.HasValue)
                             Cells[x, y]._vel.Y = sampledVel.Value;
@@ -258,7 +258,7 @@ public class FluidSystem : ISystem
                 {
                     Vector2 velocity = new((Cells[x, y]._vel.X + Cells[x + 1, y]._vel.X) * 0.5f, (Cells[x, y]._vel.Y + Cells[x, y - 1]._vel.Y) * 0.5f);
                     Vector2 pos = IndexToSmokePos(x, y);
-                    Vector2 prevPos = pos - velocity * _ctx.Substep;
+                    Vector2 prevPos = pos - velocity * _ctx._timestep;
                     float sampledDensity = SampleDensity(prevPos);
                     Cells[x, y].Density = sampledDensity;
                 }
