@@ -29,6 +29,26 @@ public partial class MassShape
         return s;
     }
 
+    public static ShapePreview SoftBallPreview(float x, float y, float radius, float mass, int res, Context ctx)
+    {
+        float angle = MathF.PI / 2f;
+        ShapePreview preview = new();
+        // Points
+        for (int i = 0; i < res; i++)
+        {
+            float x0 = radius * MathF.Cos(angle);
+            float y0 = radius * MathF.Sin(angle);
+            preview._points.Add(new(x0 + x, y0 + y, mass / res, false, ctx));
+            angle += 2f * MathF.PI / res;
+        }
+        // Constraints
+        for (int i = 0; i < res; i++)
+        {
+            preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[(i + 1) % res], 0f, ctx));
+        }
+        return preview;
+    }
+
     public static MassShape HardBall(float x, float y, float radius, float mass, int res, Context ctx)
     {
         float angle = MathF.PI / 2f;
@@ -55,6 +75,33 @@ public partial class MassShape
         }
         
         return s;
+    }
+
+    public static ShapePreview HardBallPreview(float x, float y, float radius, float mass, int res, Context ctx)
+    {
+        float angle = MathF.PI / 2f;
+        ShapePreview preview = new();
+        // Points
+        for (int i = 0; i < res; i++)
+        {
+            float x0 = radius * MathF.Cos(angle);
+            float y0 = radius * MathF.Sin(angle);
+            preview._points.Add(new(x0 + x, y0 + y, mass / res, false, ctx));
+            angle += 2f * MathF.PI / res;
+        }
+        // Constraints
+        HashSet<int> visitedPoints = new();
+        for (int i = 0; i < res; i++)
+        {
+            preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[(i + 1) % res], 1f, ctx));
+            if (!visitedPoints.Contains(i))
+            {
+                int nextIndex = res % 2 == 0 ? (i + res / 2 - 1) % res : (i + res / 2) % res;
+                preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[nextIndex], 1f, ctx));
+                visitedPoints.Add(i);
+            }
+        }
+        return preview;
     }
 
     public static MassShape Chain(float x0, float y0, float x1, float y1, float mass, int res, (bool, bool) pins, Context ctx)
@@ -174,6 +221,27 @@ public partial class MassShape
         return c;
     }
 
+    public static ShapePreview BoxPreview(float x, float y, float size, float mass, Context ctx)
+    {
+        ShapePreview preview = new()
+        {
+            _points = new() 
+            {
+                new(x - size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx),
+                new(x - size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx),
+                new(x + size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx),
+                new(x + size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx)
+            },
+            _constraints = new()
+        };
+        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[1], 1f, ctx));
+        preview._constraints.Add(new DistanceConstraint(preview._points[1], preview._points[2], 1f, ctx));
+        preview._constraints.Add(new DistanceConstraint(preview._points[2], preview._points[3], 1f, ctx));
+        preview._constraints.Add(new DistanceConstraint(preview._points[3], preview._points[0], 1f, ctx));
+        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[2], 1f, ctx));
+        return preview;
+    }
+
     public static MassShape SoftBox(float x, float y, float size, float mass, float stiffness, Context ctx)
     {
         MassShape c = new(ctx, false)
@@ -194,6 +262,26 @@ public partial class MassShape
         return c;
     }
 
+    public static ShapePreview SoftBoxPreview(float x, float y, float size, float mass, Context ctx)
+    {
+        ShapePreview preview = new()
+        {
+            _points =  
+            {
+                new(x - size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx),
+                new(x - size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx),
+                new(x + size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx),
+                new(x + size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx)
+            }
+        };
+        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[1], 0f, ctx));
+        preview._constraints.Add(new DistanceConstraint(preview._points[1], preview._points[2], 0f, ctx));
+        preview._constraints.Add(new DistanceConstraint(preview._points[2], preview._points[3], 0f, ctx));
+        preview._constraints.Add(new DistanceConstraint(preview._points[3], preview._points[0], 0f, ctx));
+        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[2], 0f, ctx));
+        return preview;
+    }
+
     public static MassShape Particle(float x, float y, float mass, Context ctx)
     {
         MassShape c = new(ctx, false)
@@ -201,5 +289,60 @@ public partial class MassShape
             _points = { new(x, y, mass, false, ctx) }
         };
         return c;
+    }
+
+    public static ShapePreview ParticlePreview(float x, float y, float mass, Context ctx)
+    {
+        ShapePreview preview = new()
+        {
+            _points = { new(x, y, mass, false, ctx) }
+        };
+        return preview;
+    }
+
+    public struct ShapePreview
+    {
+        public List<Constraint> _constraints;
+        public List<PointMass> _points;
+
+        public readonly Vector2 Centroid
+        {
+            get
+            {
+                var points = _points;
+                return points.Aggregate(
+                    new Vector2(),
+                    (centroid, p) => centroid += p.Pos,
+                    centroid => centroid / points.Count
+                );
+            }
+        }
+
+        public ShapePreview()
+        {
+            _points = new();
+            _constraints = new();
+        }
+
+        public readonly void Draw()
+        {
+            foreach (var c in _constraints)
+            {
+                c.Draw();
+            }
+            foreach (var p in _points)
+            {
+                p.Draw();
+            }
+        }
+
+        public readonly void Move(in Vector2 translation)
+        {
+            foreach (PointMass p in _points)
+            {
+                p.Pos += translation;
+                p.PrevPos = p.Pos;
+            }
+        }
     }
 }
