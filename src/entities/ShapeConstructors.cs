@@ -159,10 +159,10 @@ public partial class MassShape
         {
             _points = new() 
             {
-                new(x - size / 2f, y - size / 2f, mass / 4f, false, ctx),
-                new(x - size / 2f, y + size / 2f, mass / 4f, false, ctx),
-                new(x + size / 2f, y + size / 2f, mass / 4f, false, ctx),
-                new(x + size / 2f, y - size / 2f, mass / 4f, false, ctx)
+                new(x - size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx),
+                new(x - size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx),
+                new(x + size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx),
+                new(x + size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx)
             },
             _constraints = new()
         };
@@ -180,10 +180,10 @@ public partial class MassShape
         {
             _points =  
             {
-                new(x - size / 2f, y - size / 2f, mass / 4f, false, ctx),
-                new(x - size / 2f, y + size / 2f, mass / 4f, false, ctx),
-                new(x + size / 2f, y + size / 2f, mass / 4f, false, ctx),
-                new(x + size / 2f, y - size / 2f, mass / 4f, false, ctx)
+                new(x - size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx),
+                new(x - size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx),
+                new(x + size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx),
+                new(x + size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx)
             }
         };
         c._constraints.Add(new DistanceConstraint(c._points[0], c._points[1], stiffness, ctx));

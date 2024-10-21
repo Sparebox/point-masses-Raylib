@@ -46,7 +46,7 @@ public class Program
         
         float winWidthMeters = UnitConv.PixelsToMeters(Constants.WinW);
         float winHeightMeters = UnitConv.PixelsToMeters(Constants.WinH);
-        Context ctx = new(timeStep: 1f / 60f, 1, gravity: new(0f, 9.81f))
+        Context ctx = new(timeStep: 1f / 30f, 5, gravity: new(0f, 9.81f))
         {
             QuadTree = new(
                 UnitConv.PixelsToMeters(new Vector2(Constants.WinW / 2f, Constants.WinH / 2f)),

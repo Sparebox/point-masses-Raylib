@@ -75,8 +75,8 @@ public class PointMass : Entity
 
     public override void Draw()
     {
-        var drawPos = Ctx.Camera.GetOffsetCoords(UnitConv.MetersToPixels(Pos));
-        DrawCircleLinesV(drawPos, UnitConv.MetersToPixels(Radius), Color.White);
+        var viewPos = Ctx.Camera.ViewPos(UnitConv.MetersToPixels(Pos));
+        DrawCircleLinesV(viewPos, UnitConv.MetersToPixels(Radius), Color.White);
     }
 
     public void ApplyForce(in Vector2 force)

@@ -20,19 +20,19 @@ public class Camera
         Vector2 dir = new();
         if (IsKeyDown(KeyboardKey.A))
         {
-            dir.X -= 1f;
+            dir.X += 1f;
         }
         if (IsKeyDown(KeyboardKey.D))
         {
-            dir.X += 1f;
+            dir.X -= 1f;
         }
         if (IsKeyDown(KeyboardKey.W))
         {
-            dir.Y -= 1f;
+            dir.Y += 1f;
         }
         if (IsKeyDown(KeyboardKey.S))
         {
-            dir.Y += 1f;
+            dir.Y -= 1f;
         }
         if (dir.LengthSquared() != 0f)
         {
@@ -50,14 +50,24 @@ public class Camera
         Offset = Vector2.Zero;
     }
 
-    public Vector2 GetOffsetCoords(in Vector2 pos)
+    public Vector2 ViewPos(in Vector2 pos)
     {
         return pos + Offset;
     }
 
-    public Vector2 GetOffsetCoords(int x, int y)
+    public Vector2 ViewPos(int x, int y)
     {
         return new(x + Offset.X, y + Offset.Y);
+    }
+
+    public Vector2 WorldPos(in Vector2 pos)
+    {
+        return pos - Offset;
+    }
+
+    public Vector2 WorldPos(int x, int y)
+    {
+        return new(x - Offset.X, y - Offset.Y);
     }
 
 }

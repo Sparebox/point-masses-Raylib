@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Text;
 using Editing;
 using Entities;
+using Physics;
 using PointMasses.Systems;
 using Raylib_cs;
 using Sim;
@@ -247,8 +248,8 @@ namespace Tools
             {
                 return;
             }
-            Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
-            Vector2 translation = mousePos - _shapeToSpawn.Centroid;
+            Vector2 mouseWorldPos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
+            Vector2 translation = mouseWorldPos - _shapeToSpawn.Centroid;
             _shapeToSpawn.Move(translation);
             _shapeToSpawn.Draw();
         }
@@ -291,6 +292,24 @@ namespace Tools
                 sb.Append(tool.ToString() + "\0");
             }
             return sb.ToString();
+        }
+
+        private struct ShapePreview
+        {
+            public List<Constraint> _constraints;
+            public List<PointMass> _points;
+
+            public readonly void Draw()
+            {
+                foreach (var c in _constraints)
+                {
+                    c.Draw();
+                }
+                foreach (var p in _points)
+                {
+                    p.Draw();
+                }
+            }
         }
     }
 
@@ -349,7 +368,7 @@ namespace Tools
             {
                 return;
             }
-            Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
+            Vector2 mousePos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
             BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
             var shapes = _ctx.GetMassShapes(area);
             if (!shapes.Any())
@@ -362,7 +381,7 @@ namespace Tools
                 return;
             }
             _centerOfMass = closest.CenterOfMass;
-            Vector2 force = _forceCoeff * (mousePos - _centerOfMass);
+            Vector2 force = _ctx._timestep * _forceCoeff * (mousePos - _centerOfMass);
             closest.ApplyForceCOM(force);
             _shouldVisualize = true;
         }
@@ -374,7 +393,7 @@ namespace Tools
             if (_shouldVisualize)
             {
                 _shouldVisualize = false;
-                DrawLineV(UnitConv.MetersToPixels(_centerOfMass), mousePos, Color.Red);
+                DrawLineV(_ctx.Camera.ViewPos(UnitConv.MetersToPixels(_centerOfMass)), mousePos, Color.Red);
             }
         }
     }
@@ -397,7 +416,7 @@ namespace Tools
             {
                 return;
             }
-            Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
+            Vector2 mousePos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
             BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
             var points = _ctx.GetPointMasses(area);
             if (!points.Any())
@@ -411,7 +430,7 @@ namespace Tools
                 {
                     continue;
                 }
-                Vector2 force = _forceCoeff * (mousePos - p.Pos);
+                Vector2 force = _ctx._timestep * _forceCoeff * (mousePos - p.Pos);
                 p.ApplyForce(force);
                 _positions.Add(p.Pos);
             }
@@ -427,7 +446,7 @@ namespace Tools
                 _shouldVisualize = false;
                 foreach (var pos in _positions)
                 {
-                DrawLineV(UnitConv.MetersToPixels(pos), mousePos, Color.Red);
+                DrawLineV(_ctx.Camera.ViewPos(UnitConv.MetersToPixels(pos)), mousePos, Color.Red);
                 }
             }
         }
@@ -451,7 +470,7 @@ namespace Tools
             {
                 foreach (var p in s._points)
                 {
-                    float force = GetRandomValue(Constants.MinWindForce, Constants.MaxWindForce);
+                    float force = _ctx._timestep * GetRandomValue(Constants.MinWindForce, Constants.MaxWindForce);
                     p.ApplyForce(force * Direction);
                 }
             }
@@ -474,7 +493,7 @@ namespace Tools
             {
                 return;
             }
-            Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
+            Vector2 mousePos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
             var shapes = _ctx.GetMassShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
             if (!shapes.Any())
             {
@@ -491,7 +510,7 @@ namespace Tools
                     continue;
                 }
                 Vector2 normal = new(comToPoint.Y / radius, -comToPoint.X / radius);
-                p.ApplyForce((IsMouseButtonDown(MouseButton.Right) ? -1f : 1f) * Constants.RotationForce * normal);
+                p.ApplyForce((IsMouseButtonDown(MouseButton.Right) ? -1f : 1f) * _ctx._timestep * Constants.RotationForce * normal);
             }
         }
 
@@ -545,7 +564,7 @@ namespace Tools
             var mousePos = GetMousePosition();
             foreach (var pos in _positions)
             {
-                Vector2 pixelPos = UnitConv.MetersToPixels(pos);
+                Vector2 pixelPos = _ctx.Camera.ViewPos(UnitConv.MetersToPixels(pos));
                 DrawText("G", (int) pixelPos.X, (int) pixelPos.Y, 20, Color.Yellow);
             }
             DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
@@ -553,7 +572,7 @@ namespace Tools
 
         public override void Update()
         {
-            var mousePosMeters = UnitConv.PixelsToMeters(GetMousePosition());
+            var mousePosMeters = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
             if (IsMouseButtonPressed(MouseButton.Left))
             {
                 _positions.Add(mousePosMeters);

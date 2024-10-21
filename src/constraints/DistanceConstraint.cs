@@ -62,12 +62,12 @@ public class DistanceConstraint : Constraint
 
     public override void Draw()
     {
-        var pointAdrawPos = _ctx.Camera.GetOffsetCoords(UnitConv.MetersToPixels(PointA.Pos));
-        var pointBdrawPos = _ctx.Camera.GetOffsetCoords(UnitConv.MetersToPixels(PointB.Pos));
+        var pointAviewPos = _ctx.Camera.ViewPos(UnitConv.MetersToPixels(PointA.Pos));
+        var pointBviewPos = _ctx.Camera.ViewPos(UnitConv.MetersToPixels(PointB.Pos));
 
         DrawLineV(
-            pointAdrawPos,
-            pointBdrawPos,
+            pointAviewPos,
+            pointBviewPos,
             Color.White
         );
     }
