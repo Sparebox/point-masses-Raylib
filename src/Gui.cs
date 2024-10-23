@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Editing;
+using Entities;
 using ImGuiNET;
 using PointMasses.Systems;
 using Sim;
@@ -12,6 +13,8 @@ namespace UI;
 public class Gui
 {
     
+    private static bool ShowSystemEnergy;
+
     public static void Draw(Context ctx)
     {
         var toolSystem = (ToolSystem) ctx.GetSystem(typeof(ToolSystem));
@@ -57,7 +60,17 @@ public class Gui
         ImGui.Text(string.Format("Substeps: {0}", ctx._substeps));
         ImGui.Text(string.Format("Step: {0:0.0000} ms", ctx._timestep * 1e3f));
         ImGui.Text(string.Format("Substep: {0:0.0000} ms", ctx.Substep * 1e3f));
-        ImGui.Text(string.Format("System energy: {0:0.###} kJ", ctx.SystemEnergy / 1e3f));
+        if (ShowSystemEnergy)
+        {
+            ImGui.Text(string.Format("System energy: {0:0.###} kJ", ctx.SystemEnergy / 1e3f));
+            if (ImGui.Button("Hide system energy"))
+            {
+                ShowSystemEnergy = false;
+            }
+        } else if (ImGui.Button("Show system energy"))
+        {
+            ShowSystemEnergy = true;
+        }
         ImGui.Checkbox("Gravity", ref ctx._gravityEnabled);
         ImGui.Checkbox("Draw forces", ref ctx._drawForces);
         ImGui.Checkbox("Draw AABBs", ref ctx._drawAABBS);
@@ -82,6 +95,7 @@ public class Gui
         if (ImGui.Button("Delete all shapes"))
         {
             ctx.Lock.EnterWriteLock();
+            Entity.ResetIdCounter();
             foreach (var shape in ctx.MassShapes)
             {
                 shape._toBeDeleted = true;
@@ -154,19 +168,19 @@ public class Gui
         var spawnTool = (Spawn) toolSystem.SelectedTool;
         if (ImGui.Combo("Spawn target", ref spawnTool._selectedSpawnTargetIndex, TargetsToComboString()))
         {
-            spawnTool.UpdateSpawnTarget();
+            spawnTool.UpdateSpawnPreview();
         }
         if (ImGui.InputFloat("Mass", ref spawnTool._mass))
         {
             spawnTool._mass = MathF.Abs(spawnTool._mass);
-            spawnTool.UpdateSpawnTarget();
+            spawnTool.UpdateSpawnPreview();
         }
         if (spawnTool._currentTarget == SpawnTarget.Ball || spawnTool._currentTarget == SpawnTarget.SoftBall)
         {
             if (ImGui.InputInt("Resolution", ref spawnTool._resolution))
             {
                 spawnTool._resolution = Math.Abs(spawnTool._resolution);
-                spawnTool.UpdateSpawnTarget();
+                spawnTool.UpdateSpawnPreview();
             }
         }
         if (spawnTool._currentTarget == SpawnTarget.SoftBox || spawnTool._currentTarget == SpawnTarget.SoftBall)
@@ -174,14 +188,14 @@ public class Gui
             if (ImGui.InputFloat("Stiffness", ref spawnTool._stiffness))
             {
                 spawnTool._stiffness = MathF.Abs(spawnTool._stiffness);
-                spawnTool.UpdateSpawnTarget();
+                spawnTool.UpdateSpawnPreview();
             }
             if (spawnTool._currentTarget == SpawnTarget.SoftBall)
             {
                 if (ImGui.InputFloat("Gas amount", ref spawnTool._gasAmount))
                 {
                     spawnTool._gasAmount = MathF.Abs(spawnTool._gasAmount);
-                    spawnTool.UpdateSpawnTarget();
+                    spawnTool.UpdateSpawnPreview();
                 }
             }
         }

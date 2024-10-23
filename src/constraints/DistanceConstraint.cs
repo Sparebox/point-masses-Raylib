@@ -13,14 +13,17 @@ public class DistanceConstraint : Constraint
     public float Stiffness { get; init; }
     private readonly Context _ctx;
 
-    public DistanceConstraint(in PointMass a, in PointMass b, float stiffness, Context ctx)
+    public DistanceConstraint(in PointMass a, in PointMass b, float stiffness, Context ctx, bool incrementId = true)
     {
         PointA = a;
         PointB = b;
         Length = Vector2.Distance(PointA.Pos, PointB.Pos);
         Stiffness = stiffness;
         _ctx = ctx;
-        Id = _idCounter++;
+        if (incrementId)
+        {
+            Id = _idCounter++;
+        }
     }
 
     public DistanceConstraint(in DistanceConstraint c)

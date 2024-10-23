@@ -26,13 +26,13 @@ public abstract class Entity
     protected float? _mass;
     protected float _invMass;
 
-    public Entity(Context ctx, float mass, uint? id = null)
+    public Entity(Context ctx, float mass, uint? id = null, bool incrementId = true)
     {
         if (id.HasValue)
         {
             Id = id.Value;
         }
-        else
+        else if (incrementId)
         {
             Id = _idCounter++;
         }
@@ -40,13 +40,13 @@ public abstract class Entity
         Ctx = ctx;
     }
 
-    public Entity(Context ctx, uint? id = null)
+    public Entity(Context ctx, uint? id = null, bool incrementId = true)
     {
         if (id.HasValue)
         {
             Id = id.Value;
         }
-        else
+        else if (incrementId)
         {
             Id = _idCounter++;
         }
@@ -54,6 +54,11 @@ public abstract class Entity
     }
 
     public Entity() {}
+
+    public static void ResetIdCounter()
+    {
+        _idCounter = 0;
+    }
 
     public abstract void Update();
     public abstract void Draw();

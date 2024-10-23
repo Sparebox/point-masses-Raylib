@@ -2,12 +2,12 @@ using System.Numerics;
 using System.Text;
 using Editing;
 using Entities;
-using Physics;
 using PointMasses.Systems;
 using Raylib_cs;
 using Sim;
 using Tools;
 using Utils;
+using static Entities.MassShape;
 using static Raylib_cs.Raylib;
 
 namespace PointMasses.Systems
@@ -205,7 +205,7 @@ namespace Tools
         public float _stiffness;
         public int _resolution;
         public int _selectedSpawnTargetIndex;
-        private MassShape _shapeToSpawn;
+        private ShapePreview _shapePreview;
 
         public enum SpawnTarget
         {
@@ -225,7 +225,7 @@ namespace Tools
             _stiffness = DefaultStiffness;
             _gasAmount = DefaultGasAmt;
             Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
-            _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, _mass, _ctx);
+            _shapePreview = BoxPreview(mousePos.X, mousePos.Y, Radius, _mass, _ctx);
         }
 
         public override void Update() 
@@ -234,82 +234,82 @@ namespace Tools
             {
                 return;
             }
-            if (_shapeToSpawn is null || Radius == 0f || _mass == 0f)
+            if (Radius == 0f || _mass == 0f)
             {
                 return;
             }
-            _ctx.AddMassShape(_shapeToSpawn);
-            _shapeToSpawn = new MassShape(_shapeToSpawn);
+            _ctx.AddMassShape(CreateShape());
         }
 
         public override void Draw()
         {
-            if (_shapeToSpawn is null)
-            {
-                return;
-            }
             Vector2 mouseWorldPos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
-            Vector2 translation = mouseWorldPos - _shapeToSpawn.Centroid;
-            _shapeToSpawn.Move(translation);
-            _shapeToSpawn.Draw();
+            Vector2 translation = mouseWorldPos - _shapePreview.Centroid;
+            _shapePreview.Move(translation);
+            _shapePreview.Draw();
         }
 
-        public void UpdateSpawnTarget()
+        public void UpdateSpawnPreview()
         {
             SpawnTarget[] spawnTargets = (SpawnTarget[]) Enum.GetValues(typeof(SpawnTarget));
             _currentTarget = spawnTargets[_selectedSpawnTargetIndex];
-            if (_shapeToSpawn is null)
-            {
-                return;
-            }
-            Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
+            Vector2 mousePosMeters = UnitConv.PixelsToMeters(GetMousePosition());
             switch (_currentTarget)
             {
                 case SpawnTarget.Box:
-                    _shapeToSpawn = MassShape.Box(mousePos.X, mousePos.Y, Radius, _mass, _ctx);
+                    _shapePreview = BoxPreview(mousePosMeters.X, mousePosMeters.Y, Radius, _mass, _ctx);
                     break;
                 case SpawnTarget.SoftBox:
-                    _shapeToSpawn = MassShape.SoftBox(mousePos.X, mousePos.Y, Radius, _mass, _stiffness, _ctx);
+                    _shapePreview = SoftBoxPreview(mousePosMeters.X, mousePosMeters.Y, Radius, _mass, _ctx);
                     break;
                 case SpawnTarget.Ball:
-                    _shapeToSpawn = MassShape.HardBall(mousePos.X, mousePos.Y, Radius, _mass, _resolution, _ctx);
+                    _shapePreview = HardBallPreview(mousePosMeters.X, mousePosMeters.Y, Radius, _mass, _resolution, _ctx);
                     break;
                 case SpawnTarget.SoftBall:
-                    _shapeToSpawn = MassShape.SoftBall(mousePos.X, mousePos.Y, Radius, _mass, _resolution, _stiffness, _gasAmount, _ctx);
+                    _shapePreview = SoftBallPreview(mousePosMeters.X, mousePosMeters.Y, Radius, _mass, _resolution, _ctx);
                     break;
                 case SpawnTarget.Particle:
-                    _shapeToSpawn = MassShape.Particle(mousePos.X, mousePos.Y, PointMass.RadiusToMass(Radius), _ctx);
+                    _shapePreview = ParticlePreview(mousePosMeters.X, mousePosMeters.Y, PointMass.RadiusToMass(Radius), _ctx);
                     break;
             }
+        }
+
+        private MassShape CreateShape()
+        {
+            SpawnTarget[] spawnTargets = (SpawnTarget[]) Enum.GetValues(typeof(SpawnTarget));
+            _currentTarget = spawnTargets[_selectedSpawnTargetIndex];
+            Vector2 mousePosMeters = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
+            MassShape shapeToSpawn = null;
+            switch (_currentTarget)
+            {
+                case SpawnTarget.Box:
+                    shapeToSpawn = Box(mousePosMeters.X, mousePosMeters.Y, Radius, _mass, _ctx);
+                    break;
+                case SpawnTarget.SoftBox:
+                    shapeToSpawn = SoftBox(mousePosMeters.X, mousePosMeters.Y, Radius, _mass, _stiffness, _ctx);
+                    break;
+                case SpawnTarget.Ball:
+                    shapeToSpawn = HardBall(mousePosMeters.X, mousePosMeters.Y, Radius, _mass, _resolution, _ctx);
+                    break;
+                case SpawnTarget.SoftBall:
+                    shapeToSpawn = SoftBall(mousePosMeters.X, mousePosMeters.Y, Radius, _mass, _resolution, _stiffness, _gasAmount, _ctx);
+                    break;
+                case SpawnTarget.Particle:
+                    shapeToSpawn = Particle(mousePosMeters.X, mousePosMeters.Y, PointMass.RadiusToMass(Radius), _ctx);
+                    break;
+            }
+            return shapeToSpawn;
         }
 
         public static string TargetsToComboString()
         {
             StringBuilder sb = new();
             SpawnTarget[] spawnTargets = (SpawnTarget[]) Enum.GetValues(typeof(SpawnTarget));
-            foreach (var tool in spawnTargets)
+            foreach (var target in spawnTargets)
             {
-                sb.Append(tool.ToString() + "\0");
+                sb.Append(target.ToString() + "\0");
             }
             return sb.ToString();
-        }
-
-        private struct ShapePreview
-        {
-            public List<Constraint> _constraints;
-            public List<PointMass> _points;
-
-            public readonly void Draw()
-            {
-                foreach (var c in _constraints)
-                {
-                    c.Draw();
-                }
-                foreach (var p in _points)
-                {
-                    p.Draw();
-                }
-            }
         }
     }
 

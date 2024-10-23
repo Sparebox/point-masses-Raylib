@@ -250,14 +250,13 @@ public partial class MassShape : Entity
             _toBeDeleted = true;
             return;
         }
-        if (_showInfo)
-        {
-            _lastCenterOfMass = CenterOfMass;
-            _lastAngle = Angle;
-        }
+        _lastCenterOfMass = CenterOfMass;
+        _lastAngle = Angle;
+        
+        _constraints = _constraints.OrderBy(_ => Rng.Gen.Next(_constraints.Count)).ToList(); // Iterate in random order to prevent ghost torque
         for (int i = 0; i < Constants.ConstraintIterations; i++)
         {
-            foreach (Constraint c in _constraints.OrderBy(_ => Rng.Gen.Next(_constraints.Count))) // Iterate in random order to prevent ghost torque
+            foreach (Constraint c in _constraints) 
             {
                 c.Update();
             }

@@ -38,13 +38,13 @@ public partial class MassShape
         {
             float x0 = radius * MathF.Cos(angle);
             float y0 = radius * MathF.Sin(angle);
-            preview._points.Add(new(x0 + x, y0 + y, mass / res, false, ctx));
+            preview._points.Add(new(x0 + x, y0 + y, mass / res, false, ctx, false));
             angle += 2f * MathF.PI / res;
         }
         // Constraints
         for (int i = 0; i < res; i++)
         {
-            preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[(i + 1) % res], 0f, ctx));
+            preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[(i + 1) % res], 0f, ctx, false));
         }
         return preview;
     }
@@ -86,18 +86,18 @@ public partial class MassShape
         {
             float x0 = radius * MathF.Cos(angle);
             float y0 = radius * MathF.Sin(angle);
-            preview._points.Add(new(x0 + x, y0 + y, mass / res, false, ctx));
+            preview._points.Add(new(x0 + x, y0 + y, mass / res, false, ctx, false));
             angle += 2f * MathF.PI / res;
         }
         // Constraints
         HashSet<int> visitedPoints = new();
         for (int i = 0; i < res; i++)
         {
-            preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[(i + 1) % res], 1f, ctx));
+            preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[(i + 1) % res], 1f, ctx, false));
             if (!visitedPoints.Contains(i))
             {
                 int nextIndex = res % 2 == 0 ? (i + res / 2 - 1) % res : (i + res / 2) % res;
-                preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[nextIndex], 1f, ctx));
+                preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[nextIndex], 1f, ctx, false));
                 visitedPoints.Add(i);
             }
         }
@@ -227,18 +227,18 @@ public partial class MassShape
         {
             _points = new() 
             {
-                new(x - size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx),
-                new(x - size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx),
-                new(x + size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx),
-                new(x + size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx)
+                new(x - size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx, false),
+                new(x - size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx, false),
+                new(x + size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx, false),
+                new(x + size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx, false)
             },
             _constraints = new()
         };
-        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[1], 1f, ctx));
-        preview._constraints.Add(new DistanceConstraint(preview._points[1], preview._points[2], 1f, ctx));
-        preview._constraints.Add(new DistanceConstraint(preview._points[2], preview._points[3], 1f, ctx));
-        preview._constraints.Add(new DistanceConstraint(preview._points[3], preview._points[0], 1f, ctx));
-        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[2], 1f, ctx));
+        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[1], 1f, ctx, false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[1], preview._points[2], 1f, ctx, false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[2], preview._points[3], 1f, ctx, false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[3], preview._points[0], 1f, ctx, false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[2], 1f, ctx, false));
         return preview;
     }
 
@@ -268,17 +268,17 @@ public partial class MassShape
         {
             _points =  
             {
-                new(x - size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx),
-                new(x - size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx),
-                new(x + size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx),
-                new(x + size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx)
+                new(x - size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx, false),
+                new(x - size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx, false),
+                new(x + size * 0.5f, y + size * 0.5f, mass * 0.25f, false, ctx, false),
+                new(x + size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx, false)
             }
         };
-        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[1], 0f, ctx));
-        preview._constraints.Add(new DistanceConstraint(preview._points[1], preview._points[2], 0f, ctx));
-        preview._constraints.Add(new DistanceConstraint(preview._points[2], preview._points[3], 0f, ctx));
-        preview._constraints.Add(new DistanceConstraint(preview._points[3], preview._points[0], 0f, ctx));
-        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[2], 0f, ctx));
+        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[1], 0f, ctx, false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[1], preview._points[2], 0f, ctx, false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[2], preview._points[3], 0f, ctx, false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[3], preview._points[0], 0f, ctx, false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[2], 0f, ctx, false));
         return preview;
     }
 
@@ -286,7 +286,7 @@ public partial class MassShape
     {
         MassShape c = new(ctx, false)
         {
-            _points = { new(x, y, mass, false, ctx) }
+            _points = { new(x, y, mass, false, ctx, false) }
         };
         return c;
     }
@@ -295,7 +295,7 @@ public partial class MassShape
     {
         ShapePreview preview = new()
         {
-            _points = { new(x, y, mass, false, ctx) }
+            _points = { new(x, y, mass, false, ctx, false) }
         };
         return preview;
     }

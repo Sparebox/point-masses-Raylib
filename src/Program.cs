@@ -189,7 +189,7 @@ public class Program
             if (selectedTool.GetType() == typeof(Spawn))
             {
                 var spawnTool = (Spawn) selectedTool;
-                spawnTool.UpdateSpawnTarget();
+                spawnTool.UpdateSpawnPreview();
             }
         } 
         else if (GetMouseWheelMoveV().Y < 0f)
@@ -199,7 +199,7 @@ public class Program
             if (selectedTool.GetType() == typeof(Spawn))
             {
                 var spawnTool = (Spawn) selectedTool;
-                spawnTool.UpdateSpawnTarget();
+                spawnTool.UpdateSpawnPreview();
             }
         }
         // Handle camera

@@ -34,7 +34,7 @@ public class PointMass : Entity
     public override Vector2 Centroid => Pos;
     public override Vector2 CenterOfMass => Pos;
     
-    public PointMass(float x, float y, float mass, bool pinned, Context ctx) : base(ctx, mass)
+    public PointMass(float x, float y, float mass, bool pinned, Context ctx, bool incrementId = true) : base(ctx, mass, incrementId: incrementId)
     {
         Pos = new(x, y);
         PrevPos = Pos;
