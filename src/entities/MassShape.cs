@@ -410,16 +410,16 @@ public partial class MassShape : Entity
     private void DrawInfo()
     {
         Vector2 centroidViewPos = Ctx.Camera.ViewPos(UnitConv.MetersToPixels(Centroid));
-        ImGui.Begin(string.Format("Body {0} info", Id), ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
+        ImGui.Begin($"Body id {Id} info", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
         ImGui.SetWindowPos(centroidViewPos + new Vector2(25f, 0f));
         ImGui.SetWindowSize(new (250f, 130f));
-        ImGui.Text(string.Format("Mass: {0} kg", Mass));
-        ImGui.Text(string.Format("Velocity: {0:0.0} m/s", Vel / Ctx.Substep));
-        ImGui.Text(string.Format("Momentum: {0:0.0} kgm/s", Momentum / Ctx.Substep));
-        ImGui.Text(string.Format("Moment of inertia: {0:0} kgm^2", Inertia));
-        ImGui.Text(string.Format("Angular vel: {0:0} deg/s", AngVel / Ctx.Substep * RAD2DEG));
-        ImGui.Text(string.Format("Linear energy: {0:0.##} J", LinEnergy));
-        ImGui.Text(string.Format("Rot energy: {0:0.##} J", RotEnergy));
+        ImGui.Text($"Mass: {Mass} kg");
+        ImGui.Text($"Velocity: {Vel / Ctx.Substep:0.0} m/s");
+        ImGui.Text($"Momentum: {Momentum / Ctx.Substep:0.0} kgm/s");
+        ImGui.Text($"Moment of inertia: {Inertia:0} kgm^2");
+        ImGui.Text($"Angular vel: {AngVel / Ctx.Substep * RAD2DEG:0} deg/s");
+        ImGui.Text($"Linear energy: {LinEnergy:0.##} J");
+        ImGui.Text($"Rot energy: {RotEnergy:0.##} J");
         ImGui.End();
         var centerOfMassIcon = Ctx.TextureManager.GetTexture("center_of_mass.png");
         Vector2 offset = new(-centerOfMassIcon.Width * 0.5f, -centerOfMassIcon.Height * 0.5f);

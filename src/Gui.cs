@@ -47,7 +47,7 @@ public class Gui
 
     private static void ShowSimulationInfo(Context ctx, ToolSystem toolSystem)
     {
-        ImGui.Text(string.Format("FPS: {0}", GetFPS()));
+        ImGui.Text($"FPS: {GetFPS()}");
         ImGui.PushStyleColor(ImGuiCol.Text, ctx._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
         if (ImGui.Checkbox(ctx._simPaused ? "PAUSE" : "RUNNING", ref ctx._simPaused))
         {
@@ -62,7 +62,7 @@ public class Gui
         ImGui.Text($"Substep: {ctx.Substep * 1e3f:0.0000} ms");
         if (ShowSystemEnergy)
         {
-            ImGui.Text(string.Format("System energy: {0:0.###} kJ", ctx.SystemEnergy / 1e3f));
+            ImGui.Text($"System energy: {ctx.SystemEnergy / 1e3f:0.###} kJ");
             if (ImGui.Button("Hide system energy"))
             {
                 ShowSystemEnergy = false;
@@ -254,7 +254,7 @@ public class Gui
     private static void ShowCameraSettings(Context ctx)
     {
         ImGui.Text("Camera settings");
-        ImGui.Text(string.Format("Current offset: ({0:0}, {1:0})", ctx.Camera.Offset.X, ctx.Camera.Offset.Y));
+        ImGui.Text($"Current offset: ({ctx.Camera.Offset.X:0}, {ctx.Camera.Offset.Y:0})");
         ImGui.PushItemWidth(50f);
         ImGui.InputFloat("Move speed", ref ctx.Camera._moveSpeed);
         ImGui.PopItemWidth();

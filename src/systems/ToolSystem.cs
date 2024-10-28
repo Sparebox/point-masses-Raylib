@@ -558,7 +558,7 @@ namespace Tools
             }
             Vector2 mousePos = GetMousePosition();
             float len = UnitConv.PixelsToMeters(Vector2.Distance(_startPos, mousePos));
-            DrawText(string.Format("{0:0.00} m", len), (int) mousePos.X, (int) mousePos.Y + 20, 30, Color.Yellow);
+            DrawText($"{len:0.00} m", (int) mousePos.X, (int) mousePos.Y + 20, 30, Color.Yellow);
             DrawLineV(_startPos, mousePos, Color.Yellow);
         }
 

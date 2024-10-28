@@ -88,7 +88,6 @@ public class QuadTree
             }
             _massShapes.Clear();
         }
-        return;
     }
 
     private void Subdivide()
