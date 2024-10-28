@@ -6,6 +6,7 @@ using Utils;
 using Raylib_cs;
 using PointMasses.Systems;
 using point_masses.Camera;
+using point_masses.systems;
 
 namespace Sim;
 
@@ -219,8 +220,8 @@ public class Context
             height: UnitConv.PixelsToMeters(500f),
             mass: 0.7f,
             res: 42,
-            stiffness: 0.9f,
-            false,
+            stiffness: 0.5f,
+            true,
             this
         ));
     }
@@ -256,7 +257,11 @@ public class Context
     private void LoadSystems()
     {
         Systems.Add(new ToolSystem(this));
-        Systems.Add(new NbodySystem(this));
-        SubStepSystems.Add(new CollisionSystem(this));
+        //Systems.Add(new NbodySystem(this));
+        //SubStepSystems.Add(new CollisionSystem(this));
+        // int terrariumWidth = 15;
+        // int terrariumHeight = 15;
+        // int cellSize = 50;
+        // Systems.Add(new Terrarium(Constants.WinW / 2 - terrariumWidth / 2 * cellSize, Constants.WinH / 2 - terrariumHeight / 2 * cellSize, terrariumWidth, terrariumHeight, cellSize, this));
     }
 }

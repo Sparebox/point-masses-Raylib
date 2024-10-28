@@ -47,7 +47,33 @@ namespace PointMasses.Systems
 
         public void Update() {}
 
-        public void UpdateInput() {}
+        public void UpdateInput() 
+        {
+            if (GetMouseWheelMoveV().Y > 0f)
+            {
+                SelectedTool.ChangeRadius(Tool.BaseRadiusChange);
+                SelectedTool.ChangeDirection(DEG2RAD * Tool.BaseAngleChange);
+                if (SelectedTool.GetType() == typeof(Spawn))
+                {
+                    var spawnTool = (Spawn) SelectedTool;
+                    spawnTool.UpdateSpawnPreview();
+                }
+            } 
+            else if (GetMouseWheelMoveV().Y < 0f)
+            {
+                SelectedTool.ChangeRadius(-Tool.BaseRadiusChange);
+                SelectedTool.ChangeDirection(DEG2RAD * -Tool.BaseAngleChange);
+                if (SelectedTool.GetType() == typeof(Spawn))
+                {
+                    var spawnTool = (Spawn) SelectedTool;
+                    spawnTool.UpdateSpawnPreview();
+                }
+            }
+            if (ToolEnabled)
+            {
+                SelectedTool.Update();
+            }
+        }
 
         public void Draw()
         {

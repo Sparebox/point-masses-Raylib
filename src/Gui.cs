@@ -54,12 +54,12 @@ public class Gui
             ((NbodySystem) ctx.GetSystem(typeof(NbodySystem))).PauseEvent.Reset();
         }
         ImGui.PopStyleColor();
-        ImGui.Text(string.Format("Masses: {0}", ctx.MassCount));
-        ImGui.Text(string.Format("Constraints: {0}", ctx.ConstraintCount));
-        ImGui.Text(string.Format("Shapes: {0}", ctx.MassShapes.Count));
-        ImGui.Text(string.Format("Substeps: {0}", ctx._substeps));
-        ImGui.Text(string.Format("Step: {0:0.0000} ms", ctx._timestep * 1e3f));
-        ImGui.Text(string.Format("Substep: {0:0.0000} ms", ctx.Substep * 1e3f));
+        ImGui.Text($"Masses: {ctx.MassCount}");
+        ImGui.Text($"Constraints: {ctx.ConstraintCount}");
+        ImGui.Text($"Shapes: {ctx.MassShapes.Count}");
+        ImGui.Text($"Substeps: {ctx._substeps}");
+        ImGui.Text($"Step: { ctx._timestep * 1e3f:0.0000} ms");
+        ImGui.Text($"Substep: {ctx.Substep * 1e3f:0.0000} ms");
         if (ShowSystemEnergy)
         {
             ImGui.Text(string.Format("System energy: {0:0.###} kJ", ctx.SystemEnergy / 1e3f));

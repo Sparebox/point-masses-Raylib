@@ -46,7 +46,7 @@ public class Program
         
         float winWidthMeters = UnitConv.PixelsToMeters(Constants.WinW);
         float winHeightMeters = UnitConv.PixelsToMeters(Constants.WinH);
-        Context ctx = new(timeStep: 1f / 30f, 5, gravity: new(0f, 9.81f))
+        Context ctx = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f))
         {
             QuadTree = new(
                 UnitConv.PixelsToMeters(new Vector2(Constants.WinW / 2f, Constants.WinH / 2f)),
@@ -55,12 +55,12 @@ public class Program
                 6
             )
         };
-        ctx.LineColliders = new() {
-            new(0f, 0f, winWidthMeters, 0f, ctx),
-            new(0f, 0f, 0f, winHeightMeters, ctx),
-            new(winWidthMeters, 0f, winWidthMeters, winHeightMeters, ctx),
-            new(0f, winHeightMeters, winWidthMeters, winHeightMeters, ctx)
-        };
+        // ctx.LineColliders = new() {
+        //     new(0f, 0f, winWidthMeters, 0f, ctx),
+        //     new(0f, 0f, 0f, winHeightMeters, ctx),
+        //     new(winWidthMeters, 0f, winWidthMeters, winHeightMeters, ctx),
+        //     new(0f, winHeightMeters, winWidthMeters, winHeightMeters, ctx)
+        // };
         ctx.SaveCurrentState();
         // Load textures
         ctx.TextureManager.LoadTexture("center_of_mass.png");
@@ -141,8 +141,6 @@ public class Program
 
     private static void HandleInput()
     {
-        var toolSystem = (ToolSystem) _context.GetSystem(typeof(ToolSystem));
-        Tool selectedTool = toolSystem.SelectedTool;
         // Keys
         if (IsKeyPressed(KeyboardKey.G))
         {
@@ -175,33 +173,6 @@ public class Program
             subStepSystem.UpdateInput();
         }
 
-        // Handle tool input
-        if (toolSystem.ToolEnabled)
-        {
-            selectedTool.Update();
-        }
-        
-        // Handle mouse input
-        if (GetMouseWheelMoveV().Y > 0f)
-        {
-            selectedTool.ChangeRadius(Tool.BaseRadiusChange);
-            selectedTool.ChangeDirection(DEG2RAD * Tool.BaseAngleChange);
-            if (selectedTool.GetType() == typeof(Spawn))
-            {
-                var spawnTool = (Spawn) selectedTool;
-                spawnTool.UpdateSpawnPreview();
-            }
-        } 
-        else if (GetMouseWheelMoveV().Y < 0f)
-        {
-            selectedTool.ChangeRadius(-Tool.BaseRadiusChange);
-            selectedTool.ChangeDirection(DEG2RAD * -Tool.BaseAngleChange);
-            if (selectedTool.GetType() == typeof(Spawn))
-            {
-                var spawnTool = (Spawn) selectedTool;
-                spawnTool.UpdateSpawnPreview();
-            }
-        }
         // Handle camera
         _context.Camera.UpdateInput();
 
