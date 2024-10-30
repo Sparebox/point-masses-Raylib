@@ -27,7 +27,7 @@ public class BarnesHutTree
     {
         _center = center;
         _size = size;
-        _boundary = new BoundingBox(new(_center.X - _size.X / 2f, _center.Y - _size.Y / 2f, 0f), new(_center.X + _size.X / 2f, _center.Y + _size.Y / 2f, 0f));
+        _boundary = new BoundingBox(new(_center.X - _size.X * 0.5f, _center.Y - _size.Y * 0.5f, 0f), new(_center.X + _size.X * 0.5f, _center.Y + _size.Y * 0.5f, 0f));
         _massShapes = new();
         _subdivided  = false;
         _depth = 0;
@@ -117,11 +117,11 @@ public class BarnesHutTree
 
     private void Subdivide()
     {
-        Vector2 newSize = _size / 2f;
-        _northEast ??= new BarnesHutTree(new(_center.X + newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize);
-        _southEast ??= new BarnesHutTree(new(_center.X + newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize);
-        _southWest ??= new BarnesHutTree(new(_center.X - newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize);
-        _northWest ??= new BarnesHutTree(new(_center.X - newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize);
+        Vector2 newSize = _size * 0.5f;
+        _northEast ??= new BarnesHutTree(new(_center.X + newSize.X * 0.5f, _center.Y - newSize.Y * 0.5f), newSize);
+        _southEast ??= new BarnesHutTree(new(_center.X + newSize.X * 0.5f, _center.Y + newSize.Y * 0.5f), newSize);
+        _southWest ??= new BarnesHutTree(new(_center.X - newSize.X * 0.5f, _center.Y + newSize.Y * 0.5f), newSize);
+        _northWest ??= new BarnesHutTree(new(_center.X - newSize.X * 0.5f, _center.Y - newSize.Y * 0.5f), newSize);
         uint newDepth = _depth + 1;
         _northEast._depth = newDepth;
         _southEast._depth = newDepth;
@@ -228,16 +228,15 @@ public class BarnesHutTree
     private static Vector2 GetPostNewtonianGravForce(Vector2 dir, float gravConst, float dist, MassShape shapeA, float massB, float stepSize)
     {
         Vector2 newtonianForce = GetNewtonianGravForce(dir, gravConst, dist, shapeA.Mass, massB);
-        const float speedOfLightSq = Constants.SpeedOfLight * Constants.SpeedOfLight;
-        float relativisticCorrection = 1f + 3f * shapeA.Vel.LengthSquared() / stepSize / speedOfLightSq - 4f * gravConst * massB / (speedOfLightSq * dist);
+        float relativisticCorrection = 1f + 3f * shapeA.Vel.LengthSquared() / stepSize / Constants.SpeedOfLightSq - 4f * gravConst * massB / (Constants.SpeedOfLightSq * dist);
         return relativisticCorrection * newtonianForce;
     }
 
     public void Draw()
     {
         DrawRectangleLines(
-            UnitConv.MetersToPixels(_center.X - _size.X / 2f),
-            UnitConv.MetersToPixels(_center.Y - _size.Y / 2f),
+            UnitConv.MetersToPixels(_center.X - _size.X * 0.5f),
+            UnitConv.MetersToPixels(_center.Y - _size.Y * 0.5f),
             UnitConv.MetersToPixels(_size.X),
             UnitConv.MetersToPixels(_size.Y),
             Color.Red

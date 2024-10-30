@@ -49,18 +49,18 @@ public class Program
         Context ctx = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f))
         {
             QuadTree = new(
-                UnitConv.PixelsToMeters(new Vector2(Constants.WinW / 2f, Constants.WinH / 2f)),
+                UnitConv.PixelsToMeters(new Vector2(Constants.WinW * 0.5f, Constants.WinH * 0.5f)),
                 UnitConv.PixelsToMeters(new Vector2(Constants.WinW, Constants.WinH)),
                 1,
                 6
             )
         };
-        // ctx.LineColliders = new() {
-        //     new(0f, 0f, winWidthMeters, 0f, ctx),
-        //     new(0f, 0f, 0f, winHeightMeters, ctx),
-        //     new(winWidthMeters, 0f, winWidthMeters, winHeightMeters, ctx),
-        //     new(0f, winHeightMeters, winWidthMeters, winHeightMeters, ctx)
-        // };
+        ctx.LineColliders = new() {
+            new(0f, 0f, winWidthMeters, 0f, ctx),
+            new(0f, 0f, 0f, winHeightMeters, ctx),
+            new(winWidthMeters, 0f, winWidthMeters, winHeightMeters, ctx),
+            new(0f, winHeightMeters, winWidthMeters, winHeightMeters, ctx)
+        };
         ctx.SaveCurrentState();
         // Load textures
         ctx.TextureManager.LoadTexture("center_of_mass.png");
@@ -183,7 +183,7 @@ public class Program
         }
         if (IsKeyPressed(KeyboardKey.B))
         {
-            _context.LoadBenchmark(1000, 3f, 20f, new(Constants.WinW / 2f - 200f, 200f));
+            _context.LoadBenchmark(1000, 3f, 20f, new(Constants.WinW * 0.5f - 200f, 200f));
         }
     }
 }

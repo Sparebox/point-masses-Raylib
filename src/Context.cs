@@ -251,14 +251,14 @@ public class Context
                 return system;
             }
         }
-        return null;
+        throw new Exception($"System {systemType} could not be found");
     }
 
     private void LoadSystems()
     {
         Systems.Add(new ToolSystem(this));
-        //Systems.Add(new NbodySystem(this));
-        //SubStepSystems.Add(new CollisionSystem(this));
+        Systems.Add(new NbodySystem(this));
+        SubStepSystems.Add(new CollisionSystem(this));
         // int terrariumWidth = 15;
         // int terrariumHeight = 15;
         // int cellSize = 50;

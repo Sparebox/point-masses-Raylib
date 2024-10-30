@@ -22,7 +22,7 @@ namespace PointMasses.Systems
         {
             _ctx = ctx;
             _barnesHutTree = new(
-                UnitConv.PixelsToMeters(new Vector2(Constants.WinW / 2f, Constants.WinH / 2f)),
+                UnitConv.PixelsToMeters(new Vector2(Constants.WinW * 0.5f, Constants.WinH * 0.5f)),
                 UnitConv.PixelsToMeters(new Vector2(Constants.WinW, Constants.WinH))
             );
             PauseEvent = new ManualResetEventSlim(false);

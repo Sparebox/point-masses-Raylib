@@ -173,7 +173,7 @@ namespace PointMasses.Systems
             float aOffset = distToB / lineLen * totalOffset;
             float bOffset = totalOffset - aOffset;
             var normal = Vector2.Normalize(pointToClosest);
-            Vector2 avgVel = (closestA.Vel + closestB.Vel) / 2f;
+            Vector2 avgVel = (closestA.Vel + closestB.Vel) * 0.5f;
             Vector2 preVel = pointMass.Vel;
             Vector2 closestApreVel = closestA.Vel;
             Vector2 closestBpreVel = closestB.Vel;

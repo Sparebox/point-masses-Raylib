@@ -52,6 +52,7 @@ namespace Utils
     public static class Constants
     {
         public const float SpeedOfLight = 299_792_458f;
+        public const float SpeedOfLightSq = SpeedOfLight * SpeedOfLight;
         public const float GravConstant = 6.67430e-11f;
         public const int WinW = 1600;
         public const int WinH = 900;

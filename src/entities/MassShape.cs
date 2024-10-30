@@ -347,7 +347,7 @@ public partial class MassShape : Entity
             float faceLength = P1ToP2.Length();
             Vector2 normal = new(P1ToP2.Y, -P1ToP2.X);
             normal /= faceLength;
-            Vector2 force = faceLength * Constants.GasAmountMult * _gasAmount / Volume / 2f * normal;
+            Vector2 force = faceLength * Constants.GasAmountMult * _gasAmount / Volume * 0.5f * normal;
             p1.ApplyForce(force);
             p2.ApplyForce(force);
             if (Ctx._drawForces)

@@ -8,7 +8,7 @@ public partial class MassShape
 {
     public static MassShape SoftBall(float x, float y, float radius, float mass, int res, float stiffness, float gasAmount, Context ctx)
     {
-        float angle = MathF.PI / 2f;
+        float angle = MathF.PI * 0.5f;
         MassShape s = new(ctx, true)
         {
             _gasAmount = gasAmount
@@ -31,7 +31,7 @@ public partial class MassShape
 
     public static ShapePreview SoftBallPreview(float x, float y, float radius, float mass, int res, Context ctx)
     {
-        float angle = MathF.PI / 2f;
+        float angle = MathF.PI * 0.5f;
         ShapePreview preview = new();
         // Points
         for (int i = 0; i < res; i++)
@@ -51,7 +51,7 @@ public partial class MassShape
 
     public static MassShape HardBall(float x, float y, float radius, float mass, int res, Context ctx)
     {
-        float angle = MathF.PI / 2f;
+        float angle = MathF.PI * 0.5f;
         MassShape s = new(ctx, false);
         // Points
         for (int i = 0; i < res; i++)
@@ -79,7 +79,7 @@ public partial class MassShape
 
     public static ShapePreview HardBallPreview(float x, float y, float radius, float mass, int res, Context ctx)
     {
-        float angle = MathF.PI / 2f;
+        float angle = MathF.PI * 0.5f;
         ShapePreview preview = new();
         // Points
         for (int i = 0; i < res; i++)

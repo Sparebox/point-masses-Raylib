@@ -10,9 +10,9 @@ public class QuadTree
 {
     public static uint MaxDepth { get; set; }
     public static uint NodeCapacity { get; set; }
+    public static ManualResetEventSlim PauseEvent { get; set; } = new ManualResetEventSlim(true);
+    public static ReaderWriterLockSlim Lock { get; set; } = new ReaderWriterLockSlim();
 
-    public ManualResetEventSlim PauseEvent { get; init; }
-    public ReaderWriterLockSlim Lock { get; init; }
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
     private readonly Vector2 _size;
@@ -28,11 +28,9 @@ public class QuadTree
     {
         _center = center;
         _size = size;
-        _boundary = new BoundingBox(new(_center.X - _size.X / 2f, _center.Y - _size.Y / 2f, 0f), new(_center.X + _size.X / 2f, _center.Y + _size.Y / 2f, 0f));
+        _boundary = new BoundingBox(new(_center.X - _size.X * 0.5f, _center.Y - _size.Y * 0.5f, 0f), new(_center.X + _size.X * 0.5f, _center.Y + _size.Y * 0.5f, 0f));
         _massShapes = new();
         _subdivided  = false;
-        Lock = new ReaderWriterLockSlim();
-        PauseEvent = new ManualResetEventSlim(true);
         NodeCapacity = nodeCapacity;
         _depth = 0;
         MaxDepth = maxDepth;
@@ -92,11 +90,11 @@ public class QuadTree
 
     private void Subdivide()
     {
-        Vector2 newSize = _size / 2f;
-        _northEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
-        _southEast ??= new QuadTree(new(_center.X + newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
-        _southWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y + newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
-        _northWest ??= new QuadTree(new(_center.X - newSize.X / 2f, _center.Y - newSize.Y / 2f), newSize, NodeCapacity, MaxDepth);
+        Vector2 newSize = _size * 0.5f;
+        _northEast ??= new QuadTree(new(_center.X + newSize.X * 0.5f, _center.Y - newSize.Y * 0.5f), newSize, NodeCapacity, MaxDepth);
+        _southEast ??= new QuadTree(new(_center.X + newSize.X * 0.5f, _center.Y + newSize.Y * 0.5f), newSize, NodeCapacity, MaxDepth);
+        _southWest ??= new QuadTree(new(_center.X - newSize.X * 0.5f, _center.Y + newSize.Y * 0.5f), newSize, NodeCapacity, MaxDepth);
+        _northWest ??= new QuadTree(new(_center.X - newSize.X * 0.5f, _center.Y - newSize.Y * 0.5f), newSize, NodeCapacity, MaxDepth);
         uint newDepth = _depth + 1;
         _northEast._depth = newDepth;
         _southEast._depth = newDepth;
@@ -176,8 +174,8 @@ public class QuadTree
             return;
         }
         DrawRectangleLines(
-            UnitConv.MetersToPixels(_center.X - _size.X / 2f),
-            UnitConv.MetersToPixels(_center.Y - _size.Y / 2f),
+            UnitConv.MetersToPixels(_center.X - _size.X * 0.5f),
+            UnitConv.MetersToPixels(_center.Y - _size.Y * 0.5f),
             UnitConv.MetersToPixels(_size.X),
             UnitConv.MetersToPixels(_size.Y),
             Color.Red
@@ -203,7 +201,7 @@ public class QuadTree
         Context ctx = (Context) _ctx;
         for (;;)
         {
-            ctx.QuadTree.PauseEvent.Wait();
+            PauseEvent.Wait();
             Thread.Sleep(Constants.QuadTreeUpdateMs);
             ctx.QuadTree.Update(ctx);
         }
