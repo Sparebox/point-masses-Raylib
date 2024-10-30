@@ -1,11 +1,11 @@
 using System.Numerics;
-using Entities;
+using PointMasses.Entities;
 using Raylib_cs;
-using Sim;
-using Utils;
+using PointMasses.Sim;
+using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 
-namespace Physics;
+namespace PointMasses.Physics;
 
 public class DistanceConstraint : Constraint 
 {

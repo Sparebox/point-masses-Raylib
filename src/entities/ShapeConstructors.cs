@@ -1,8 +1,8 @@
 ﻿using System.Numerics;
-using Physics;
-using Sim;
+using PointMasses.Physics;
+using PointMasses.Sim;
 
-namespace Entities;
+namespace PointMasses.Entities;
 
 public partial class MassShape
 {

@@ -1,11 +1,11 @@
 using System.Numerics;
-using Entities;
 using Raylib_cs;
-using Sim;
-using Utils;
+using PointMasses.Entities;
+using PointMasses.Sim;
+using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 
-namespace Collision;
+namespace PointMasses.Collision;
 
 public class LineCollider : Entity
 {

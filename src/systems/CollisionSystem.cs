@@ -1,8 +1,8 @@
 using System.Numerics;
-using Collision;
-using Entities;
-using Sim;
-using Utils;
+using PointMasses.Collision;
+using PointMasses.Entities;
+using PointMasses.Sim;
+using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 
 namespace PointMasses.Systems

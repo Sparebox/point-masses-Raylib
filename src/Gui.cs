@@ -1,18 +1,17 @@
 ﻿using System.Numerics;
-using Editing;
-using Entities;
+using PointMasses.Editing;
+using PointMasses.Entities;
 using ImGuiNET;
 using PointMasses.Systems;
-using Sim;
-using Tools;
+using PointMasses.Sim;
+using PointMasses.Tools;
 using static Raylib_cs.Raylib;
-using static Tools.Spawn;
+using static PointMasses.Tools.Spawn;
 
-namespace UI;
+namespace PointMasses.UI;
 
 public class Gui
 {
-    
     private static bool ShowSystemEnergy;
 
     public static void Draw(Context ctx)
@@ -21,6 +20,17 @@ public class Gui
         toolSystem.ToolEnabled = !ImGui.IsAnyItemHovered();
         if (ImGui.BeginMainMenuBar())
         {
+            int fps = GetFPS();
+            if (fps < 60)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(255f, 0f, 0f, 255f));
+            }
+            else
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0f, 255f, 0f, 255f));
+            }
+            ImGui.Text($"FPS: {fps}");
+            ImGui.PopStyleColor();
             if (ImGui.BeginMenu("Simulation info"))
             {
                 ShowSimulationInfo(ctx, toolSystem);
@@ -47,7 +57,6 @@ public class Gui
 
     private static void ShowSimulationInfo(Context ctx, ToolSystem toolSystem)
     {
-        ImGui.Text($"FPS: {GetFPS()}");
         ImGui.PushStyleColor(ImGuiCol.Text, ctx._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
         if (ImGui.Checkbox(ctx._simPaused ? "PAUSE" : "RUNNING", ref ctx._simPaused))
         {
@@ -79,11 +88,11 @@ public class Gui
         {
             if (ctx._collisionsEnabled && !ctx._simPaused)
             {
-                QuadTree.PauseEvent.Set();
+                ctx.QuadTreePauseEvent.Set();
             }
             else
             {
-                QuadTree.PauseEvent.Reset();
+                ctx.QuadTreePauseEvent.Reset();
             }
         }
         ImGui.PushItemWidth(50f);
@@ -246,9 +255,12 @@ public class Gui
         var nBodySystem = (NbodySystem) ctx.GetSystem(typeof(NbodySystem));
         ImGui.Checkbox("Running", ref nBodySystem._running);
         ImGui.Checkbox("Post-Newtonian relativistic corrections", ref nBodySystem._postNewtonianEnabled);
+        ImGui.PushItemWidth(50f);
         ImGui.InputFloat("Gravitational constant", ref nBodySystem._gravConstant);
         ImGui.InputFloat("Minimum distance", ref nBodySystem._minDist);
         ImGui.InputFloat("Threshold", ref nBodySystem._threshold);
+        ImGui.InputInt("Update interval ms", ref nBodySystem._updateIntervalMs, 0, 10);
+        ImGui.PopItemWidth();
     }
 
     private static void ShowCameraSettings(Context ctx)

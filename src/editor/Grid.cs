@@ -1,10 +1,10 @@
 using System.Numerics;
 using Raylib_cs;
-using Tools;
-using Utils;
+using PointMasses.Tools;
+using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 
-namespace Editing;
+namespace PointMasses.Editing;
 
 public class Grid
 {

@@ -1,14 +1,14 @@
 ﻿using System.Numerics;
-using Entities;
+using PointMasses.Entities;
 using PointMasses.Systems;
 using Raylib_cs;
 using rlImGui_cs;
-using Tools;
-using UI;
-using Utils;
+using PointMasses.Tools;
+using PointMasses.UI;
+using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 
-namespace Sim;
+namespace PointMasses.Sim;
 
 public class Program 
 {   
@@ -98,7 +98,7 @@ public class Program
             {
                 if (_context.Lock.TryEnterWriteLock(0)) // Do not block the main thread if the lock is unavailable
                 {
-                    _context.MassShapes.RemoveWhere(s => s._toBeDeleted);
+                    _context.MassShapes.RemoveAll(s => s._toBeDeleted);
                     _context.Lock.ExitWriteLock();
                 }
             }

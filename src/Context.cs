@@ -1,24 +1,24 @@
 using System.Numerics;
-using Collision;
-using Entities;
-using Textures;
-using Utils;
+using PointMasses.Collision;
+using PointMasses.Entities;
+using PointMasses.Textures;
+using PointMasses.Utils;
 using Raylib_cs;
 using PointMasses.Systems;
-using point_masses.Camera;
-using point_masses.systems;
 
-namespace Sim;
+namespace PointMasses.Sim;
 
 public class Context
 {
     public ReaderWriterLockSlim Lock { get; set; }
+    public ReaderWriterLockSlim QuadTreeLock { get; init; }
+    public ManualResetEventSlim QuadTreePauseEvent { get; init; } 
     public float Substep { get; set; }
     public Vector2 Gravity { get; init; }
     public TextureManager TextureManager { get; init; }
     public QuadTree QuadTree { get; set; }
-    public HashSet<LineCollider> LineColliders { get; set; }
-    public HashSet<MassShape> MassShapes { get; init; }
+    public List<LineCollider> LineColliders { get; set; }
+    public List<MassShape> MassShapes { get; init; }
     public List<ISystem> Systems { get; init; }
     public List<ISystem> SubStepSystems { get; init; }
     public Camera Camera { get; init; }
@@ -79,14 +79,16 @@ public class Context
         Gravity = gravity;
         Camera = new Camera(1f);
         Lock = new ReaderWriterLockSlim();
+        QuadTreeLock = new ReaderWriterLockSlim();
+        QuadTreePauseEvent = new ManualResetEventSlim(true);
         TextureManager = new TextureManager();
         _gravityEnabled = false;
         _drawAABBS = false;
         _drawForces = false;
         _simPaused = true;
         _collisionsEnabled = true;
-        MassShapes = new();
-        LineColliders = new();
+        MassShapes = new(100);
+        LineColliders = new(100);
         Systems = new();
         SubStepSystems = new();
         LoadSystems();
@@ -166,9 +168,9 @@ public class Context
     public IEnumerable<MassShape> GetMassShapes(in BoundingBox area)
     {
         HashSet<MassShape> found = new();
-        QuadTree.Lock.EnterReadLock();
+        QuadTreeLock.EnterReadLock();
         QuadTree.QueryShapes(area, found);
-        QuadTree.Lock.ExitReadLock();
+        QuadTreeLock.ExitReadLock();
         return found;
     }
 
@@ -193,9 +195,9 @@ public class Context
     public IEnumerable<PointMass> GetPointMasses(in BoundingBox area)
     {
         HashSet<PointMass> found = new();
-        QuadTree.Lock.EnterReadLock();
+        QuadTreeLock.EnterReadLock();
         QuadTree.QueryPoints(in area, found);
-        QuadTree.Lock.ExitReadLock();
+        QuadTreeLock.ExitReadLock();
         return found;
     }
     

@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
 using Raylib_cs;
-using Utils;
+using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 
 namespace PointMasses.Systems;

@@ -1,13 +1,13 @@
 using System.Numerics;
 using System.Text;
-using Editing;
-using Entities;
+using PointMasses.Editing;
+using PointMasses.Entities;
 using PointMasses.Systems;
 using Raylib_cs;
-using Sim;
-using Tools;
-using Utils;
-using static Entities.MassShape;
+using PointMasses.Sim;
+using PointMasses.Tools;
+using PointMasses.Utils;
+using static PointMasses.Entities.MassShape;
 using static Raylib_cs.Raylib;
 
 namespace PointMasses.Systems
@@ -166,7 +166,7 @@ namespace PointMasses.Systems
     }
 }
 
-namespace Tools
+namespace PointMasses.Tools
 {
     public abstract class Tool
     {
@@ -349,7 +349,7 @@ namespace Tools
             {
                 return;
             }
-            Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
+            Vector2 mousePos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
             BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
             var shapes = _ctx.GetMassShapes(area).ToHashSet();
             if (!shapes.Any())
@@ -641,7 +641,7 @@ namespace Tools
             {
                 return;
             }
-            Vector2 mousePos = UnitConv.PixelsToMeters(GetMousePosition());
+            Vector2 mousePos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
             BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
             var points = _ctx.GetPointMasses(area);
             if (!points.Any())
@@ -674,7 +674,7 @@ namespace Tools
             {
                 return;
             }
-            var mousePos = UnitConv.PixelsToMeters(GetMousePosition());
+            var mousePos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
             BoundingBox area = new(new(mousePos.X, mousePos.Y, 0f), new(mousePos.X, mousePos.Y, 0f));
             var shapes = _ctx.GetMassShapes(area);
             if (shapes.Any())

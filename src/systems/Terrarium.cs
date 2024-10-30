@@ -1,10 +1,10 @@
 using System.Numerics;
 using PointMasses.Systems;
 using Raylib_cs;
-using Sim;
+using PointMasses.Sim;
 using static Raylib_cs.Raylib;
 
-namespace point_masses.systems;
+namespace PointMasses.systems;
 
 public class Terrarium : ISystem
 {   

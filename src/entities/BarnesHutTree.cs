@@ -1,10 +1,11 @@
 ﻿using System.Numerics;
 using Raylib_cs;
 using static Raylib_cs.Raylib;
-using Sim;
-using Utils;
-using Tools;
+using PointMasses.Sim;
+using PointMasses.Utils;
+using PointMasses.Tools;
 using PointMasses.Systems;
+using PointMasses.Entities;
 
 namespace Entities;
 

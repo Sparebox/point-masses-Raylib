@@ -1,18 +1,16 @@
 ﻿using System.Numerics;
 using Raylib_cs;
-using Sim;
-using Utils;
+using PointMasses.Sim;
+using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 
-namespace Entities;
+namespace PointMasses.Entities;
 
 public class QuadTree
 {
     public static uint MaxDepth { get; set; }
     public static uint NodeCapacity { get; set; }
-    public static ManualResetEventSlim PauseEvent { get; set; } = new ManualResetEventSlim(true);
-    public static ReaderWriterLockSlim Lock { get; set; } = new ReaderWriterLockSlim();
-
+    
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
     private readonly Vector2 _size;
@@ -38,7 +36,7 @@ public class QuadTree
 
     public void Update(Context ctx)
     {
-        Lock.EnterWriteLock();
+        ctx.QuadTreeLock.EnterWriteLock();
         ctx.Lock.EnterReadLock();
         Clear();
         foreach (var shape in ctx.MassShapes)
@@ -46,7 +44,7 @@ public class QuadTree
             Insert(shape);
         }
         ctx.Lock.ExitReadLock();
-        Lock.ExitWriteLock();
+        ctx.QuadTreeLock.ExitWriteLock();
     }
 
     public void Insert(MassShape shape)
@@ -201,7 +199,7 @@ public class QuadTree
         Context ctx = (Context) _ctx;
         for (;;)
         {
-            PauseEvent.Wait();
+            ctx.QuadTreePauseEvent.Wait();
             Thread.Sleep(Constants.QuadTreeUpdateMs);
             ctx.QuadTree.Update(ctx);
         }

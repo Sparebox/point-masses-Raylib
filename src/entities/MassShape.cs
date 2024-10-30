@@ -1,12 +1,12 @@
 using System.Numerics;
 using ImGuiNET;
-using Physics;
 using Raylib_cs;
-using Sim;
-using Utils;
+using PointMasses.Physics;
+using PointMasses.Sim;
+using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 
-namespace Entities;
+namespace PointMasses.Entities;
 
 public partial class MassShape : Entity
 {
@@ -410,7 +410,7 @@ public partial class MassShape : Entity
     private void DrawInfo()
     {
         Vector2 centroidViewPos = Ctx.Camera.ViewPos(UnitConv.MetersToPixels(Centroid));
-        ImGui.Begin($"Body id {Id} info", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
+        ImGui.Begin($"Body entity id {Id} info", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
         ImGui.SetWindowPos(centroidViewPos + new Vector2(25f, 0f));
         ImGui.SetWindowSize(new (250f, 130f));
         ImGui.Text($"Mass: {Mass} kg");

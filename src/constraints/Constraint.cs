@@ -1,6 +1,6 @@
-using Entities;
+using PointMasses.Entities;
 
-namespace Physics;
+namespace PointMasses.Physics;
 
 public abstract class Constraint
 {

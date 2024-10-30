@@ -1,7 +1,7 @@
 using System.Numerics;
 using Entities;
-using Sim;
-using Utils;
+using PointMasses.Sim;
+using PointMasses.Utils;
 
 namespace PointMasses.Systems
 {
@@ -13,7 +13,7 @@ namespace PointMasses.Systems
         public float _threshold = 0.01f;
         public bool _running;
         public bool _postNewtonianEnabled;
-        private const int UpdateIntervalMs = 50;
+        public int _updateIntervalMs = 50;
         private readonly BarnesHutTree _barnesHutTree;
         private readonly Thread _updateThread;
         private readonly Context _ctx;
@@ -38,7 +38,7 @@ namespace PointMasses.Systems
             for (;;)
             {
                 PauseEvent.Wait(Timeout.Infinite);
-                Thread.Sleep(UpdateIntervalMs);
+                Thread.Sleep(_updateIntervalMs);
                 _barnesHutTree.Update(_ctx);
             }
         }

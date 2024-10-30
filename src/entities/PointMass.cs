@@ -1,11 +1,11 @@
 using System.Numerics;
-using Collision;
 using Raylib_cs;
-using Sim;
-using Utils;
+using PointMasses.Collision;
+using PointMasses.Sim;
+using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 
-namespace Entities;
+namespace PointMasses.Entities;
 
 public class PointMass : Entity
 {

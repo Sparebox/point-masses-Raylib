@@ -1,8 +1,8 @@
 using System.Numerics;
-using Sim;
+using PointMasses.Sim;
 using static Raylib_cs.Raylib;
 
-namespace Collision;
+namespace PointMasses.Collision;
 
 public class RotatingCollider : LineCollider
 {

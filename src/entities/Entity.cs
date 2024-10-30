@@ -1,8 +1,8 @@
 ﻿using System.Numerics;
 using Raylib_cs;
-using Sim;
+using PointMasses.Sim;
 
-namespace Entities;
+namespace PointMasses.Entities;
 
 public abstract class Entity
 {

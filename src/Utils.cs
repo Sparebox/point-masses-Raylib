@@ -2,7 +2,7 @@ using System.Numerics;
 using Raylib_cs;
 using static Raylib_cs.Raylib;
 
-namespace Utils 
+namespace PointMasses.Utils 
 {
     public static class UnitConv
     {
@@ -121,7 +121,7 @@ namespace Utils
 }
 
 
-namespace Entities
+namespace PointMasses.Entities
 {
     public readonly struct CollisionData
     {

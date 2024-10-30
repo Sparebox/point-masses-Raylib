@@ -1,14 +1,14 @@
 using System.Numerics;
 using System.Text;
-using Entities;
-using Physics;
+using PointMasses.Entities;
+using PointMasses.Physics;
 using Raylib_cs;
-using Sim;
-using Tools;
-using Utils;
+using PointMasses.Sim;
+using PointMasses.Tools;
+using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 
-namespace Editing;
+namespace PointMasses.Editing;
 
 public class Editor : Tool
 {
