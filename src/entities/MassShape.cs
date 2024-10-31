@@ -58,7 +58,7 @@ public partial class MassShape : Entity
         }
     }
 
-    public Vector2 Vel => CenterOfMass - _lastCenterOfMass;
+    public Vector2 Vel => (CenterOfMass - _lastCenterOfMass) / Ctx.Substep;
 
     public float Inertia
     {
@@ -77,12 +77,13 @@ public partial class MassShape : Entity
 
     public Vector2 Momentum => Mass * Vel;
 
+    public float AngularMomentum => Inertia * AngVel;
+
     public float RotEnergy
     {
         get
         {
-            float angVel = AngVel / Ctx.Substep;
-            return 0.5f * Inertia * angVel * angVel;
+            return 0.5f * Inertia * AngVel * AngVel;
         }
     }
 
@@ -90,8 +91,7 @@ public partial class MassShape : Entity
     {
         get
         {
-            var vel = Vel / Ctx.Substep;
-            return 0.5f * Mass * vel.LengthSquared();
+            return 0.5f * Mass * Vel.LengthSquared();
         }
     }
     
@@ -129,7 +129,7 @@ public partial class MassShape : Entity
     {
         get
         {
-            return Angle - _lastAngle;
+            return (Angle - _lastAngle) / Ctx.Substep;
         }
     }
 
@@ -284,11 +284,13 @@ public partial class MassShape : Entity
         if (Ctx._drawAABBS)
         {
             BoundingBox aabb = Aabb;
+            aabb.Min = Ctx.Camera.ViewPos(UnitConv.MetersToPixels(aabb.Min));
+            aabb.Max = Ctx.Camera.ViewPos(UnitConv.MetersToPixels(aabb.Max));
             DrawRectangleLines(
-                UnitConv.MetersToPixels(aabb.Min.X),
-                UnitConv.MetersToPixels(aabb.Min.Y),
-                UnitConv.MetersToPixels(aabb.Max.X - aabb.Min.X),
-                UnitConv.MetersToPixels(aabb.Max.Y - aabb.Min.Y),
+                (int) aabb.Min.X,
+                (int) aabb.Min.Y,
+                (int) (aabb.Max.X - aabb.Min.X),
+                (int) (aabb.Max.Y - aabb.Min.Y),
                 Color.Red
             );
         }
@@ -414,10 +416,11 @@ public partial class MassShape : Entity
         ImGui.SetWindowPos(centroidViewPos + new Vector2(25f, 0f));
         ImGui.SetWindowSize(new (250f, 130f));
         ImGui.Text($"Mass: {Mass} kg");
-        ImGui.Text($"Velocity: {Vel / Ctx.Substep:0.0} m/s");
-        ImGui.Text($"Momentum: {Momentum / Ctx.Substep:0.0} kgm/s");
+        ImGui.Text($"Velocity: {Vel:0.0} m/s");
+        ImGui.Text($"Momentum: {Momentum:0.0} kgm/s");
         ImGui.Text($"Moment of inertia: {Inertia:0} kgm^2");
-        ImGui.Text($"Angular vel: {AngVel / Ctx.Substep * RAD2DEG:0} deg/s");
+        ImGui.Text($"Angular vel: {AngVel * RAD2DEG:0} deg/s");
+        ImGui.Text($"Angular momentum: {AngularMomentum:0} kgm^2/s");
         ImGui.Text($"Linear energy: {LinEnergy:0.##} J");
         ImGui.Text($"Rot energy: {RotEnergy:0.##} J");
         ImGui.End();

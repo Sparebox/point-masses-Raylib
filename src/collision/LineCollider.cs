@@ -20,7 +20,7 @@ public class LineCollider : Entity
             {
                 return _center.Value;
             }
-            _center = StartPos + (EndPos - StartPos) * 0.5f;
+            _center = Raymath.Vector2Lerp(StartPos, EndPos, 0.5f);
             return _center.Value;
         }
     }
@@ -86,16 +86,6 @@ public class LineCollider : Entity
 
     public override void Draw()
     {
-        if (Ctx._drawAABBS)
-        {
-            DrawRectangleLines(
-                UnitConv.MetersToPixels(Aabb.Min.X),
-                UnitConv.MetersToPixels(Aabb.Min.Y),
-                UnitConv.MetersToPixels(Aabb.Max.X - Aabb.Min.X),
-                UnitConv.MetersToPixels(Aabb.Max.Y - Aabb.Min.Y),
-                Color.Red
-            );
-        }
         DrawLineV(
             Ctx.Camera.ViewPos(UnitConv.MetersToPixels(StartPos)),
             Ctx.Camera.ViewPos(UnitConv.MetersToPixels(EndPos)),

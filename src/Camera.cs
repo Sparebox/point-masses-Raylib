@@ -54,6 +54,10 @@ public class Camera
     {
         return pos + Offset;
     }
+    public Vector3 ViewPos(in Vector3 pos)
+    {
+        return new(pos.X + Offset.X, pos.Y + Offset.Y, 0f);
+    }
 
     public Vector2 ViewPos(int x, int y)
     {

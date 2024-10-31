@@ -77,7 +77,6 @@ public class Program
         _accumulator += GetFrameTime();
         while (_accumulator >= _context._timestep)
         {
-            Perf.PrintAvgMsSinceLast();
             for (int i = 0; i < _context._substeps; i++)
             {
                 foreach (MassShape s in _context.MassShapes)
@@ -132,7 +131,7 @@ public class Program
         }
         if (_context._drawQuadTree)
         {
-            _context.QuadTree.Draw();
+            _context.QuadTree.Draw(_context.Camera);
         }
         Gui.Draw(_context); // GUI
         

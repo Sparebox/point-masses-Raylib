@@ -20,14 +20,19 @@ namespace PointMasses.Utils
             return (int) (PixelsPerMeter * meters);
         }
 
-        public static Vector2 PixelsToMeters(Vector2 pixels)
+        public static Vector2 PixelsToMeters(in Vector2 pixels)
         {
-            return new Vector2(pixels.X / PixelsPerMeter, pixels.Y / PixelsPerMeter);
+            return new(pixels.X / PixelsPerMeter, pixels.Y / PixelsPerMeter);
         }
 
-        public static Vector2 MetersToPixels(Vector2 meters)
+        public static Vector2 MetersToPixels(in Vector2 meters)
         {
-            return new Vector2(meters.X * PixelsPerMeter, meters.Y * PixelsPerMeter);
+            return new(meters.X * PixelsPerMeter, meters.Y * PixelsPerMeter);
+        }
+
+        public static Vector3 MetersToPixels(in Vector3 meters)
+        {
+            return new(meters.X * PixelsPerMeter, meters.Y * PixelsPerMeter, 0f);
         }
     }
 
@@ -137,8 +142,12 @@ namespace PointMasses.Utils
         public static void PrintAvgMsSinceLast()
         {
             Update();
-            float milliSeconds = _history.Aggregate(0f, (milliseconds, entry) => milliseconds + entry.Milliseconds);
-            AsyncConsole.WriteLine($"{milliSeconds / HistoryLength} avg ms");
+            float avgMilliSeconds = _history.Aggregate(
+                0f, 
+                (milliseconds, entry) => milliseconds + entry.Milliseconds,
+                (milliseconds) => milliseconds / HistoryLength
+            );
+            AsyncConsole.WriteLine($"{avgMilliSeconds} avg ms");
         }
 
         private static TimeSpan Update()

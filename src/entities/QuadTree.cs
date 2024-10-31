@@ -165,32 +165,36 @@ public class QuadTree
         return;
     }
 
-    public void Draw()
+    public void Draw(Camera camera)
     {
         if (_massShapes.Count == 0 && !_subdivided)
         {
             return;
         }
+        Vector2 viewCenter = camera.ViewPos(UnitConv.MetersToPixels(_center));
+
         DrawRectangleLines(
-            UnitConv.MetersToPixels(_center.X - _size.X * 0.5f),
-            UnitConv.MetersToPixels(_center.Y - _size.Y * 0.5f),
+            (int) viewCenter.X - UnitConv.MetersToPixels(_size.X * 0.5f),
+            (int) viewCenter.Y - UnitConv.MetersToPixels(_size.Y * 0.5f),
             UnitConv.MetersToPixels(_size.X),
             UnitConv.MetersToPixels(_size.Y),
             Color.Red
         );
-        DrawText(
-            _massShapes.Count.ToString(),
-            UnitConv.MetersToPixels(_center.X),
-            UnitConv.MetersToPixels(_center.Y),
-            15,
-            Color.Yellow
-        );
-        if (_subdivided)
+        if (!_subdivided)
         {
-            _northEast.Draw();
-            _southEast.Draw();
-            _southWest.Draw();
-            _northWest.Draw();
+            DrawText(
+                _massShapes.Count.ToString(),
+                (int) viewCenter.X,
+                (int) viewCenter.Y,
+                15,
+                Color.Yellow
+            );
+        } else
+        {
+            _northEast.Draw(camera);
+            _southEast.Draw(camera);
+            _southWest.Draw(camera);
+            _northWest.Draw(camera);
         }
     }
 
