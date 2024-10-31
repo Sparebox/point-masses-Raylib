@@ -1,8 +1,8 @@
 using System.Numerics;
-using PointMasses.Systems;
 using Raylib_cs;
-using PointMasses.Sim;
 using static Raylib_cs.Raylib;
+using PointMasses.Systems;
+using PointMasses.Sim;
 
 namespace PointMasses.systems;
 
@@ -25,6 +25,7 @@ public class Terrarium : ISystem
     {
         
     }
+    
     public void Draw()
     {
         if (_drawGrid)

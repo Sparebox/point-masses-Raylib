@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Numerics;
 using Raylib_cs;
 using static Raylib_cs.Raylib;
@@ -118,6 +119,33 @@ namespace PointMasses.Utils
         public static Random Gen { get; } = new Random();
     }
 
+    public static class Perf
+    {
+        private static readonly Stopwatch _stopwatch = new Stopwatch();
+        private const int HistoryLength = 10;
+        private static readonly TimeSpan[] _history = new TimeSpan[HistoryLength];
+        private static int _historyIndex = 0;
+
+        public static void PrintAvgMsSinceLast()
+        {
+            Update();
+            float milliSeconds = 0f;
+            foreach (var entry in _history)
+            {
+                milliSeconds += entry.Milliseconds;
+            }
+            Console.WriteLine($"{milliSeconds / HistoryLength} avg ms");
+        }
+
+        private static TimeSpan Update()
+        {
+            TimeSpan elapsed = _stopwatch.Elapsed;
+            _history[_historyIndex++ % HistoryLength] = elapsed;
+            _stopwatch.Restart();
+            return elapsed;
+        }
+
+    }
 }
 
 
