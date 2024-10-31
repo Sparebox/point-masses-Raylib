@@ -71,12 +71,13 @@ public class Program
     {
         if (GetFPS() < Constants.PauseThresholdFPS) // Pause if running too slow
         {
-            Console.WriteLine("Running too slow. Pausing sim");
+            AsyncConsole.WriteLine("Running too slow. Pausing sim");
             _context._simPaused = true;
         }
         _accumulator += GetFrameTime();
         while (_accumulator >= _context._timestep)
         {
+            Perf.PrintAvgMsSinceLast();
             for (int i = 0; i < _context._substeps; i++)
             {
                 foreach (MassShape s in _context.MassShapes)

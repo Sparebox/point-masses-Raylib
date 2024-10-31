@@ -1,3 +1,4 @@
+using PointMasses.Utils;
 using Raylib_cs;
 using static Raylib_cs.Raylib;
 
@@ -11,10 +12,10 @@ public class TextureManager
     public TextureManager()
     {
         #if DEBUG
-            Console.WriteLine("Point-masses is running in DEBUG mode");
+            AsyncConsole.WriteLine("Point-masses is running in DEBUG mode");
             _resourcesPath = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName + "/res/";
         #else
-            Console.WriteLine("Point-masses is running in RELEASE mode");
+            AsyncConsole.WriteLine("Point-masses is running in RELEASE mode");
             _resourcesPath = Directory.GetCurrentDirectory() + "/res/";
         #endif
         _textures = new Dictionary<string, Texture2D>();
@@ -26,7 +27,7 @@ public class TextureManager
         {
             UnloadTexture(texture);
         }
-        Console.WriteLine("Unloaded textures");
+        AsyncConsole.WriteLine("Unloaded textures");
     }
 
     public void LoadTexture(string fileName)

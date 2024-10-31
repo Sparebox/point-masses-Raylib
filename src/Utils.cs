@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Numerics;
 using Raylib_cs;
@@ -121,20 +122,23 @@ namespace PointMasses.Utils
 
     public static class Perf
     {
-        private static readonly Stopwatch _stopwatch = new Stopwatch();
         private const int HistoryLength = 10;
-        private static readonly TimeSpan[] _history = new TimeSpan[HistoryLength];
-        private static int _historyIndex = 0;
+        private static readonly Stopwatch _stopwatch;
+        private static readonly TimeSpan[] _history;
+        private static int _historyIndex;
+
+        static Perf()
+        {
+            _stopwatch = new Stopwatch();
+            _history = new TimeSpan[HistoryLength];
+            _historyIndex = 0;
+        }
 
         public static void PrintAvgMsSinceLast()
         {
             Update();
-            float milliSeconds = 0f;
-            foreach (var entry in _history)
-            {
-                milliSeconds += entry.Milliseconds;
-            }
-            Console.WriteLine($"{milliSeconds / HistoryLength} avg ms");
+            float milliSeconds = _history.Aggregate(0f, (milliseconds, entry) => milliseconds + entry.Milliseconds);
+            AsyncConsole.WriteLine($"{milliSeconds / HistoryLength} avg ms");
         }
 
         private static TimeSpan Update()
@@ -144,7 +148,29 @@ namespace PointMasses.Utils
             _stopwatch.Restart();
             return elapsed;
         }
+    }
 
+    public static class AsyncConsole
+    {
+        private static readonly BlockingCollection<string> _printQueue;
+
+        static AsyncConsole()
+        {
+            _printQueue = new();
+            var thread = new Thread(
+                () => 
+                {
+                    for (;;) Console.WriteLine(_printQueue.Take());
+                }
+            );
+            thread.IsBackground = true;
+            thread.Start();
+        }
+
+        public static void WriteLine(string line)
+        {
+            _printQueue.Add(line);
+        }
     }
 }
 
