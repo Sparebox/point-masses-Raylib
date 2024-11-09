@@ -87,8 +87,8 @@ public class LineCollider : Entity
     public override void Draw()
     {
         DrawLineV(
-            Ctx.Camera.ViewPos(UnitConv.MetersToPixels(StartPos)),
-            Ctx.Camera.ViewPos(UnitConv.MetersToPixels(EndPos)),
+            UnitConv.MetersToPixels(StartPos),
+            UnitConv.MetersToPixels(EndPos),
             Color.White
         );
     }

@@ -65,8 +65,8 @@ public class DistanceConstraint : Constraint
 
     public override void Draw()
     {
-        var pointAviewPos = _ctx.Camera.ViewPos(UnitConv.MetersToPixels(PointA.Pos));
-        var pointBviewPos = _ctx.Camera.ViewPos(UnitConv.MetersToPixels(PointB.Pos));
+        var pointAviewPos = UnitConv.MetersToPixels(PointA.Pos);
+        var pointBviewPos = UnitConv.MetersToPixels(PointB.Pos);
 
         DrawLineV(
             pointAviewPos,

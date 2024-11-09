@@ -336,8 +336,9 @@ public partial class MassShape
             }
         }
 
-        public readonly void Move(in Vector2 translation)
+        public readonly void SetPos(in Vector2 newPos)
         {
+            Vector2 translation = newPos - Centroid;
             foreach (PointMass p in _points)
             {
                 p.Pos += translation;

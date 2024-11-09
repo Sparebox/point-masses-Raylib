@@ -266,13 +266,13 @@ public class Gui
     private static void ShowCameraSettings(Context ctx)
     {
         ImGui.Text("Camera settings");
-        ImGui.Text($"Current offset: ({ctx.Camera.Offset.X:0}, {ctx.Camera.Offset.Y:0})");
+        ImGui.Text($"Current offset: ({ctx._camera.Offset.X:0}, {ctx._camera.Offset.Y:0})");
         ImGui.PushItemWidth(50f);
-        ImGui.InputFloat("Move speed", ref ctx.Camera._moveSpeed);
+        ImGui.InputFloat("Move speed", ref ctx._cameraMoveSpeed);
         ImGui.PopItemWidth();
         if (ImGui.Button("Reset camera"))
         {
-            ctx.Camera.Reset();
+            ctx._camera.Offset = Vector2.Zero;
         }
     }
 }

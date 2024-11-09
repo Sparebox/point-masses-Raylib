@@ -28,10 +28,10 @@ public class Terrarium : ISystem
     
     public void Draw()
     {
-        if (_drawGrid)
-        {
-            _grid.Draw();
-        }
+        // if (_drawGrid)
+        // {
+        //     _grid.Draw();
+        // }
     }
 }
 
@@ -65,25 +65,25 @@ internal class Grid
         }
     }
 
-    public void Draw()
-    {
-        float maxX = TopLeftPos.X + NumX * CellSize;
-        float maxY = TopLeftPos.Y + NumY * CellSize;
-        for (int i = 0; i < NumX + 1; i++)
-        {
-            float x = TopLeftPos.X + i * CellSize; 
-            Vector2 start = _ctx.Camera.ViewPos(new Vector2(x, TopLeftPos.Y));
-            Vector2 end = _ctx.Camera.ViewPos(new Vector2(x, maxY));
-            DrawLineV(start, end, Color.White);
-        }
-        for (int j = 0; j < NumY + 1; j++)
-        {
-            float y = TopLeftPos.Y + j * CellSize;
-            Vector2 start = _ctx.Camera.ViewPos(new Vector2(TopLeftPos.X, y));
-            Vector2 end = _ctx.Camera.ViewPos(new Vector2(maxX, y));
-            DrawLineV(start, end, Color.White);
-        }
-    }
+    // public void Draw()
+    // {
+    //     float maxX = TopLeftPos.X + NumX * CellSize;
+    //     float maxY = TopLeftPos.Y + NumY * CellSize;
+    //     for (int i = 0; i < NumX + 1; i++)
+    //     {
+    //         float x = TopLeftPos.X + i * CellSize; 
+    //         Vector2 start = _ctx._camera.ViewPos(new Vector2(x, TopLeftPos.Y));
+    //         Vector2 end = _ctx._camera.ViewPos(new Vector2(x, maxY));
+    //         DrawLineV(start, end, Color.White);
+    //     }
+    //     for (int j = 0; j < NumY + 1; j++)
+    //     {
+    //         float y = TopLeftPos.Y + j * CellSize;
+    //         Vector2 start = _ctx._camera.ViewPos(new Vector2(TopLeftPos.X, y));
+    //         Vector2 end = _ctx._camera.ViewPos(new Vector2(maxX, y));
+    //         DrawLineV(start, end, Color.White);
+    //     }
+    //}
 
     private readonly struct Cell
     {

@@ -165,13 +165,13 @@ public class QuadTree
         return;
     }
 
-    public void Draw(Camera camera)
+    public void Draw()
     {
         if (_massShapes.Count == 0 && !_subdivided)
         {
             return;
         }
-        Vector2 viewCenter = camera.ViewPos(UnitConv.MetersToPixels(_center));
+        Vector2 viewCenter = UnitConv.MetersToPixels(_center);
 
         DrawRectangleLines(
             (int) viewCenter.X - UnitConv.MetersToPixels(_size.X * 0.5f),
@@ -191,10 +191,10 @@ public class QuadTree
             );
         } else
         {
-            _northEast.Draw(camera);
-            _southEast.Draw(camera);
-            _southWest.Draw(camera);
-            _northWest.Draw(camera);
+            _northEast.Draw();
+            _southEast.Draw();
+            _southWest.Draw();
+            _northWest.Draw();
         }
     }
 

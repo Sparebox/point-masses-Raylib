@@ -15,20 +15,20 @@ public class Program
     public static readonly int TargetFPS = GetMonitorRefreshRate(GetCurrentMonitor());
 
     private static float _accumulator;
-    private static Context _context;
+    private static Context _ctx;
 
     public static void Main() 
     {
-        _context = Init();
+        _ctx = Init();
         var _quadTreeUpdateThread = new Thread(new ParameterizedThreadStart(QuadTree.ThreadUpdate), 0)
         {
             IsBackground = true
         };
-        _quadTreeUpdateThread.Start(_context);
+        _quadTreeUpdateThread.Start(_ctx);
         rlImGui.Setup(true);
         while (!WindowShouldClose())
         {
-            if (!_context._simPaused)
+            if (!_ctx._simPaused)
             {
                 Update();
             }
@@ -72,38 +72,38 @@ public class Program
         if (GetFPS() < Constants.PauseThresholdFPS) // Pause if running too slow
         {
             AsyncConsole.WriteLine("Running too slow. Pausing sim");
-            _context._simPaused = true;
+            _ctx._simPaused = true;
         }
         _accumulator += GetFrameTime();
-        while (_accumulator >= _context._timestep)
+        while (_accumulator >= _ctx._timestep)
         {
-            for (int i = 0; i < _context._substeps; i++)
+            for (int i = 0; i < _ctx._substeps; i++)
             {
-                foreach (MassShape s in _context.MassShapes)
+                foreach (MassShape s in _ctx.MassShapes)
                 {
                     s.Update();
                 }
-                foreach (var system in _context.SubStepSystems)
+                foreach (var system in _ctx.SubStepSystems)
                 {
                     system.Update();
                 }
             }
-            foreach (var system in _context.Systems)
+            foreach (var system in _ctx.Systems)
             {
                 system.Update();
             }
             // Remove deleted mass shapes if any deleted
-            _context.Lock.EnterUpgradeableReadLock();
-            if (_context.MassShapes.Where(s => s._toBeDeleted).Any())
+            _ctx.Lock.EnterUpgradeableReadLock();
+            if (_ctx.MassShapes.Where(s => s._toBeDeleted).Any())
             {
-                if (_context.Lock.TryEnterWriteLock(0)) // Do not block the main thread if the lock is unavailable
+                if (_ctx.Lock.TryEnterWriteLock(0)) // Do not block the main thread if the lock is unavailable
                 {
-                    _context.MassShapes.RemoveAll(s => s._toBeDeleted);
-                    _context.Lock.ExitWriteLock();
+                    _ctx.MassShapes.RemoveAll(s => s._toBeDeleted);
+                    _ctx.Lock.ExitWriteLock();
                 }
             }
-            _context.Lock.ExitUpgradeableReadLock();
-            _accumulator -= _context._timestep;
+            _ctx.Lock.ExitUpgradeableReadLock();
+            _accumulator -= _ctx._timestep;
         }
     }
 
@@ -113,27 +113,30 @@ public class Program
         rlImGui.Begin(); // GUI
         ClearBackground(Color.Black);
 
-        foreach (MassShape s in _context.MassShapes)
+        BeginMode2D(_ctx._camera);
+        foreach (MassShape s in _ctx.MassShapes)
         {
             s.Draw();
         }
-        foreach (var l in _context.LineColliders)
+        foreach (var l in _ctx.LineColliders)
         {
             l.Draw();
         }
-        foreach (var system in _context.Systems)
+        foreach (var system in _ctx.Systems)
         {
             system.Draw();
         }
-        foreach (var substepSystem in _context.SubStepSystems)
+        foreach (var substepSystem in _ctx.SubStepSystems)
         {
             substepSystem.Draw();
         }
-        if (_context._drawQuadTree)
+        if (_ctx._drawQuadTree)
         {
-            _context.QuadTree.Draw(_context.Camera);
+            _ctx.QuadTree.Draw();
         }
-        Gui.Draw(_context); // GUI
+        EndMode2D();
+        
+        Gui.Draw(_ctx); // GUI
         
         rlImGui.End();
         EndDrawing(); // raylib
@@ -144,46 +147,46 @@ public class Program
         // Keys
         if (IsKeyPressed(KeyboardKey.G))
         {
-            _context._gravityEnabled = !_context._gravityEnabled;
+            _ctx._gravityEnabled = !_ctx._gravityEnabled;
         }
         if (IsKeyPressed(KeyboardKey.F))
         {
-            _context._drawForces = !_context._drawForces;
+            _ctx._drawForces = !_ctx._drawForces;
         }
         if (IsKeyPressed(KeyboardKey.Q))
         {
-            _context._drawQuadTree = !_context._drawQuadTree;
+            _ctx._drawQuadTree = !_ctx._drawQuadTree;
         }
         if (IsKeyPressed(KeyboardKey.R))
         {
-            _context.LoadSavedState();
+            _ctx.LoadSavedState();
         }
         if (IsKeyPressed(KeyboardKey.Space))
         {
-            _context._simPaused = !_context._simPaused;
+            _ctx._simPaused = !_ctx._simPaused;
         }
 
         // Handle system inputs
-        foreach (var system in _context.Systems)
+        foreach (var system in _ctx.Systems)
         {
             system.UpdateInput();
         }
-        foreach (var subStepSystem in _context.SubStepSystems)
+        foreach (var subStepSystem in _ctx.SubStepSystems)
         {
             subStepSystem.UpdateInput();
         }
 
         // Handle camera
-        _context.Camera.UpdateInput();
+        _ctx.UpdateCamera();
 
         // Temporary demo keys
         if (IsKeyPressed(KeyboardKey.C))
         {
-            _context.LoadClothScenario();
+            _ctx.LoadClothScenario();
         }
         if (IsKeyPressed(KeyboardKey.B))
         {
-            _context.LoadBenchmark(1000, 3f, 20f, new(Constants.WinW * 0.5f - 200f, 200f));
+            _ctx.LoadBenchmark(1000, 3f, 20f, new(Constants.WinW * 0.5f - 200f, 200f));
         }
     }
 }

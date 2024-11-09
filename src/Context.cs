@@ -3,8 +3,9 @@ using PointMasses.Collision;
 using PointMasses.Entities;
 using PointMasses.Textures;
 using PointMasses.Utils;
-using Raylib_cs;
 using PointMasses.Systems;
+using Raylib_cs;
+using static Raylib_cs.Raylib;
 
 namespace PointMasses.Sim;
 
@@ -21,7 +22,8 @@ public class Context
     public List<MassShape> MassShapes { get; init; }
     public List<ISystem> Systems { get; init; }
     public List<ISystem> SubStepSystems { get; init; }
-    public Camera Camera { get; init; }
+    public Camera2D _camera;
+    public float _cameraMoveSpeed = 1f;
 
     public int MassCount 
     {
@@ -77,7 +79,7 @@ public class Context
         _substeps = subSteps;
         Substep = timeStep / subSteps;
         Gravity = gravity;
-        Camera = new Camera(1f);
+        _camera = new Camera2D(Vector2.Zero, Vector2.Zero, 0f, 1f);
         Lock = new ReaderWriterLockSlim();
         QuadTreeLock = new ReaderWriterLockSlim();
         QuadTreePauseEvent = new ManualResetEventSlim(true);
@@ -136,7 +138,7 @@ public class Context
     {
         Lock.EnterWriteLock();
         _simPaused = true;
-        Camera.Reset();
+        _camera.Offset = Vector2.Zero;
         LineColliders.Clear();
         MassShapes.Clear();
         foreach (var c in _saveState.LineColliders)
@@ -266,4 +268,25 @@ public class Context
         // int cellSize = 50;
         // Systems.Add(new Terrarium(Constants.WinW / 2 - terrariumWidth / 2 * cellSize, Constants.WinH / 2 - terrariumHeight / 2 * cellSize, terrariumWidth, terrariumHeight, cellSize, this));
     }
+
+    public void UpdateCamera()
+    {
+        if (IsKeyDown(KeyboardKey.W))
+        {
+            _camera.Offset.Y += _cameraMoveSpeed;
+        }
+        if (IsKeyDown(KeyboardKey.S))
+        {
+            _camera.Offset.Y -= _cameraMoveSpeed;
+        }
+        if (IsKeyDown(KeyboardKey.A))
+        {
+            _camera.Offset.X += _cameraMoveSpeed;
+        }
+        if (IsKeyDown(KeyboardKey.D))
+        {
+            _camera.Offset.X -= _cameraMoveSpeed;
+        }
+    }
+
 }

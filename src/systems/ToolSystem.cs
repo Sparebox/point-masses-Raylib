@@ -269,9 +269,8 @@ namespace PointMasses.Tools
 
         public override void Draw()
         {
-            Vector2 mouseWorldPos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
-            Vector2 translation = mouseWorldPos - _shapePreview.Centroid;
-            _shapePreview.Move(translation);
+            Vector2 mouseWorldPos = UnitConv.PixelsToMeters(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
+            _shapePreview.SetPos(mouseWorldPos);
             _shapePreview.Draw();
         }
 
@@ -304,7 +303,7 @@ namespace PointMasses.Tools
         {
             SpawnTarget[] spawnTargets = (SpawnTarget[]) Enum.GetValues(typeof(SpawnTarget));
             _currentTarget = spawnTargets[_selectedSpawnTargetIndex];
-            Vector2 mousePosMeters = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
+            Vector2 mousePosMeters = UnitConv.PixelsToMeters(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
             MassShape shapeToSpawn = null;
             switch (_currentTarget)
             {
@@ -349,7 +348,7 @@ namespace PointMasses.Tools
             {
                 return;
             }
-            Vector2 mousePos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
+            Vector2 mousePos = UnitConv.PixelsToMeters(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
             BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
             var shapes = _ctx.GetMassShapes(area).ToHashSet();
             if (!shapes.Any())
@@ -394,7 +393,7 @@ namespace PointMasses.Tools
             {
                 return;
             }
-            Vector2 mousePos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
+            Vector2 mousePos = UnitConv.PixelsToMeters(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
             BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
             var shapes = _ctx.GetMassShapes(area);
             if (!shapes.Any())
@@ -414,12 +413,12 @@ namespace PointMasses.Tools
 
         public override void Draw()
         {
-            Vector2 mousePos = GetMousePosition();
+            Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), _ctx._camera);
             DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
             if (_shouldVisualize)
             {
                 _shouldVisualize = false;
-                DrawLineV(_ctx.Camera.ViewPos(UnitConv.MetersToPixels(_centerOfMass)), mousePos, Color.Red);
+                DrawLineV(UnitConv.MetersToPixels(_centerOfMass), mousePos, Color.Red);
             }
         }
     }
@@ -442,7 +441,7 @@ namespace PointMasses.Tools
             {
                 return;
             }
-            Vector2 mousePos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
+            Vector2 mousePos = UnitConv.PixelsToMeters(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
             BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
             var points = _ctx.GetPointMasses(area);
             if (!points.Any())
@@ -465,14 +464,14 @@ namespace PointMasses.Tools
 
         public override void Draw()
         {
-            Vector2 mousePos = GetMousePosition();
+            Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), _ctx._camera);
             DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
             if (_shouldVisualize)
             {
                 _shouldVisualize = false;
                 foreach (var pos in _positions)
                 {
-                DrawLineV(_ctx.Camera.ViewPos(UnitConv.MetersToPixels(pos)), mousePos, Color.Red);
+                    DrawLineV(UnitConv.MetersToPixels(pos), mousePos, Color.Red);
                 }
             }
         }
@@ -504,7 +503,7 @@ namespace PointMasses.Tools
 
         public override void Draw()
         {
-            Vector2 mousePos = GetMousePosition();
+            Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), _ctx._camera);
             Graphics.DrawArrow(mousePos.X, mousePos.Y, mousePos.X + (int) (100f * Direction.X), mousePos.Y + (int) (100f * Direction.Y), Color.Yellow);
         }
     }
@@ -519,7 +518,7 @@ namespace PointMasses.Tools
             {
                 return;
             }
-            Vector2 mousePos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
+            Vector2 mousePos = UnitConv.PixelsToMeters(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
             var shapes = _ctx.GetMassShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
             if (!shapes.Any())
             {
@@ -556,10 +555,11 @@ namespace PointMasses.Tools
             {
                 return;
             }
-            Vector2 mousePos = GetMousePosition();
-            float len = UnitConv.PixelsToMeters(Vector2.Distance(_startPos, mousePos));
+            Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), _ctx._camera);
+            Vector2 startPos = GetScreenToWorld2D(_startPos, _ctx._camera);
+            float len = UnitConv.PixelsToMeters(Vector2.Distance(startPos, mousePos));
             DrawText($"{len:0.00} m", (int) mousePos.X, (int) mousePos.Y + 20, 30, Color.Yellow);
-            DrawLineV(_startPos, mousePos, Color.Yellow);
+            DrawLineV(startPos, mousePos, Color.Yellow);
         }
 
         public override void Update()
@@ -587,10 +587,10 @@ namespace PointMasses.Tools
 
         public override void Draw()
         {
-            var mousePos = GetMousePosition();
+            var mousePos = GetScreenToWorld2D(GetMousePosition(), _ctx._camera);
             foreach (var pos in _positions)
             {
-                Vector2 pixelPos = _ctx.Camera.ViewPos(UnitConv.MetersToPixels(pos));
+                Vector2 pixelPos = UnitConv.MetersToPixels(pos);
                 DrawText("G", (int) pixelPos.X, (int) pixelPos.Y, 20, Color.Yellow);
             }
             DrawCircleLines((int) mousePos.X, (int) mousePos.Y, UnitConv.MetersToPixels(Radius), Color.Yellow);
@@ -598,7 +598,7 @@ namespace PointMasses.Tools
 
         public override void Update()
         {
-            var mousePosMeters = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
+            var mousePosMeters = UnitConv.PixelsToMeters(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
             if (IsMouseButtonPressed(MouseButton.Left))
             {
                 _positions.Add(mousePosMeters);
@@ -641,7 +641,7 @@ namespace PointMasses.Tools
             {
                 return;
             }
-            Vector2 mousePos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
+            Vector2 mousePos = UnitConv.PixelsToMeters(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
             BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
             var points = _ctx.GetPointMasses(area);
             if (!points.Any())
@@ -674,7 +674,7 @@ namespace PointMasses.Tools
             {
                 return;
             }
-            var mousePos = UnitConv.PixelsToMeters(_ctx.Camera.WorldPos(GetMousePosition()));
+            var mousePos = UnitConv.PixelsToMeters(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
             BoundingBox area = new(new(mousePos.X, mousePos.Y, 0f), new(mousePos.X, mousePos.Y, 0f));
             var shapes = _ctx.GetMassShapes(area);
             if (shapes.Any())

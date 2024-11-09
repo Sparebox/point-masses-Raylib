@@ -284,8 +284,8 @@ public partial class MassShape : Entity
         if (Ctx._drawAABBS)
         {
             BoundingBox aabb = Aabb;
-            aabb.Min = Ctx.Camera.ViewPos(UnitConv.MetersToPixels(aabb.Min));
-            aabb.Max = Ctx.Camera.ViewPos(UnitConv.MetersToPixels(aabb.Max));
+            aabb.Min = UnitConv.MetersToPixels(aabb.Min);
+            aabb.Max = UnitConv.MetersToPixels(aabb.Max);
             DrawRectangleLines(
                 (int) aabb.Min.X,
                 (int) aabb.Min.Y,
@@ -411,7 +411,7 @@ public partial class MassShape : Entity
 
     private void DrawInfo()
     {
-        Vector2 centroidViewPos = Ctx.Camera.ViewPos(UnitConv.MetersToPixels(Centroid));
+        Vector2 centroidViewPos = UnitConv.MetersToPixels(Centroid);
         ImGui.Begin($"Body entity id {Id} info", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
         ImGui.SetWindowPos(centroidViewPos + new Vector2(25f, 0f));
         ImGui.SetWindowSize(new (250f, 130f));
