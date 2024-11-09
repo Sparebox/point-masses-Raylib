@@ -413,13 +413,13 @@ public partial class MassShape : Entity
     {
         Vector2 centroidViewPos = UnitConv.MetersToPixels(Centroid);
         ImGui.Begin($"Body entity id {Id} info", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
-        ImGui.SetWindowPos(centroidViewPos + new Vector2(25f, 0f));
+        ImGui.SetWindowPos(GetWorldToScreen2D(centroidViewPos + new Vector2(25f, 0f), Ctx._camera));
         ImGui.SetWindowSize(new (250f, 130f));
         ImGui.Text($"Mass: {Mass} kg");
         ImGui.Text($"Velocity: {Vel:0.0} m/s");
         ImGui.Text($"Momentum: {Momentum:0.0} kgm/s");
         ImGui.Text($"Moment of inertia: {Inertia:0} kgm^2");
-        ImGui.Text($"Angular vel: {AngVel * RAD2DEG:0} deg/s");
+        ImGui.Text($"Angular vel: {AngVel * RAD2DEG / 6f:0} RPM");
         ImGui.Text($"Angular momentum: {AngularMomentum:0} kgm^2/s");
         ImGui.Text($"Linear energy: {LinEnergy:0.##} J");
         ImGui.Text($"Rot energy: {RotEnergy:0.##} J");
