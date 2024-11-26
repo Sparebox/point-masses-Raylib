@@ -535,7 +535,7 @@ namespace PointMasses.Tools
                     continue;
                 }
                 Vector2 normal = new(comToPoint.Y / radius, -comToPoint.X / radius);
-                p.ApplyForce((IsMouseButtonDown(MouseButton.Right) ? -1f : 1f) * _ctx._timestep * Constants.RotationForce * normal);
+                p.ApplyForce((IsMouseButtonDown(MouseButton.Right) ? -1f : 1f) * _ctx._timestep * Constants.Torque * normal);
             }
         }
 

@@ -1,12 +1,11 @@
 ﻿using System.Numerics;
 using PointMasses.Entities;
-using PointMasses.Systems;
 using Raylib_cs;
 using rlImGui_cs;
-using PointMasses.Tools;
 using PointMasses.UI;
 using PointMasses.Utils;
 using static Raylib_cs.Raylib;
+using ImGuiNET;
 
 namespace PointMasses.Sim;
 
@@ -19,13 +18,10 @@ public class Program
 
     public static void Main() 
     {
-        _ctx = Init();
-        var _quadTreeUpdateThread = new Thread(new ParameterizedThreadStart(QuadTree.ThreadUpdate), 0)
-        {
-            IsBackground = true
-        };
-        _quadTreeUpdateThread.Start(_ctx);
+        _ctx = Init(0.8f, 1f);
+        
         rlImGui.Setup(true);
+        unsafe { ImGui.GetIO().NativePtr->IniFilename = null; } // Disable imgui.ini file
         while (!WindowShouldClose())
         {
             if (!_ctx._simPaused)
@@ -39,21 +35,33 @@ public class Program
         CloseWindow();
     }
 
-    private static Context Init()
+    private static Context Init(float winSizePercentage, float renderPercentage)
     {
-        InitWindow(Constants.WinW, Constants.WinH, "Point-masses");
+        InitWindow(0, 0, "Point-masses");
         SetTargetFPS(TargetFPS);
+
+        int winWidth = (int) (winSizePercentage * GetMonitorWidth(GetCurrentMonitor()));
+        int winHeight = (int) (winSizePercentage * GetMonitorHeight(GetCurrentMonitor()));
+        int renderWidth = (int) (renderPercentage * winWidth);
+        int renderHeight = (int) (renderPercentage * winHeight);
+        SetWindowSize(winWidth, winHeight);
         
-        float winWidthMeters = UnitConv.PixelsToMeters(Constants.WinW);
-        float winHeightMeters = UnitConv.PixelsToMeters(Constants.WinH);
+        int winPosX = GetMonitorWidth(GetCurrentMonitor()) / 2 - winWidth / 2;
+        int winPosY = GetMonitorHeight(GetCurrentMonitor()) / 2 - winHeight / 2;
+        SetWindowPosition(winPosX, winPosY);
+        
+        float winWidthMeters = UnitConv.PixelsToMeters(winWidth);
+        float winHeightMeters = UnitConv.PixelsToMeters(winHeight);
         Context ctx = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f))
         {
             QuadTree = new(
-                UnitConv.PixelsToMeters(new Vector2(Constants.WinW * 0.5f, Constants.WinH * 0.5f)),
-                UnitConv.PixelsToMeters(new Vector2(Constants.WinW, Constants.WinH)),
+                new Vector2(winWidthMeters * 0.5f, winHeightMeters * 0.5f),
+                new Vector2(winWidthMeters, winHeightMeters),
                 1,
                 6
-            )
+            ),
+            WinSize = new(winWidth, winHeight),
+            RenderTexture = LoadRenderTexture(renderWidth, renderHeight)
         };
         ctx.LineColliders = new() {
             new(0f, 0f, winWidthMeters, 0f, ctx),
@@ -64,6 +72,13 @@ public class Program
         ctx.SaveCurrentState();
         // Load textures
         ctx.TextureManager.LoadTexture("center_of_mass.png");
+
+        // Start quad tree update thread
+        var quadTreeUpdateThread = new Thread(new ParameterizedThreadStart(QuadTree.ThreadUpdate), 0)
+        {
+            IsBackground = true
+        };
+        quadTreeUpdateThread.Start(ctx);
         return ctx;
     }
 
@@ -111,6 +126,8 @@ public class Program
     {
         BeginDrawing(); // raylib
         rlImGui.Begin(); // GUI
+
+        BeginTextureMode(_ctx.RenderTexture);
         ClearBackground(Color.Black);
 
         BeginMode2D(_ctx._camera);
@@ -135,9 +152,21 @@ public class Program
             _ctx.QuadTree.Draw();
         }
         EndMode2D();
+
+        EndTextureMode();
+
         
+        
+        DrawTexturePro(
+            _ctx.RenderTexture.Texture,
+            new (0f, 0f, _ctx.RenderTexture.Texture.Width, -_ctx.RenderTexture.Texture.Height),
+            new (0f, 0f, _ctx.WinSize.X, _ctx.WinSize.Y),
+            Vector2.Zero,
+            0f,
+            Color.White
+        );
         Gui.Draw(_ctx); // GUI
-        
+
         rlImGui.End();
         EndDrawing(); // raylib
     }
@@ -186,7 +215,7 @@ public class Program
         }
         if (IsKeyPressed(KeyboardKey.B))
         {
-            _ctx.LoadBenchmark(1000, 3f, 20f, new(Constants.WinW * 0.5f - 200f, 200f));
+            _ctx.LoadBenchmark(1000, 3f, 20f, new(_ctx.WinSize.X * 0.5f - 200f, 200f));
         }
     }
 }

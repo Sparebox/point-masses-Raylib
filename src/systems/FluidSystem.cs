@@ -84,7 +84,7 @@ public class FluidSystem : ISystem
         public const int NumX = 30;
         public const int NumY = 30;
         public const float CellSize = 0.05f;
-        public static readonly Vector2 Pos = new(Constants.WinW / 2 - 200, Constants.WinH / 2 - 400);
+        public static Vector2 Pos;
 
         private Cell[,] Cells { get; set; }
         private readonly Context _ctx;
@@ -94,6 +94,7 @@ public class FluidSystem : ISystem
         public Grid(Context ctx)
         {
             _ctx = ctx;
+            Pos = new(ctx.WinSize.X / 2 - 200, ctx.WinSize.Y / 2 - 400);
             Initialize();
         }
 

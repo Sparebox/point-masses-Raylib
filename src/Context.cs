@@ -22,6 +22,8 @@ public class Context
     public List<MassShape> MassShapes { get; init; }
     public List<ISystem> Systems { get; init; }
     public List<ISystem> SubStepSystems { get; init; }
+    public RenderTexture2D RenderTexture { get; init; }
+    public Vector2 WinSize { get; set; }
     public Camera2D _camera;
     public float _cameraMoveSpeed = 1f;
 

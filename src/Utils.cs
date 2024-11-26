@@ -61,8 +61,6 @@ namespace PointMasses.Utils
         public const float SpeedOfLight = 299_792_458f;
         public const float SpeedOfLightSq = SpeedOfLight * SpeedOfLight;
         public const float GravConstant = 6.67430e-11f;
-        public const int WinW = 1600;
-        public const int WinH = 900;
         public const int PauseThresholdFPS = 15;
         public const int QuadTreeUpdateMs = 50;
         // Point mass
@@ -81,7 +79,7 @@ namespace PointMasses.Utils
         public const int MaxWindForce = 100;
         public const int MinWindForce = 10;
         // Rotate tool
-        public const float RotationForce = 1e2f;
+        public const float Torque = 1e2f;
         // Gravitywell tool
         public const float DefaultGravityWellConstant = 0.1f;
         public const float DefaultGravityWellMinDist = 0.01f;

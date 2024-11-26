@@ -38,7 +38,7 @@ public class Editor : Tool
     public Editor(Context ctx)
     {
         _ctx = ctx;
-        _grid = new Grid(5);
+        _grid = new Grid(5, ctx.WinSize);
         ActionComboString = GetActionComboString();
         _selectedActionIndex = 0;
         _clickedPointIndices = new();

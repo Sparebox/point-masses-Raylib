@@ -34,11 +34,11 @@ public class Grid
     private uint _pointsX;
     private uint _pointsY;
 
-    public Grid(int pointsPerMeter)
+    public Grid(int pointsPerMeter, in Vector2 winSize)
     {
         SelectedPointIndices = new();
         ConstrainedPointIndexPairs = new();
-        SetGridScale(pointsPerMeter);
+        SetGridScale(pointsPerMeter, winSize);
     }
 
     public void Draw()
@@ -83,11 +83,11 @@ public class Grid
         }
     }
 
-    public void SetGridScale(int pointsPerMeter)
+    public void SetGridScale(int pointsPerMeter, in Vector2 winSize)
     {
         _pointsPerMeter = pointsPerMeter;
-        _pointsX = (uint) float.Ceiling(UnitConv.PixelsToMeters(Constants.WinW) * _pointsPerMeter);
-        _pointsY = (uint) float.Ceiling(UnitConv.PixelsToMeters(Constants.WinH) * _pointsPerMeter);
+        _pointsX = (uint) float.Ceiling(UnitConv.PixelsToMeters(winSize.X) * _pointsPerMeter);
+        _pointsY = (uint) float.Ceiling(UnitConv.PixelsToMeters(winSize.Y) * _pointsPerMeter);
 
         GridPoints = new GridPoint[_pointsX * _pointsY];
         SelectedPointIndices.Clear();
