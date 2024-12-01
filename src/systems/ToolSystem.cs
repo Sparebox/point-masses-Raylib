@@ -374,7 +374,7 @@ namespace PointMasses.Tools
 
         public override void Draw()
         {
-            Vector2 mousePos = GetMousePosition();
+            Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), _ctx._camera);
             DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
         }
     }
@@ -660,7 +660,8 @@ namespace PointMasses.Tools
 
         public override void Draw() 
         {
-            DrawCircleLinesV(GetMousePosition(), UnitConv.MetersToPixels(Radius), Color.Yellow);
+            Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), _ctx._camera);
+            DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
         }
     }
 
