@@ -75,12 +75,13 @@ public class Context
     public float _globalStaticFrictionCoeff = Constants.GlobalStaticFrictionCoeffDefault;
     
 
-    public Context(float timeStep, int subSteps, Vector2 gravity)
+    public Context(float timeStep, int subSteps, Vector2 gravity, Vector2 winSize)
     {
         _timestep = timeStep;
         _substeps = subSteps;
         Substep = timeStep / subSteps;
         Gravity = gravity;
+        WinSize = winSize;
         _camera = new Camera2D(Vector2.Zero, Vector2.Zero, 0f, 1f);
         Lock = new ReaderWriterLockSlim();
         QuadTreeLock = new ReaderWriterLockSlim();
@@ -265,10 +266,6 @@ public class Context
         Systems.Add(new ToolSystem(this));
         Systems.Add(new NbodySystem(this));
         SubStepSystems.Add(new CollisionSystem(this));
-        // int terrariumWidth = 15;
-        // int terrariumHeight = 15;
-        // int cellSize = 50;
-        // Systems.Add(new Terrarium(Constants.WinW / 2 - terrariumWidth / 2 * cellSize, Constants.WinH / 2 - terrariumHeight / 2 * cellSize, terrariumWidth, terrariumHeight, cellSize, this));
     }
 
     public void UpdateCamera()

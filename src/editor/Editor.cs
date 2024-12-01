@@ -47,7 +47,7 @@ public class Editor : Tool
     public override void Draw()
     {
         _grid.Draw();
-        Vector2 mousePos = GetMousePosition();
+        Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), _ctx._camera);
         if (SelectedAction == EditorAction.Freeform && IsMouseButtonDown(MouseButton.Left) && IsKeyDown(KeyboardKey.LeftAlt))
         {
             var startPos = UnitConv.MetersToPixels(_grid.GridPoints[_clickedPointIndices.Item1]._pos);
@@ -181,12 +181,12 @@ public class Editor : Tool
             try {
                 if (SelectedAction == EditorAction.Freeform && IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint start point
                 {
-                    SetClickedPoint(GetMousePosition(), true);
+                    SetClickedPoint(GetScreenToWorld2D(GetMousePosition(), _ctx._camera), true);
                 }
             }
             catch (IndexOutOfRangeException e)
             {
-                Console.Error.WriteLine(e);
+                Console.Error.WriteLineAsync(e.Message);
             }
         }
         
@@ -195,12 +195,12 @@ public class Editor : Tool
             try {
                 if (SelectedAction == EditorAction.Freeform && IsKeyDown(KeyboardKey.LeftAlt)) // Creating constraint end point
                 {
-                    SetClickedPoint(GetMousePosition(), false);
+                    SetClickedPoint(GetScreenToWorld2D(GetMousePosition(), _ctx._camera), false);
                 }
             }
             catch (IndexOutOfRangeException e)
             {
-                Console.Error.WriteLine(e);
+                Console.Error.WriteLineAsync(e.Message);
             }
         }
     }
@@ -209,8 +209,9 @@ public class Editor : Tool
     {
         if (IsMouseButtonDown(MouseButton.Left) && !IsKeyDown(KeyboardKey.LeftAlt))
         {
-            try {
-                var mousePos = GetMousePosition();
+            try 
+            {
+                var mousePos = GetScreenToWorld2D(GetMousePosition(), _ctx._camera);
                 if (IsKeyDown(KeyboardKey.LeftShift))
                 {
                     _grid.SetGridPoint((int) mousePos.X, (int) mousePos.Y, false, IsKeyDown(KeyboardKey.LeftControl));
@@ -222,7 +223,7 @@ public class Editor : Tool
             }
             catch (IndexOutOfRangeException e)
             {
-                Console.Error.WriteLine(e);
+                Console.Error.WriteLineAsync(e.Message);
             }
         }
     }
