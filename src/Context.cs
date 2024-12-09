@@ -266,6 +266,19 @@ public class Context
         Systems.Add(new ToolSystem(this));
         Systems.Add(new NbodySystem(this));
         SubStepSystems.Add(new CollisionSystem(this));
+        WaveSystem waveSystem = new(this);
+        waveSystem.AddWaveInstance(
+            UnitConv.PixelsToMeters(new Vector2(WinSize.X * 0.05f, WinSize.Y * 0.5f)),
+            UnitConv.PixelsToMeters(new Vector2(WinSize.X * 0.95f, WinSize.Y * 0.5f)),
+            false,
+            500f,
+            250,
+            5f,
+            0.1f,
+            0f,
+            this
+        );
+        SubStepSystems.Add(waveSystem);
     }
 
     public void UpdateCamera()

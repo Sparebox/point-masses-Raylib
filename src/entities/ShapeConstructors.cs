@@ -104,7 +104,7 @@ public partial class MassShape
         return preview;
     }
 
-    public static MassShape Chain(float x0, float y0, float x1, float y1, float mass, int res, (bool, bool) pins, Context ctx)
+    public static MassShape Chain(float x0, float y0, float x1, float y1, float mass, float stiffness, int res, (bool, bool) pins, Context ctx)
     {
         MassShape c = new(ctx, false);
         Vector2 start = new(x0, y0);
@@ -134,7 +134,7 @@ public partial class MassShape
         // Constraints
         for (int i = 0; i < res - 1; i++)
         {
-            c._constraints.Add(new DistanceConstraint(c._points[i], c._points[i + 1], 1f, ctx));
+            c._constraints.Add(new DistanceConstraint(c._points[i], c._points[i + 1], stiffness, ctx));
         }
         return c;
     }
