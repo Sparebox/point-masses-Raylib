@@ -32,7 +32,7 @@ public class ParticleSystem : ISystem
             if (particle.IsDead)
             {
                 particle.Pos = SpawnPos;
-                particle.Vel = SpawnVel + UnitConv.PixelsToMeters(new Vector2(Rng.Gen.NextSingle(), Rng.Gen.NextSingle()));
+                particle.Vel = SpawnVel + UnitConv.PtoM(new Vector2(Rng.Gen.NextSingle(), Rng.Gen.NextSingle()));
                 particle.Resurrect();
             }
         }
@@ -96,7 +96,7 @@ internal class Particle
         {
             return;
         }
-        DrawCircleLinesV(UnitConv.MetersToPixels(Pos), UnitConv.MetersToPixels(Radius), Color.White);
+        DrawCircleLinesV(UnitConv.MtoP(Pos), UnitConv.MtoP(Radius), Color.White);
     }
 
     public void Resurrect()

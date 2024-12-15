@@ -195,7 +195,7 @@ public partial class MassShape : Entity
                     maxY = p.Pos.Y + p.Radius;
                 }
             }
-            float margin = UnitConv.PixelsToMeters(1f);
+            float margin = UnitConv.PtoM(1f);
             return new BoundingBox()
             {
                 Max = new(maxX + margin, maxY + margin, 0f),
@@ -284,8 +284,8 @@ public partial class MassShape : Entity
         if (Ctx._drawAABBS)
         {
             BoundingBox aabb = Aabb;
-            aabb.Min = UnitConv.MetersToPixels(aabb.Min);
-            aabb.Max = UnitConv.MetersToPixels(aabb.Max);
+            aabb.Min = UnitConv.MtoP(aabb.Min);
+            aabb.Max = UnitConv.MtoP(aabb.Max);
             DrawRectangleLines(
                 (int) aabb.Min.X,
                 (int) aabb.Min.Y,
@@ -305,7 +305,7 @@ public partial class MassShape : Entity
                     Graphics.DrawArrow(line._start, line._start + clampedLine, Color.Magenta);
                 }
             }
-            Vector2 COM = UnitConv.MetersToPixels(CenterOfMass);
+            Vector2 COM = UnitConv.MtoP(CenterOfMass);
             Graphics.DrawArrow(COM, COM + Raymath.Vector2ClampValue(TotalVisForce, 0f, 150f), Color.Magenta);
         }
         if (_showInfo)
@@ -365,8 +365,8 @@ public partial class MassShape : Entity
                 line._start.Y = p1.Pos.Y + 0.5f * P1ToP2.Y;
                 line._end.X = p1.Pos.X + 0.5f * P1ToP2.X + force.X * PressureVis.VisForceMult;
                 line._end.Y = p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y * PressureVis.VisForceMult;
-                line._start = UnitConv.MetersToPixels(line._start);
-                line._end = UnitConv.MetersToPixels(line._end);
+                line._start = UnitConv.MtoP(line._start);
+                line._end = UnitConv.MtoP(line._end);
                 _pressureVis._lines[i] = line;
             }
         }
@@ -411,7 +411,7 @@ public partial class MassShape : Entity
 
     private void DrawInfo()
     {
-        Vector2 centroidViewPos = UnitConv.MetersToPixels(Centroid);
+        Vector2 centroidViewPos = UnitConv.MtoP(Centroid);
         ImGui.Begin($"Body entity id {Id} info", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
         ImGui.SetWindowPos(GetWorldToScreen2D(centroidViewPos + new Vector2(25f, 0f), Ctx._camera));
         ImGui.SetWindowSize(new (250f, 130f));

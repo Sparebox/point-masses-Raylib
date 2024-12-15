@@ -50,12 +50,12 @@ public class Editor : Tool
         Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), _ctx._camera);
         if (SelectedAction == EditorAction.Freeform && IsMouseButtonDown(MouseButton.Left) && IsKeyDown(KeyboardKey.LeftAlt))
         {
-            var startPos = UnitConv.MetersToPixels(_grid.GridPoints[_clickedPointIndices.Item1]._pos);
+            var startPos = UnitConv.MtoP(_grid.GridPoints[_clickedPointIndices.Item1]._pos);
             DrawLineV(startPos, mousePos, Color.Purple);
         }
         else
         {
-            DrawCircleLinesV(mousePos, UnitConv.MetersToPixels(Radius), Color.Yellow);
+            DrawCircleLinesV(mousePos, UnitConv.MtoP(Radius), Color.Yellow);
         }
     }
 

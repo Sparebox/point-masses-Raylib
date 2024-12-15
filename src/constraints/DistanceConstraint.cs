@@ -13,11 +13,11 @@ public class DistanceConstraint : Constraint
     public float Stiffness { get; init; }
     private readonly Context _ctx;
 
-    public DistanceConstraint(in PointMass a, in PointMass b, float stiffness, Context ctx, bool incrementId = true)
+    public DistanceConstraint(in PointMass a, in PointMass b, float stiffness, Context ctx, float lengthMult = 1f, bool incrementId = true)
     {
         PointA = a;
         PointB = b;
-        Length = Vector2.Distance(PointA.Pos, PointB.Pos);
+        Length = lengthMult * Vector2.Distance(PointA.Pos, PointB.Pos);
         Stiffness = stiffness;
         _ctx = ctx;
         if (incrementId)
@@ -26,6 +26,7 @@ public class DistanceConstraint : Constraint
         }
     }
 
+    // Copy constructor
     public DistanceConstraint(in DistanceConstraint c)
     {
         PointA = c.PointA;
@@ -39,13 +40,13 @@ public class DistanceConstraint : Constraint
     public override void Update()
     {
         Vector2 AtoB = PointB.Pos - PointA.Pos;
-        float dist = AtoB.Length();
-        float error = Length - dist;
+        float length = AtoB.Length();
+        float error = Length - length;
         if (Raymath.FloatEquals(error, 0f) == 1 || (PointA.Pinned && PointB.Pinned))
         {
             return;
         }
-        Vector2 correctionVector = AtoB / dist * error;
+        Vector2 correctionVector = AtoB / length * error;
         Vector2 correctionA;
         Vector2 correctionB;
         float stiffnessCoeff = 1f - MathF.Pow(1f - Stiffness, 1f / _ctx._substeps);
@@ -65,8 +66,8 @@ public class DistanceConstraint : Constraint
 
     public override void Draw()
     {
-        var pointAviewPos = UnitConv.MetersToPixels(PointA.Pos);
-        var pointBviewPos = UnitConv.MetersToPixels(PointB.Pos);
+        var pointAviewPos = UnitConv.MtoP(PointA.Pos);
+        var pointBviewPos = UnitConv.MtoP(PointB.Pos);
 
         DrawLineV(
             pointAviewPos,

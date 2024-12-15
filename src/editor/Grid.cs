@@ -46,8 +46,8 @@ public class Grid
         foreach (var point in GridPoints)
         {
             DrawRectangleLines(
-                UnitConv.MetersToPixels(point._pos.X),
-                UnitConv.MetersToPixels(point._pos.Y),
+                UnitConv.MtoP(point._pos.X),
+                UnitConv.MtoP(point._pos.Y),
                 PointSize,
                 PointSize,
                 Color.White
@@ -55,17 +55,17 @@ public class Grid
             if (point.IsSelected)
             {
                 Color color = point.IsConstrained ? Color.Purple : Color.Yellow;
-                int toolRadiusPixels = UnitConv.MetersToPixels(Tool.Radius);
+                int toolRadiusPixels = UnitConv.MtoP(Tool.Radius);
                 DrawCircleLinesV(
-                    UnitConv.MetersToPixels(point._pos),
+                    UnitConv.MtoP(point._pos),
                     toolRadiusPixels,
                     color
                 );
                 if (point.IsPinned)
                 {
                     DrawRectangleLines(
-                        UnitConv.MetersToPixels(point._pos.X) - toolRadiusPixels / 2,
-                        UnitConv.MetersToPixels(point._pos.Y) - toolRadiusPixels / 2,
+                        UnitConv.MtoP(point._pos.X) - toolRadiusPixels / 2,
+                        UnitConv.MtoP(point._pos.Y) - toolRadiusPixels / 2,
                         toolRadiusPixels,
                         toolRadiusPixels,
                         color
@@ -76,8 +76,8 @@ public class Grid
         foreach (var pair in ConstrainedPointIndexPairs)
         {
             DrawLineV(
-                UnitConv.MetersToPixels(GridPoints[pair.Item1]._pos),
-                UnitConv.MetersToPixels(GridPoints[pair.Item2]._pos),
+                UnitConv.MtoP(GridPoints[pair.Item1]._pos),
+                UnitConv.MtoP(GridPoints[pair.Item2]._pos),
                 Color.Purple
             );
         }
@@ -86,8 +86,8 @@ public class Grid
     public void SetGridScale(int pointsPerMeter, in Vector2 winSize)
     {
         _pointsPerMeter = pointsPerMeter;
-        _pointsX = (uint) float.Ceiling(UnitConv.PixelsToMeters(winSize.X) * _pointsPerMeter);
-        _pointsY = (uint) float.Ceiling(UnitConv.PixelsToMeters(winSize.Y) * _pointsPerMeter);
+        _pointsX = (uint) float.Ceiling(UnitConv.PtoM(winSize.X) * _pointsPerMeter);
+        _pointsY = (uint) float.Ceiling(UnitConv.PtoM(winSize.Y) * _pointsPerMeter);
 
         GridPoints = new GridPoint[_pointsX * _pointsY];
         SelectedPointIndices.Clear();
@@ -143,8 +143,8 @@ public class Grid
 
     public uint[] GetClosestPoint(int xPixels, int yPixels)
     {
-        float xPoint = UnitConv.PixelsToMeters(xPixels) * _pointsPerMeter;
-        float yPoint = UnitConv.PixelsToMeters(yPixels) * _pointsPerMeter;
+        float xPoint = UnitConv.PtoM(xPixels) * _pointsPerMeter;
+        float yPoint = UnitConv.PtoM(yPixels) * _pointsPerMeter;
         float xPointFrac = xPoint - float.Floor(xPoint);
         float yPointFrac = yPoint - float.Floor(yPoint);
         uint xPointInt;

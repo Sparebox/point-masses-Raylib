@@ -28,7 +28,7 @@ public class FluidSystem : ISystem
     {   
         if (IsMouseButtonDown(MouseButton.Left))
         {
-            var mousePos = UnitConv.PixelsToMeters(GetMousePosition() - Grid.Pos);
+            var mousePos = UnitConv.PtoM(GetMousePosition() - Grid.Pos);
             (int xIndex, int yIndex) = Grid.PosToIndex(mousePos);
             if (IsKeyDown(KeyboardKey.LeftShift))
             {
@@ -49,7 +49,7 @@ public class FluidSystem : ISystem
         }
         if (IsMouseButtonDown(MouseButton.Right))
         {
-            var mousePos = UnitConv.PixelsToMeters(GetMousePosition() - Grid.Pos);
+            var mousePos = UnitConv.PtoM(GetMousePosition() - Grid.Pos);
             (int xIndex, int yIndex) = Grid.PosToIndex(mousePos);
             try
             {
@@ -413,9 +413,9 @@ public class FluidSystem : ISystem
 
         public readonly void Draw(int x, int y)
         {
-            x = (int) Grid.Pos.X + UnitConv.MetersToPixels(x * Grid.CellSize);
-            y = (int) Grid.Pos.Y + UnitConv.MetersToPixels(y * Grid.CellSize);
-            int GridPixelSize = UnitConv.MetersToPixels(Grid.CellSize);
+            x = (int) Grid.Pos.X + UnitConv.MtoP(x * Grid.CellSize);
+            y = (int) Grid.Pos.Y + UnitConv.MtoP(y * Grid.CellSize);
+            int GridPixelSize = UnitConv.MtoP(Grid.CellSize);
             int lightness = (int) (Density * 255);
           
             if (S == 0)

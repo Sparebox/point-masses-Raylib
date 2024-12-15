@@ -50,9 +50,9 @@ public class Program
         int winPosY = GetMonitorHeight(GetCurrentMonitor()) / 2 - winHeight / 2;
         SetWindowPosition(winPosX, winPosY);
         
-        float winWidthMeters = UnitConv.PixelsToMeters(winWidth);
-        float winHeightMeters = UnitConv.PixelsToMeters(winHeight);
-        Context ctx = new(timeStep: 1f / 60f, 5, gravity: new(0f, 9.81f), winSize: new(winWidth, winHeight))
+        float winWidthMeters = UnitConv.PtoM(winWidth);
+        float winHeightMeters = UnitConv.PtoM(winHeight);
+        Context ctx = new(timeStep: 1f / 60f, 1, gravity: new(0f, 9.81f), winSize: new(winWidth, winHeight))
         {
             QuadTree = new(
                 new Vector2(winWidthMeters * 0.5f, winHeightMeters * 0.5f),

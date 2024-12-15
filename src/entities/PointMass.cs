@@ -75,7 +75,7 @@ public class PointMass : Entity
 
     public override void Draw()
     {
-        DrawCircleLinesV(UnitConv.MetersToPixels(Pos), UnitConv.MetersToPixels(Radius), Color.White);
+        DrawCircleLinesV(UnitConv.MtoP(Pos), UnitConv.MtoP(Radius), Color.White);
     }
 
     public void ApplyForce(in Vector2 force)

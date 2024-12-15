@@ -44,7 +44,7 @@ public partial class MassShape
         // Constraints
         for (int i = 0; i < res; i++)
         {
-            preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[(i + 1) % res], 0f, ctx, false));
+            preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[(i + 1) % res], 0f, ctx, incrementId: false));
         }
         return preview;
     }
@@ -93,18 +93,18 @@ public partial class MassShape
         HashSet<int> visitedPoints = new();
         for (int i = 0; i < res; i++)
         {
-            preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[(i + 1) % res], 1f, ctx, false));
+            preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[(i + 1) % res], 1f, ctx, incrementId: false));
             if (!visitedPoints.Contains(i))
             {
                 int nextIndex = res % 2 == 0 ? (i + res / 2 - 1) % res : (i + res / 2) % res;
-                preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[nextIndex], 1f, ctx, false));
+                preview._constraints.Add(new DistanceConstraint(preview._points[i], preview._points[nextIndex], 1f, ctx, incrementId: false));
                 visitedPoints.Add(i);
             }
         }
         return preview;
     }
 
-    public static MassShape Chain(float x0, float y0, float x1, float y1, float mass, float stiffness, int res, (bool, bool) pins, Context ctx)
+    public static MassShape Chain(float x0, float y0, float x1, float y1, float mass, float stiffness, float lengthMult, int res, (bool, bool) pins, Context ctx)
     {
         MassShape c = new(ctx, false);
         Vector2 start = new(x0, y0);
@@ -134,7 +134,7 @@ public partial class MassShape
         // Constraints
         for (int i = 0; i < res - 1; i++)
         {
-            c._constraints.Add(new DistanceConstraint(c._points[i], c._points[i + 1], stiffness, ctx));
+            c._constraints.Add(new DistanceConstraint(c._points[i], c._points[i + 1], stiffness, ctx, lengthMult));
         }
         return c;
     }
@@ -234,11 +234,11 @@ public partial class MassShape
             },
             _constraints = new()
         };
-        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[1], 1f, ctx, false));
-        preview._constraints.Add(new DistanceConstraint(preview._points[1], preview._points[2], 1f, ctx, false));
-        preview._constraints.Add(new DistanceConstraint(preview._points[2], preview._points[3], 1f, ctx, false));
-        preview._constraints.Add(new DistanceConstraint(preview._points[3], preview._points[0], 1f, ctx, false));
-        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[2], 1f, ctx, false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[1], 1f, ctx, incrementId: false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[1], preview._points[2], 1f, ctx, incrementId: false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[2], preview._points[3], 1f, ctx, incrementId: false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[3], preview._points[0], 1f, ctx, incrementId: false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[2], 1f, ctx, incrementId: false));
         return preview;
     }
 
@@ -274,11 +274,11 @@ public partial class MassShape
                 new(x + size * 0.5f, y - size * 0.5f, mass * 0.25f, false, ctx, false)
             }
         };
-        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[1], 0f, ctx, false));
-        preview._constraints.Add(new DistanceConstraint(preview._points[1], preview._points[2], 0f, ctx, false));
-        preview._constraints.Add(new DistanceConstraint(preview._points[2], preview._points[3], 0f, ctx, false));
-        preview._constraints.Add(new DistanceConstraint(preview._points[3], preview._points[0], 0f, ctx, false));
-        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[2], 0f, ctx, false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[1], 0f, ctx, incrementId: false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[1], preview._points[2], 0f, ctx, incrementId: false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[2], preview._points[3], 0f, ctx, incrementId: false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[3], preview._points[0], 0f, ctx, incrementId: false));
+        preview._constraints.Add(new DistanceConstraint(preview._points[0], preview._points[2], 0f, ctx, incrementId: false));
         return preview;
     }
 

@@ -171,13 +171,13 @@ public class QuadTree
         {
             return;
         }
-        Vector2 viewCenter = UnitConv.MetersToPixels(_center);
+        Vector2 viewCenter = UnitConv.MtoP(_center);
 
         DrawRectangleLines(
-            (int) viewCenter.X - UnitConv.MetersToPixels(_size.X * 0.5f),
-            (int) viewCenter.Y - UnitConv.MetersToPixels(_size.Y * 0.5f),
-            UnitConv.MetersToPixels(_size.X),
-            UnitConv.MetersToPixels(_size.Y),
+            (int) viewCenter.X - UnitConv.MtoP(_size.X * 0.5f),
+            (int) viewCenter.Y - UnitConv.MtoP(_size.Y * 0.5f),
+            UnitConv.MtoP(_size.X),
+            UnitConv.MtoP(_size.Y),
             Color.Red
         );
         if (!_subdivided)

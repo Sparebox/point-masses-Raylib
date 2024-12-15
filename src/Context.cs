@@ -221,10 +221,10 @@ public class Context
     public void LoadClothScenario()
     {
         AddMassShape(MassShape.Cloth(
-            x: UnitConv.PixelsToMeters(500f),
-            y: UnitConv.PixelsToMeters(10f),
-            width: UnitConv.PixelsToMeters(500f),
-            height: UnitConv.PixelsToMeters(500f),
+            x: UnitConv.PtoM(500f),
+            y: UnitConv.PtoM(10f),
+            width: UnitConv.PtoM(500f),
+            height: UnitConv.PtoM(500f),
             mass: 0.7f,
             res: 42,
             stiffness: 0.5f,
@@ -237,8 +237,8 @@ public class Context
     {
         List<MassShape> particles = new(maxParticleCount);
         int sideCount = (int) Math.Sqrt(maxParticleCount);
-        spacing = UnitConv.PixelsToMeters(spacing);
-        offset = UnitConv.PixelsToMeters(offset);
+        spacing = UnitConv.PtoM(spacing);
+        offset = UnitConv.PtoM(offset);
         for (int y = 0; y < sideCount; y++)
         {
             for (int x = 0; x < sideCount; x++)
@@ -265,20 +265,31 @@ public class Context
     {
         Systems.Add(new ToolSystem(this));
         Systems.Add(new NbodySystem(this));
-        SubStepSystems.Add(new CollisionSystem(this));
+        Systems.Add(new CollisionSystem(this));
         WaveSystem waveSystem = new(this);
         waveSystem.AddWaveInstance(
-            UnitConv.PixelsToMeters(new Vector2(WinSize.X * 0.05f, WinSize.Y * 0.5f)),
-            UnitConv.PixelsToMeters(new Vector2(WinSize.X * 0.95f, WinSize.Y * 0.5f)),
-            false,
-            500f,
-            250,
-            5f,
-            0.1f,
-            0f,
+            UnitConv.PtoM(new Vector2(WinSize.X * 0.01f, WinSize.Y * 0.5f)),
+            UnitConv.PtoM(new Vector2(WinSize.X * 0.99f, WinSize.Y * 0.5f)),
+            mass: 0.5f,
+            res: 100,
+            freq: 1f,
+            amp: 0.5f,
+            phase: 0f,
+            showInfo: true,
             this
         );
-        SubStepSystems.Add(waveSystem);
+        waveSystem.AddWaveInstance(
+            UnitConv.PtoM(new Vector2(WinSize.X * 0.01f, WinSize.Y * 0.5f)),
+            UnitConv.PtoM(new Vector2(WinSize.X * 0.99f, WinSize.Y * 0.5f)),
+            mass: 0.5f,
+            res: 100,
+            freq: 1f,
+            amp: 0.5f,
+            phase: MathF.PI,
+            showInfo: false,
+            this
+        );
+        Systems.Add(waveSystem);
     }
 
     public void UpdateCamera()

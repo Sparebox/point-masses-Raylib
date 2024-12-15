@@ -56,7 +56,7 @@ public class BarnesHutTree
 
     public bool Insert(MassShape shape)
     {
-        if (!CheckCollisionBoxSphere(_boundary, new(shape.CenterOfMass, 0f), UnitConv.PixelsToMeters(1f)))
+        if (!CheckCollisionBoxSphere(_boundary, new(shape.CenterOfMass, 0f), UnitConv.PtoM(1f)))
         {
             return false;
         }
@@ -236,16 +236,16 @@ public class BarnesHutTree
     public void Draw()
     {
         DrawRectangleLines(
-            UnitConv.MetersToPixels(_center.X - _size.X * 0.5f),
-            UnitConv.MetersToPixels(_center.Y - _size.Y * 0.5f),
-            UnitConv.MetersToPixels(_size.X),
-            UnitConv.MetersToPixels(_size.Y),
+            UnitConv.MtoP(_center.X - _size.X * 0.5f),
+            UnitConv.MtoP(_center.Y - _size.Y * 0.5f),
+            UnitConv.MtoP(_size.X),
+            UnitConv.MtoP(_size.Y),
             Color.Red
         );
         DrawText(
             _massShapes.Count.ToString(),
-            UnitConv.MetersToPixels(_center.X),
-            UnitConv.MetersToPixels(_center.Y),
+            UnitConv.MtoP(_center.X),
+            UnitConv.MtoP(_center.Y),
             15,
             Color.Yellow
         );

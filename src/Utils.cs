@@ -10,27 +10,27 @@ namespace PointMasses.Utils
     {
         public const float PixelsPerMeter = 300f;
 
-        public static float PixelsToMeters(float pixels)
+        public static float PtoM(float pixels)
         {
             return pixels / PixelsPerMeter;
         }
 
-        public static int MetersToPixels(float meters)
+        public static int MtoP(float meters)
         {
             return (int) (PixelsPerMeter * meters);
         }
 
-        public static Vector2 PixelsToMeters(in Vector2 pixels)
+        public static Vector2 PtoM(in Vector2 pixels)
         {
             return new(pixels.X / PixelsPerMeter, pixels.Y / PixelsPerMeter);
         }
 
-        public static Vector2 MetersToPixels(in Vector2 meters)
+        public static Vector2 MtoP(in Vector2 meters)
         {
             return new(meters.X * PixelsPerMeter, meters.Y * PixelsPerMeter);
         }
 
-        public static Vector3 MetersToPixels(in Vector3 meters)
+        public static Vector3 MtoP(in Vector3 meters)
         {
             return new(meters.X * PixelsPerMeter, meters.Y * PixelsPerMeter, 0f);
         }
