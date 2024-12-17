@@ -270,23 +270,11 @@ public class Context
         waveSystem.AddWaveInstance(
             UnitConv.PtoM(new Vector2(WinSize.X * 0.01f, WinSize.Y * 0.5f)),
             UnitConv.PtoM(new Vector2(WinSize.X * 0.99f, WinSize.Y * 0.5f)),
-            mass: 0.5f,
-            res: 100,
+            yRes: 100,
             freq: 1f,
             amp: 0.5f,
             phase: 0f,
             showInfo: true,
-            this
-        );
-        waveSystem.AddWaveInstance(
-            UnitConv.PtoM(new Vector2(WinSize.X * 0.01f, WinSize.Y * 0.5f)),
-            UnitConv.PtoM(new Vector2(WinSize.X * 0.99f, WinSize.Y * 0.5f)),
-            mass: 0.5f,
-            res: 100,
-            freq: 1f,
-            amp: 0.5f,
-            phase: MathF.PI,
-            showInfo: false,
             this
         );
         Systems.Add(waveSystem);

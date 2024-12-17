@@ -37,58 +37,52 @@ public class WaveSystem : ISystem
 
     public void UpdateInput() {}
 
-    public void AddWaveInstance(Vector2 start, Vector2 end, float mass, uint res, float freq, float amp, float phase, bool showInfo, Context ctx)
+    public void AddWaveInstance(Vector2 start, Vector2 end, uint yRes, float freq, float amp, float phase, bool showInfo, Context ctx)
     {
-        _instances.Add(new WaveInstance(start, end, mass, res, freq, amp, phase, showInfo, ctx));
+        _instances.Add(new WaveInstance(start, end, yRes, freq, amp, phase, showInfo, ctx));
     }
 
     private class WaveInstance
     {
         public const int FontSize = 20;
 
-        public float Frequency { get; set; }
-        public float Amplitude { get; set; }
-        public float Phase { get; set; }
+        private float _frequency;
+        private float _phaseOffset;
+        private float _amplitude;
+        private float _currentPhase;
+        private float _vel;
 
         private readonly Context _ctx;
         private readonly Vector2 _startPos;
         private readonly Vector2[] _points;
         private readonly float _spacing;
         private readonly uint _res;
-        private readonly uint _framesPerRevolution;
-        private readonly float[] _yPosArray;
-        private readonly float _pointRadius;
         private readonly bool _showInfo;
-        private uint _animFrameIndex;
 
-        public WaveInstance(Vector2 start, Vector2 end, float mass, uint resolution, float freq, float amp, float phase, bool showInfo, Context ctx)
+        public WaveInstance(Vector2 start, Vector2 end, uint res, float freq, float amp, float phase, bool showInfo, Context ctx)
         {
-            Frequency = freq;
-            Amplitude = amp;
-            Phase = phase;
+            _frequency = freq;
+            _amplitude = amp;
+            _phaseOffset = phase;
             _showInfo = showInfo;
             _ctx = ctx;
-            _pointRadius = PointMass.MassToRadius(mass);
-            _framesPerRevolution = (uint) MathF.Ceiling(1f / _ctx._timestep);
-            _animFrameIndex = 0;
-            _yPosArray = new float[_framesPerRevolution];
+            _res = res;
             _startPos = start;
-            _res = resolution;
-            PrecalculatePositions();
-            _spacing = Vector2.Distance(start, end) / (resolution - 1);
-            _points = new Vector2[resolution];
+            _spacing = Vector2.Distance(start, end) / (res - 1);
+            _points = new Vector2[res];
             CreatePoints();
         }
 
         public void Update()
         {
+            float angle = 0f;
             for (uint i = 0; i < _res; i++)
             {
-                float yOffset = _yPosArray[(_animFrameIndex + i) % _framesPerRevolution];
+                float yOffset = _amplitude * MathF.Sin(_frequency * angle + _phaseOffset + _currentPhase);
                 _points[i].Y = _startPos.Y + yOffset;
+                angle += MathF.Tau / _res;
+                _currentPhase += _vel * _ctx._timestep;
             }
-            _animFrameIndex++;
-            _animFrameIndex %= _framesPerRevolution;
         }
 
         public void Draw()
@@ -96,12 +90,13 @@ public class WaveSystem : ISystem
             if (_showInfo)
             {
                 ImGui.Begin("Wave properties", ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize);
-                ImGui.SetWindowPos(GetWorldToScreen2D(UnitConv.MtoP(_startPos) - new Vector2(0f, UnitConv.MtoP(Amplitude) + 200f), _ctx._camera));
-                ImGui.SetWindowSize(new (200f, 150f));
-                ImGui.Text($"Time: {_animFrameIndex * _ctx._timestep} s");
-                ImGui.Text($"Frame count: {_framesPerRevolution}");
-                ImGui.Text($"Frame index: {_animFrameIndex}");
-                ImGui.Text($"Frequency: {Frequency} Hz");
+                ImGui.SetWindowPos(GetWorldToScreen2D(UnitConv.MtoP(_startPos) - new Vector2(0f, UnitConv.MtoP(_amplitude) + 200f), _ctx._camera));
+                ImGui.SetWindowSize(new (350f, 150f));
+                ImGui.Text($"Y resolution: {_res}");
+                ImGui.DragFloat("Frequency [Hz]", ref _frequency);
+                ImGui.DragFloat("Amplitude [m]", ref _amplitude);
+                ImGui.DragFloat("Phase [rad]", ref _phaseOffset);
+                ImGui.DragFloat("Velocity [m/s]", ref _vel);
                 ImGui.End();
             }
             for (uint i = 0; i < _points.Length - 1; i++)
@@ -122,16 +117,6 @@ public class WaveSystem : ISystem
                 _points[i] = nextPoint;
                 nextPoint.X += _spacing;
             }
-        }
-
-        private void PrecalculatePositions()
-        {   
-            float angle = 0f;
-            for (uint i = 0; i < _framesPerRevolution; i++)
-            {
-                _yPosArray[i] = Amplitude * MathF.Sin(Frequency * angle + Phase);
-                angle += MathF.Tau / _framesPerRevolution;
-            } 
         }
     }
 }
