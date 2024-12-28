@@ -266,17 +266,16 @@ public class Context
         Systems.Add(new ToolSystem(this));
         Systems.Add(new NbodySystem(this));
         Systems.Add(new CollisionSystem(this));
-        WaveSystem waveSystem = new(this);
-        waveSystem.AddWaveInstance(
-            UnitConv.PtoM(new Vector2(WinSize.X * 0.01f, WinSize.Y * 0.5f)),
-            UnitConv.PtoM(new Vector2(WinSize.X * 0.99f, WinSize.Y * 0.5f)),
-            yRes: 100,
-            freq: 1f,
-            amp: 0.5f,
-            phase: 0f,
-            showInfo: true,
-            this
-        );
+        WaveSystem waveSystem = new();
+        var waveBuilder = new WaveSystem.WaveBuilder(this);
+        waveBuilder.SetStart(UnitConv.PtoM(new Vector2(WinSize.X * 0.01f, WinSize.Y * 0.5f)));
+        waveBuilder.SetEnd(UnitConv.PtoM(new Vector2(WinSize.X * 0.99f, WinSize.Y * 0.5f)));
+        waveBuilder.SetResolution(100);
+        waveBuilder.SetFrequency(1f);
+        waveBuilder.SetAmplitude(0.5f);
+        waveBuilder.SetPhase(0f);
+        waveBuilder.ShowInfo(true);
+        waveSystem.AddWaveInstance(waveBuilder.Build());
         Systems.Add(waveSystem);
     }
 

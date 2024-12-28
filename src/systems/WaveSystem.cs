@@ -1,6 +1,5 @@
 using System.Numerics;
 using ImGuiNET;
-using PointMasses.Entities;
 using PointMasses.Sim;
 using PointMasses.Utils;
 using Raylib_cs;
@@ -10,12 +9,10 @@ namespace PointMasses.Systems;
 
 public class WaveSystem : ISystem
 {
-    private readonly Context _ctx;
     private readonly List<WaveInstance> _instances;
 
-    public WaveSystem(Context ctx)
+    public WaveSystem()
     {
-        _ctx = ctx;
         _instances = new();
     }
 
@@ -37,12 +34,12 @@ public class WaveSystem : ISystem
 
     public void UpdateInput() {}
 
-    public void AddWaveInstance(Vector2 start, Vector2 end, uint yRes, float freq, float amp, float phase, bool showInfo, Context ctx)
+    public void AddWaveInstance(WaveInstance instance)
     {
-        _instances.Add(new WaveInstance(start, end, yRes, freq, amp, phase, showInfo, ctx));
+        _instances.Add(instance);
     }
 
-    private class WaveInstance
+    public class WaveInstance
     {
         public const int FontSize = 20;
 
@@ -117,6 +114,74 @@ public class WaveSystem : ISystem
                 _points[i] = nextPoint;
                 nextPoint.X += _spacing;
             }
+        }
+    }
+
+    public class WaveBuilder
+    {
+        private float? _frequency;
+        private float? _phaseOffset;
+        private float? _amplitude;
+        private uint? _res;
+        private bool _showInfo;
+        private Vector2? _start;
+        private Vector2? _end;
+        private readonly Context _ctx;
+
+        public WaveBuilder(Context ctx)
+        {
+            _ctx = ctx;
+        }
+
+        public WaveBuilder SetFrequency(float freq)
+        {
+            _frequency = freq;
+            return this;
+        }
+
+        public WaveBuilder SetAmplitude(float amp)
+        {
+            _amplitude = amp;
+            return this;
+        }
+
+        public WaveBuilder SetPhase(float phase)
+        {
+            _phaseOffset = phase;
+            return this;
+        }
+
+        public WaveBuilder ShowInfo(bool show)
+        {
+            _showInfo = show;
+            return this;
+        }
+
+        public WaveBuilder SetResolution(uint res)
+        {
+            _res = res;
+            return this;
+        }
+
+        public WaveBuilder SetStart(Vector2 start)
+        {
+            _start = start;
+            return this;
+        }
+
+        public WaveBuilder SetEnd(Vector2 end)
+        {
+            _end = end;
+            return this;
+        }
+
+        public WaveInstance Build()
+        {
+            if (!_frequency.HasValue || !_amplitude.HasValue || !_phaseOffset.HasValue || !_res.HasValue || !_start.HasValue || !_end.HasValue)
+            {
+                throw new ArgumentException("Wave properties not set");
+            }
+            return new WaveInstance(_start.Value, _end.Value, _res.Value, _frequency.Value, _amplitude.Value, _phaseOffset.Value, _showInfo, _ctx);
         }
     }
 }
