@@ -11,6 +11,9 @@ namespace PointMasses.Sim;
 
 public class Context
 {
+    // Events
+    public static event EventHandler<bool> PauseChanged;
+    // Properties
     public ReaderWriterLockSlim Lock { get; set; }
     public ReaderWriterLockSlim QuadTreeLock { get; init; }
     public ManualResetEventSlim QuadTreePauseEvent { get; init; } 
@@ -24,9 +27,7 @@ public class Context
     public List<ISystem> SubStepSystems { get; init; }
     public RenderTexture2D RenderTexture { get; init; }
     public Vector2 WinSize { get; set; }
-    public Camera2D _camera;
-    public float _cameraMoveSpeed = 1f;
-
+    
     public int MassCount 
     {
         get 
@@ -73,6 +74,8 @@ public class Context
     public float _globalRestitutionCoeff = Constants.GlobalRestitutionCoeffDefault;
     public float _globalKineticFrictionCoeff = Constants.GlobalKineticFrictionCoeffDefault;
     public float _globalStaticFrictionCoeff = Constants.GlobalStaticFrictionCoeffDefault;
+    public Camera2D _camera;
+    public float _cameraMoveSpeed = 1f;
     
 
     public Context(float timeStep, int subSteps, Vector2 gravity, Vector2 winSize)
@@ -86,6 +89,7 @@ public class Context
         Lock = new ReaderWriterLockSlim();
         QuadTreeLock = new ReaderWriterLockSlim();
         QuadTreePauseEvent = new ManualResetEventSlim(true);
+        PauseChanged += QuadTree.OnPauseChanged;
         TextureManager = new TextureManager();
         _gravityEnabled = false;
         _drawAABBS = false;
@@ -266,17 +270,17 @@ public class Context
         Systems.Add(new ToolSystem(this));
         Systems.Add(new NbodySystem(this));
         Systems.Add(new CollisionSystem(this));
-        WaveSystem waveSystem = new();
-        var waveBuilder = new WaveSystem.WaveBuilder(this);
-        waveBuilder.SetStart(UnitConv.PtoM(new Vector2(WinSize.X * 0.01f, WinSize.Y * 0.5f)));
-        waveBuilder.SetEnd(UnitConv.PtoM(new Vector2(WinSize.X * 0.99f, WinSize.Y * 0.5f)));
-        waveBuilder.SetResolution(100);
-        waveBuilder.SetFrequency(1f);
-        waveBuilder.SetAmplitude(0.5f);
-        waveBuilder.SetPhase(0f);
-        waveBuilder.ShowInfo(true);
-        waveSystem.AddWaveInstance(waveBuilder.Build());
-        Systems.Add(waveSystem);
+        // WaveSystem waveSystem = new();
+        // var waveBuilder = new WaveSystem.WaveBuilder(this);
+        // waveBuilder.SetStart(UnitConv.PtoM(new Vector2(WinSize.X * 0.01f, WinSize.Y * 0.5f)));
+        // waveBuilder.SetEnd(UnitConv.PtoM(new Vector2(WinSize.X * 0.99f, WinSize.Y * 0.5f)));
+        // waveBuilder.SetResolution(100);
+        // waveBuilder.SetFrequency(1f);
+        // waveBuilder.SetAmplitude(0.5f);
+        // waveBuilder.SetPhase(0f);
+        // waveBuilder.ShowInfo(true);
+        // waveSystem.AddWaveInstance(waveBuilder.Build());
+        // Systems.Add(waveSystem);
     }
 
     public void UpdateCamera()
@@ -296,6 +300,55 @@ public class Context
         if (IsKeyDown(KeyboardKey.D))
         {
             _camera.Offset.X -= _cameraMoveSpeed;
+        }
+    }
+
+    public void HandleInput()
+    {
+        // Keys
+        if (IsKeyPressed(KeyboardKey.G))
+        {
+            _gravityEnabled = !_gravityEnabled;
+        }
+        if (IsKeyPressed(KeyboardKey.F))
+        {
+            _drawForces = !_drawForces;
+        }
+        if (IsKeyPressed(KeyboardKey.Q))
+        {
+            _drawQuadTree = !_drawQuadTree;
+        }
+        if (IsKeyPressed(KeyboardKey.R))
+        {
+            LoadSavedState();
+        }
+        if (IsKeyPressed(KeyboardKey.Space))
+        {
+            _simPaused = !_simPaused;
+            PauseChanged?.Invoke(this, _simPaused);
+        }
+
+        // Handle system inputs
+        foreach (var system in Systems)
+        {
+            system.UpdateInput();
+        }
+        foreach (var subStepSystem in SubStepSystems)
+        {
+            subStepSystem.UpdateInput();
+        }
+
+        // Handle camera
+        UpdateCamera();
+
+        // Temporary demo keys
+        if (IsKeyPressed(KeyboardKey.C))
+        {
+            LoadClothScenario();
+        }
+        if (IsKeyPressed(KeyboardKey.B))
+        {
+            LoadBenchmark(1000, 3f, 20f, new(WinSize.X * 0.5f - 200f, 200f));
         }
     }
 

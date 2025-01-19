@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Raylib_cs;
 using static Raylib_cs.Raylib;
 
@@ -63,6 +64,7 @@ namespace PointMasses.Utils
         public const float GravConstant = 6.67430e-11f;
         public const int PauseThresholdFPS = 15;
         public const int QuadTreeUpdateMs = 50;
+        public const int NbodySystemUpdateMs = 50;
         // Point mass
         public const float RadiusPerMassRatio = 0.01f; // aka inverse density
         // Mass shape
@@ -129,6 +131,7 @@ namespace PointMasses.Utils
         private static readonly Stopwatch _stopwatch;
         private static readonly TimeSpan[] _history;
         private static int _historyIndex;
+        private static int _lineStart;
 
         static Perf()
         {
@@ -146,6 +149,18 @@ namespace PointMasses.Utils
                 (milliseconds) => milliseconds / HistoryLength
             );
             AsyncConsole.WriteLine($"{avgMilliSeconds} avg ms");
+        }
+
+        public static void StartMeasure([CallerLineNumber] int lineNum = 0)
+        {
+            _lineStart = lineNum;
+            _stopwatch.Restart();
+        }
+
+        public static void EndMeasure([CallerLineNumber] int lineNum = 0, [CallerMemberName] string caller = "")
+        {
+            _stopwatch.Stop();
+            AsyncConsole.WriteLine($"{GetTime(): 0} - Measure from line {caller}:{_lineStart} to line {caller}:{lineNum} took {_stopwatch.ElapsedMilliseconds} ms");
         }
 
         private static TimeSpan Update()

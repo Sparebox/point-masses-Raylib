@@ -13,7 +13,7 @@ namespace PointMasses.Systems
         public float _threshold = 0.01f;
         public bool _running;
         public bool _postNewtonianEnabled;
-        public int _updateIntervalMs = 50;
+        public int _updateIntervalMs = Constants.NbodySystemUpdateMs;
         private readonly BarnesHutTree _barnesHutTree;
         private readonly Thread _updateThread;
         private readonly Context _ctx;
@@ -21,6 +21,7 @@ namespace PointMasses.Systems
         public NbodySystem(Context ctx)
         {
             _ctx = ctx;
+            Context.PauseChanged += OnPauseChanged;
             _barnesHutTree = new(
                 UnitConv.PtoM(new Vector2(ctx.WinSize.X * 0.5f, ctx.WinSize.Y * 0.5f)),
                 UnitConv.PtoM(new Vector2(ctx.WinSize.X, ctx.WinSize.Y))
@@ -40,6 +41,14 @@ namespace PointMasses.Systems
                 PauseEvent.Wait(Timeout.Infinite);
                 Thread.Sleep(_updateIntervalMs);
                 _barnesHutTree.Update(_ctx);
+            }
+        }
+
+        private void OnPauseChanged(object sender, bool paused)
+        {
+            if (_running && paused)
+            {
+                _running = false;
             }
         }
 

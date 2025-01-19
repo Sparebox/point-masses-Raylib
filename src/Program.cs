@@ -28,7 +28,7 @@ public class Program
             {
                 Update();
             }
-            HandleInput();
+            _ctx.HandleInput();
             Draw();
         }
         rlImGui.Shutdown();
@@ -168,53 +168,5 @@ public class Program
 
         rlImGui.End();
         EndDrawing(); // raylib
-    }
-
-    private static void HandleInput()
-    {
-        // Keys
-        if (IsKeyPressed(KeyboardKey.G))
-        {
-            _ctx._gravityEnabled = !_ctx._gravityEnabled;
-        }
-        if (IsKeyPressed(KeyboardKey.F))
-        {
-            _ctx._drawForces = !_ctx._drawForces;
-        }
-        if (IsKeyPressed(KeyboardKey.Q))
-        {
-            _ctx._drawQuadTree = !_ctx._drawQuadTree;
-        }
-        if (IsKeyPressed(KeyboardKey.R))
-        {
-            _ctx.LoadSavedState();
-        }
-        if (IsKeyPressed(KeyboardKey.Space))
-        {
-            _ctx._simPaused = !_ctx._simPaused;
-        }
-
-        // Handle system inputs
-        foreach (var system in _ctx.Systems)
-        {
-            system.UpdateInput();
-        }
-        foreach (var subStepSystem in _ctx.SubStepSystems)
-        {
-            subStepSystem.UpdateInput();
-        }
-
-        // Handle camera
-        _ctx.UpdateCamera();
-
-        // Temporary demo keys
-        if (IsKeyPressed(KeyboardKey.C))
-        {
-            _ctx.LoadClothScenario();
-        }
-        if (IsKeyPressed(KeyboardKey.B))
-        {
-            _ctx.LoadBenchmark(1000, 3f, 20f, new(_ctx.WinSize.X * 0.5f - 200f, 200f));
-        }
     }
 }

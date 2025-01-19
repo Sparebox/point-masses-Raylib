@@ -208,5 +208,18 @@ public class QuadTree
             ctx.QuadTree.Update(ctx);
         }
     }
+
+    public static void OnPauseChanged(object sender, bool paused)
+    {
+        Context ctx = (Context) sender;
+        if (paused)
+        {
+            ctx.QuadTreePauseEvent.Reset();
+        }
+        else
+        {
+            ctx.QuadTreePauseEvent.Set();
+        }
+    }
 }
 
