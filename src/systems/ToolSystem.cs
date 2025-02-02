@@ -120,7 +120,7 @@ namespace PointMasses.Systems
             }
         }
 
-        public static MassShape FindClosestShape(in Vector2 pos, IEnumerable<MassShape> shapes)
+        public static MassShape FindClosestShape(ref Vector2 pos, IEnumerable<MassShape> shapes)
         {
             MassShape closest = null;
             float closestDistSq = float.MaxValue;
@@ -270,7 +270,7 @@ namespace PointMasses.Tools
         public override void Draw()
         {
             Vector2 mouseWorldPos = UnitConv.PtoM(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
-            _shapePreview.SetPos(mouseWorldPos);
+            _shapePreview.SetPos(ref mouseWorldPos);
             _shapePreview.Draw();
         }
 
@@ -350,7 +350,7 @@ namespace PointMasses.Tools
             }
             Vector2 mousePos = UnitConv.PtoM(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
             BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-            var shapes = _ctx.GetMassShapes(area).ToHashSet();
+            var shapes = _ctx.GetMassShapes(ref area).ToHashSet();
             if (!shapes.Any())
             {
                 return;
@@ -361,7 +361,7 @@ namespace PointMasses.Tools
             {
                 foreach (var p in shape._points)
                 {
-                    if (CheckCollisionCircles(mousePos, Radius, p.Pos, p.Radius))
+                    if (CheckCollisionCircles(mousePos, Radius, p._pos, p.Radius))
                     {
                         pointsToDelete.Add(p.Id);
                     }
@@ -395,12 +395,12 @@ namespace PointMasses.Tools
             }
             Vector2 mousePos = UnitConv.PtoM(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
             BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-            var shapes = _ctx.GetMassShapes(area);
+            var shapes = _ctx.GetMassShapes(ref area);
             if (!shapes.Any())
             {
                 return;
             }
-            MassShape closest = ToolSystem.FindClosestShape(mousePos, shapes);
+            MassShape closest = ToolSystem.FindClosestShape(ref mousePos, shapes);
             if (!CheckCollisionBoxes(area, closest.Aabb))
             {
                 return;
@@ -443,7 +443,7 @@ namespace PointMasses.Tools
             }
             Vector2 mousePos = UnitConv.PtoM(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
             BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-            var points = _ctx.GetPointMasses(area);
+            var points = _ctx.GetPointMasses(ref area);
             if (!points.Any())
             {
                 return;
@@ -451,13 +451,13 @@ namespace PointMasses.Tools
             _positions.Clear();
             foreach (var p in points)
             {
-                if (!CheckCollisionPointCircle(p.Pos, mousePos, Radius))
+                if (!CheckCollisionPointCircle(p._pos, mousePos, Radius))
                 {
                     continue;
                 }
-                Vector2 force = _ctx._timestep * _forceCoeff * (mousePos - p.Pos);
+                Vector2 force = _ctx._timestep * _forceCoeff * (mousePos - p._pos);
                 p.ApplyForce(force);
-                _positions.Add(p.Pos);
+                _positions.Add(p._pos);
             }
             _shouldVisualize = true;
         }
@@ -519,16 +519,17 @@ namespace PointMasses.Tools
                 return;
             }
             Vector2 mousePos = UnitConv.PtoM(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
-            var shapes = _ctx.GetMassShapes(new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f)));
+            var area = new BoundingBox(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
+            var shapes = _ctx.GetMassShapes(ref area);
             if (!shapes.Any())
             {
                 return;
             }
-            MassShape closest = ToolSystem.FindClosestShape(mousePos, shapes);
+            MassShape closest = ToolSystem.FindClosestShape(ref mousePos, shapes);
             Vector2 COM = closest.CenterOfMass;
             foreach (var p in closest._points)
             {
-                Vector2 comToPoint = p.Pos - COM;
+                Vector2 comToPoint = p._pos - COM;
                 float radius = comToPoint.Length();
                 if (radius == 0f)
                 {
@@ -643,14 +644,14 @@ namespace PointMasses.Tools
             }
             Vector2 mousePos = UnitConv.PtoM(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
             BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
-            var points = _ctx.GetPointMasses(area);
+            var points = _ctx.GetPointMasses(ref area);
             if (!points.Any())
             {
                 return;
             }
             foreach (var p in points)
             {
-                if (!CheckCollisionPointCircle(p.Pos, mousePos, Radius))
+                if (!CheckCollisionPointCircle(p._pos, mousePos, Radius))
                 {
                     continue;
                 }
@@ -677,7 +678,7 @@ namespace PointMasses.Tools
             }
             var mousePos = UnitConv.PtoM(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
             BoundingBox area = new(new(mousePos.X, mousePos.Y, 0f), new(mousePos.X, mousePos.Y, 0f));
-            var shapes = _ctx.GetMassShapes(area);
+            var shapes = _ctx.GetMassShapes(ref area);
             if (shapes.Any())
             {
                 var shape = shapes.First();

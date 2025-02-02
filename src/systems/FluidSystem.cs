@@ -29,7 +29,7 @@ public class FluidSystem : ISystem
         if (IsMouseButtonDown(MouseButton.Left))
         {
             var mousePos = UnitConv.PtoM(GetMousePosition() - Grid.Pos);
-            (int xIndex, int yIndex) = Grid.PosToIndex(mousePos);
+            (int xIndex, int yIndex) = Grid.PosToIndex(ref mousePos);
             if (IsKeyDown(KeyboardKey.LeftShift))
             {
                 _grid.SetVelocityAt(xIndex, yIndex, 50f * (mousePos - _lastMousePos));
@@ -50,7 +50,7 @@ public class FluidSystem : ISystem
         if (IsMouseButtonDown(MouseButton.Right))
         {
             var mousePos = UnitConv.PtoM(GetMousePosition() - Grid.Pos);
-            (int xIndex, int yIndex) = Grid.PosToIndex(mousePos);
+            (int xIndex, int yIndex) = Grid.PosToIndex(ref mousePos);
             try
             {
                 _grid.SetDensityAt(xIndex, yIndex, 0f);
@@ -125,7 +125,7 @@ public class FluidSystem : ISystem
             Cells[x, y].Density = density;
         }
 
-        public void SetVelocityAt(int x, int y, in Vector2 vel)
+        public void SetVelocityAt(int x, int y, Vector2 vel)
         {
             if (x < 0 || x > NumX - 1 || y < 0 || y > NumY - 1)
             {
@@ -231,7 +231,7 @@ public class FluidSystem : ISystem
                         velocity = new(Cells[x, y]._vel.X, AvgV(x, y));
                         pos = IndexToUvelPos(x, y);
                         prevPos = pos - velocity * _ctx._timestep;
-                        sampledVel = SampleVelocity(prevPos, true);
+                        sampledVel = SampleVelocity(ref prevPos, true);
                         if (sampledVel.HasValue)
                             Cells[x, y]._vel.X = sampledVel.Value;
                     }
@@ -242,7 +242,7 @@ public class FluidSystem : ISystem
                         velocity = new(AvgU(x, y), Cells[x, y]._vel.Y);
                         pos = IndexToVvelPos(x, y);
                         prevPos = pos - velocity * _ctx._timestep;
-                        sampledVel = SampleVelocity(prevPos, false);
+                        sampledVel = SampleVelocity(ref prevPos, false);
                         if (sampledVel.HasValue)
                             Cells[x, y]._vel.Y = sampledVel.Value;
                     }
@@ -259,7 +259,7 @@ public class FluidSystem : ISystem
                     Vector2 velocity = new((Cells[x, y]._vel.X + Cells[x + 1, y]._vel.X) * 0.5f, (Cells[x, y]._vel.Y + Cells[x, y - 1]._vel.Y) * 0.5f);
                     Vector2 pos = IndexToSmokePos(x, y);
                     Vector2 prevPos = pos - velocity * _ctx._timestep;
-                    float sampledDensity = SampleDensity(prevPos);
+                    float sampledDensity = SampleDensity(ref prevPos);
                     Cells[x, y].Density = sampledDensity;
                 }
             }
@@ -270,9 +270,9 @@ public class FluidSystem : ISystem
             return Cells[x + 1, y]._vel.X - Cells[x, y]._vel.X + Cells[x, y]._vel.Y - Cells[x, y - 1]._vel.Y;
         }
 
-        private float? SampleVelocity(in Vector2 pos, bool horizontal)
+        private float? SampleVelocity(ref Vector2 pos, bool horizontal)
         {   
-            (int xIndex, int yIndex) = PosToIndex(pos);
+            (int xIndex, int yIndex) = PosToIndex(ref pos);
             if (xIndex < 1 || xIndex >= NumX - 1 || yIndex < 1 || yIndex >= NumY - 1)
             {
                 return null;
@@ -282,7 +282,7 @@ public class FluidSystem : ISystem
             var down        = Cells[xIndex - 1, yIndex];
             var downRight   = Cells[xIndex + 1, yIndex + 1];
 
-            (float xAmount, float yAmount) = PosToPercentage(pos);
+            (float xAmount, float yAmount) = PosToPercentage(ref pos);
             float a, b;
             
             if (horizontal)
@@ -299,9 +299,9 @@ public class FluidSystem : ISystem
             }
         }
 
-        private float SampleDensity(in Vector2 pos)
+        private float SampleDensity(ref Vector2 pos)
         {   
-            (int xIndex, int yIndex) = PosToIndex(pos);
+            (int xIndex, int yIndex) = PosToIndex(ref pos);
 
             var current     = Cells[xIndex, yIndex];
             var up          = Cells[xIndex, yIndex - 1];
@@ -313,7 +313,7 @@ public class FluidSystem : ISystem
             var upRight     = Cells[xIndex + 1, yIndex - 1];
             var upLeft      = Cells[xIndex - 1, yIndex - 1];
 
-            (float xAmount, float yAmount) = PosToPercentage(pos);
+            (float xAmount, float yAmount) = PosToPercentage(ref pos);
             float a, b;
             
             if (xAmount <= 0.5f && yAmount >= 0.5f)
@@ -366,7 +366,7 @@ public class FluidSystem : ISystem
             return new(CellSize * (x + 0.5f), CellSize * (y + 1f));
         }
 
-        public static (int, int) PosToIndex(in Vector2 pos)
+        public static (int, int) PosToIndex(ref Vector2 pos)
         {
             return ((int) MathF.Truncate(pos.X / CellSize), (int) MathF.Truncate(pos.Y / CellSize));
         }
@@ -381,7 +381,7 @@ public class FluidSystem : ISystem
         //     return ((int) MathF.Truncate(pos.X / CellSize - 0.5f), (int) MathF.Truncate(pos.Y / CellSize - 0.5f));
         // }
 
-        private static (float, float) PosToPercentage(in Vector2 pos)
+        private static (float, float) PosToPercentage(ref Vector2 pos)
         {
             float fullX = pos.X / CellSize;
             float fullY = pos.Y / CellSize;

@@ -6,6 +6,8 @@ using PointMasses.UI;
 using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 using ImGuiNET;
+using PointMasses.Textures;
+using point_masses;
 
 namespace PointMasses.Sim;
 
@@ -13,29 +15,31 @@ public class Program
 {   
     public static readonly int TargetFPS = GetMonitorRefreshRate(GetCurrentMonitor());
 
-    private static float _accumulator;
-    private static Context _ctx;
+    public static TextureManager TextureManager { get; set; }
+
+    private static Scene ActiveScene { get; set; }
+    private static RenderTexture2D RenderTexture { get; set;}
 
     public static void Main() 
     {
-        _ctx = Init(0.8f, 1f);
-        
+        TextureManager = new();
+        ActiveScene = Init(0.8f, 1f);
         rlImGui.Setup(true);
         unsafe { ImGui.GetIO().NativePtr->IniFilename = null; } // Disable imgui.ini file
         while (!WindowShouldClose())
         {
-            if (!_ctx._simPaused)
+            if (!ActiveScene.Ctx._simPaused)
             {
                 Update();
             }
-            _ctx.HandleInput();
+            ActiveScene.Ctx.HandleInput();
             Draw();
         }
         rlImGui.Shutdown();
         CloseWindow();
     }
 
-    private static Context Init(float winSizePercentage, float renderPercentage)
+    private static Scene Init(float winSizePercentage, float renderPercentage)
     {
         InitWindow(0, 0, "Point-masses");
         SetTargetFPS(TargetFPS);
@@ -49,18 +53,19 @@ public class Program
         int winPosX = GetMonitorWidth(GetCurrentMonitor()) / 2 - winWidth / 2;
         int winPosY = GetMonitorHeight(GetCurrentMonitor()) / 2 - winHeight / 2;
         SetWindowPosition(winPosX, winPosY);
+
+        RenderTexture = LoadRenderTexture(renderWidth, renderHeight);
         
         float winWidthMeters = UnitConv.PtoM(winWidth);
         float winHeightMeters = UnitConv.PtoM(winHeight);
-        Context ctx = new(timeStep: 1f / 60f, 1, gravity: new(0f, 9.81f), winSize: new(winWidth, winHeight))
+        Context ctx = new(timeStep: 1f / 60f, 3, gravity: new(0f, 9.81f), winSize: new(winWidth, winHeight))
         {
             QuadTree = new(
                 new Vector2(winWidthMeters * 0.5f, winHeightMeters * 0.5f),
                 new Vector2(winWidthMeters, winHeightMeters),
                 1,
                 6
-            ),
-            RenderTexture = LoadRenderTexture(renderWidth, renderHeight)
+            )
         };
         ctx.LineColliders = new() {
             new(0f, 0f, winWidthMeters, 0f, ctx),
@@ -70,7 +75,7 @@ public class Program
         };
         ctx.SaveCurrentState();
         // Load textures
-        ctx.TextureManager.LoadTexture("center_of_mass.png");
+        TextureManager.LoadTexture("center_of_mass.png");
 
         // Start quad tree update thread
         var quadTreeUpdateThread = new Thread(new ParameterizedThreadStart(QuadTree.ThreadUpdate), 0)
@@ -78,47 +83,12 @@ public class Program
             IsBackground = true
         };
         quadTreeUpdateThread.Start(ctx);
-        return ctx;
+        return new Scene() { Ctx = ctx };
     }
 
     private static void Update()
     {
-        if (GetFPS() < Constants.PauseThresholdFPS) // Pause if running too slow
-        {
-            AsyncConsole.WriteLine("Running too slow. Pausing sim");
-            _ctx._simPaused = true;
-        }
-        _accumulator += GetFrameTime();
-        while (_accumulator >= _ctx._timestep)
-        {
-            for (int i = 0; i < _ctx._substeps; i++)
-            {
-                foreach (MassShape s in _ctx.MassShapes)
-                {
-                    s.Update();
-                }
-                foreach (var system in _ctx.SubStepSystems)
-                {
-                    system.Update();
-                }
-            }
-            foreach (var system in _ctx.Systems)
-            {
-                system.Update();
-            }
-            // Remove deleted mass shapes if any deleted
-            _ctx.Lock.EnterUpgradeableReadLock();
-            if (_ctx.MassShapes.Where(s => s._toBeDeleted).Any())
-            {
-                if (_ctx.Lock.TryEnterWriteLock(0)) // Do not block the main thread if the lock is unavailable
-                {
-                    _ctx.MassShapes.RemoveAll(s => s._toBeDeleted);
-                    _ctx.Lock.ExitWriteLock();
-                }
-            }
-            _ctx.Lock.ExitUpgradeableReadLock();
-            _accumulator -= _ctx._timestep;
-        }
+        ActiveScene.Update();
     }
 
     private static void Draw()
@@ -126,45 +96,20 @@ public class Program
         BeginDrawing(); // raylib
         rlImGui.Begin(); // GUI
 
-        BeginTextureMode(_ctx.RenderTexture);
+        BeginTextureMode(RenderTexture);
         ClearBackground(Color.Black);
-
-        BeginMode2D(_ctx._camera);
-        foreach (MassShape s in _ctx.MassShapes)
-        {
-            s.Draw();
-        }
-        foreach (var l in _ctx.LineColliders)
-        {
-            l.Draw();
-        }
-        foreach (var system in _ctx.Systems)
-        {
-            system.Draw();
-        }
-        foreach (var substepSystem in _ctx.SubStepSystems)
-        {
-            substepSystem.Draw();
-        }
-        if (_ctx._drawQuadTree)
-        {
-            _ctx.QuadTree.Draw();
-        }
-        EndMode2D();
-
+        ActiveScene.Draw();
         EndTextureMode();
 
-        
-        
         DrawTexturePro(
-            _ctx.RenderTexture.Texture,
-            new (0f, 0f, _ctx.RenderTexture.Texture.Width, -_ctx.RenderTexture.Texture.Height),
-            new (0f, 0f, _ctx.WinSize.X, _ctx.WinSize.Y),
+            RenderTexture.Texture,
+            new (0f, 0f, RenderTexture.Texture.Width, -RenderTexture.Texture.Height),
+            new (0f, 0f, ActiveScene.Ctx.WinSize.X, ActiveScene.Ctx.WinSize.Y),
             Vector2.Zero,
             0f,
             Color.White
         );
-        Gui.Draw(_ctx); // GUI
+        Gui.Draw(ActiveScene.Ctx); // GUI
 
         rlImGui.End();
         EndDrawing(); // raylib

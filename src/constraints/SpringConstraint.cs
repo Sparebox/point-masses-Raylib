@@ -18,7 +18,7 @@ public class SpringConstraint : Constraint
         PointA = a;
         PointB = b;
         SpringConstant = stiffness;
-        RestLength = Vector2.Distance(PointA.Pos, PointB.Pos);
+        RestLength = Vector2.Distance(PointA._pos, PointB._pos);
         DampingCoeff = damping;
         Id = _idCounter++;
     }
@@ -35,7 +35,7 @@ public class SpringConstraint : Constraint
 
     public override void Update()
     {
-        Vector2 AtoB = PointB.Pos - PointA.Pos;
+        Vector2 AtoB = PointB._pos - PointA._pos;
         Vector2 BrelVel = PointB.Vel - PointA.Vel;
         float length = AtoB.Length();
         AtoB /= length;
@@ -57,8 +57,8 @@ public class SpringConstraint : Constraint
     public override void Draw()
     {
         DrawLineV(
-            UnitConv.MtoP(PointA.Pos),
-            UnitConv.MtoP(PointB.Pos),
+            UnitConv.MtoP(PointA._pos),
+            UnitConv.MtoP(PointB._pos),
             Color.White
         );
     }

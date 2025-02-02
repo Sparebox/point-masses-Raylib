@@ -27,7 +27,7 @@ public class TextureManager
         {
             UnloadTexture(texture);
         }
-        AsyncConsole.WriteLine("Unloaded textures");
+        AsyncConsole.WriteLine("Texture manager unloaded textures");
     }
 
     public void LoadTexture(string fileName)
@@ -38,7 +38,7 @@ public class TextureManager
     }
 
     public Texture2D GetTexture(string fileName)
-    {;
+    {
         if (_textures.TryGetValue(fileName, out Texture2D texture))
         {
             return texture;

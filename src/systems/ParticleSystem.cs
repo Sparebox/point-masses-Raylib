@@ -13,7 +13,7 @@ public class ParticleSystem : ISystem
 
     private readonly Particle[] _particlePool;
 
-    public ParticleSystem(int particleCount, float particleRadiusM, float lifeTimeSeconds, in Vector2 spawnPos, in Vector2 spawnVel)
+    public ParticleSystem(int particleCount, float particleRadiusM, float lifeTimeSeconds, Vector2 spawnPos, Vector2 spawnVel)
     {
         _particlePool = new Particle[particleCount];
         SpawnPos = spawnPos;

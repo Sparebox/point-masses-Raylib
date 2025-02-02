@@ -19,13 +19,11 @@ public class Context
     public ManualResetEventSlim QuadTreePauseEvent { get; init; } 
     public float Substep { get; set; }
     public Vector2 Gravity { get; init; }
-    public TextureManager TextureManager { get; init; }
     public QuadTree QuadTree { get; set; }
     public List<LineCollider> LineColliders { get; set; }
     public List<MassShape> MassShapes { get; init; }
     public List<ISystem> Systems { get; init; }
     public List<ISystem> SubStepSystems { get; init; }
-    public RenderTexture2D RenderTexture { get; init; }
     public Vector2 WinSize { get; set; }
     
     public int MassCount 
@@ -76,6 +74,7 @@ public class Context
     public float _globalStaticFrictionCoeff = Constants.GlobalStaticFrictionCoeffDefault;
     public Camera2D _camera;
     public float _cameraMoveSpeed = 1f;
+    public float _accumulator;
     
 
     public Context(float timeStep, int subSteps, Vector2 gravity, Vector2 winSize)
@@ -90,7 +89,6 @@ public class Context
         QuadTreeLock = new ReaderWriterLockSlim();
         QuadTreePauseEvent = new ManualResetEventSlim(true);
         PauseChanged += QuadTree.OnPauseChanged;
-        TextureManager = new TextureManager();
         _gravityEnabled = false;
         _drawAABBS = false;
         _drawForces = false;
@@ -174,11 +172,11 @@ public class Context
         return shape;
     }
 
-    public IEnumerable<MassShape> GetMassShapes(in BoundingBox area)
+    public IEnumerable<MassShape> GetMassShapes(ref BoundingBox area)
     {
         HashSet<MassShape> found = new();
         QuadTreeLock.EnterReadLock();
-        QuadTree.QueryShapes(area, found);
+        QuadTree.QueryShapes(ref area, found);
         QuadTreeLock.ExitReadLock();
         return found;
     }
@@ -201,11 +199,11 @@ public class Context
         return MassShapes.SelectMany(s => s._points).Where(p => pointIds.Contains(p.Id));
     }
 
-    public IEnumerable<PointMass> GetPointMasses(in BoundingBox area)
+    public IEnumerable<PointMass> GetPointMasses(ref BoundingBox area)
     {
         HashSet<PointMass> found = new();
         QuadTreeLock.EnterReadLock();
-        QuadTree.QueryPoints(in area, found);
+        QuadTree.QueryPoints(ref area, found);
         QuadTreeLock.ExitReadLock();
         return found;
     }

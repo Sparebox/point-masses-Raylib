@@ -21,17 +21,17 @@ namespace PointMasses.Utils
             return (int) (PixelsPerMeter * meters);
         }
 
-        public static Vector2 PtoM(in Vector2 pixels)
+        public static Vector2 PtoM(Vector2 pixels)
         {
             return new(pixels.X / PixelsPerMeter, pixels.Y / PixelsPerMeter);
         }
 
-        public static Vector2 MtoP(in Vector2 meters)
+        public static Vector2 MtoP(Vector2 meters)
         {
             return new(meters.X * PixelsPerMeter, meters.Y * PixelsPerMeter);
         }
 
-        public static Vector3 MtoP(in Vector3 meters)
+        public static Vector3 MtoP(Vector3 meters)
         {
             return new(meters.X * PixelsPerMeter, meters.Y * PixelsPerMeter, 0f);
         }
@@ -39,7 +39,7 @@ namespace PointMasses.Utils
 
     public static class Geometry
     {
-        public static Vector2 ClosestPointOnLine(in Vector2 lineStart, in Vector2 lineEnd, in Vector2 point)
+        public static Vector2 ClosestPointOnLine(ref Vector2 lineStart, ref Vector2 lineEnd, ref Vector2 point)
         {
             Vector2 startToPoint = point - lineStart;
             Vector2 startToEnd = lineEnd - lineStart;
@@ -114,7 +114,7 @@ namespace PointMasses.Utils
             DrawLine((int) end.X, (int) end.Y, (int) (end.X + branchB.X), (int) (end.Y + branchB.Y), color);
         }
 
-        public static void DrawArrow(in Vector2 start, in Vector2 end, Color color)
+        public static void DrawArrow(Vector2 start, Vector2 end, Color color)
         {
             DrawArrow(start.X, start.Y, end.X, end.Y, color);
         }
@@ -203,7 +203,7 @@ namespace PointMasses.Entities
     {
         public PointMass PointMassA { get; init; }
         public PointMass PointMassB { get; init; }
-        public Vector2 Normal { get; init; }
-        public float Separation { get; init; }
+        public Vector2 Normal       { get; init; }
+        public float Separation     { get; init; }
     }
 }

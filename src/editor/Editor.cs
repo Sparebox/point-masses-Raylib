@@ -136,8 +136,8 @@ public class Editor : Tool
         // Constraints
         foreach (var pair in _grid.ConstrainedPointIndexPairs)
         {
-            PointMass a = shape._points.Find(p => p.Pos == _grid.GridPoints[pair.Item1]._pos);
-            PointMass b = shape._points.Find(p => p.Pos == _grid.GridPoints[pair.Item2]._pos);
+            PointMass a = shape._points.Find(p => p._pos == _grid.GridPoints[pair.Item1]._pos);
+            PointMass b = shape._points.Find(p => p._pos == _grid.GridPoints[pair.Item2]._pos);
             Constraint c = new DistanceConstraint(a, b, _stiffness, _ctx);
             shape._constraints.Add(c);
         }

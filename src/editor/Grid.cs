@@ -34,7 +34,7 @@ public class Grid
     private uint _pointsX;
     private uint _pointsY;
 
-    public Grid(int pointsPerMeter, in Vector2 winSize)
+    public Grid(int pointsPerMeter, Vector2 winSize)
     {
         SelectedPointIndices = new();
         ConstrainedPointIndexPairs = new();
@@ -83,7 +83,7 @@ public class Grid
         }
     }
 
-    public void SetGridScale(int pointsPerMeter, in Vector2 winSize)
+    public void SetGridScale(int pointsPerMeter, Vector2 winSize)
     {
         _pointsPerMeter = pointsPerMeter;
         _pointsX = (uint) float.Ceiling(UnitConv.PtoM(winSize.X) * _pointsPerMeter);

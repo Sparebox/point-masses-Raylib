@@ -16,7 +16,7 @@ public partial class MassShape : Entity
         {
             return _points.Aggregate(
                 new Vector2(),
-                (totalVisForce, p) => totalVisForce += p.VisForce
+                (totalVisForce, p) => totalVisForce += p._visForce
             );
         }
     }
@@ -40,7 +40,7 @@ public partial class MassShape : Entity
         {
             return _points.Aggregate(
                 new Vector2(), 
-                (centerOfMass, p) => centerOfMass += p.Mass * p.Pos, 
+                (centerOfMass, p) => centerOfMass += p.Mass * p._pos, 
                 centerOfMass => centerOfMass / Mass
             );
         }
@@ -52,7 +52,7 @@ public partial class MassShape : Entity
         {
             return _points.Aggregate(
                 new Vector2(),
-                (centroid, p) => centroid += p.Pos,
+                (centroid, p) => centroid += p._pos,
                 centroid => centroid / _points.Count
             );
         }
@@ -68,7 +68,7 @@ public partial class MassShape : Entity
             float inertia = 0f;
             foreach (var p in _points)
             {
-                float distSq = Vector2.DistanceSquared(COM, p.Pos);
+                float distSq = Vector2.DistanceSquared(COM, p._pos);
                 inertia += p.Mass * distSq;
             }
             return inertia;
@@ -105,7 +105,7 @@ public partial class MassShape : Entity
             {
                 PointMass p1 = _points[i];
                 PointMass p2 = _points[(i + 1) % _points.Count];
-                area += (p1.Pos.Y + p2.Pos.Y) * (p1.Pos.X - p2.Pos.X);
+                area += (p1._pos.Y + p2._pos.Y) * (p1._pos.X - p2._pos.X);
             }
             return area * 0.5f;
         }
@@ -119,7 +119,7 @@ public partial class MassShape : Entity
             {
                 return 0f;
             }
-            Vector2 pos = _points.First().Pos;
+            Vector2 pos = _points.First()._pos;
             Vector2 dir = pos - CenterOfMass;
             return MathF.Atan2(dir.Y, dir.X);
         }
@@ -143,21 +143,21 @@ public partial class MassShape : Entity
             float maxY = 0f;
             foreach (var p in _points)
             {
-                if (p.Pos.X - p.Radius <= minX)
+                if (p._pos.X - p.Radius <= minX)
                 {
-                    minX = p.Pos.X - p.Radius;
+                    minX = p._pos.X - p.Radius;
                 }
-                if (p.Pos.Y - p.Radius <= minY)
+                if (p._pos.Y - p.Radius <= minY)
                 {
-                    minY = p.Pos.Y - p.Radius;
+                    minY = p._pos.Y - p.Radius;
                 }
-                if (p.Pos.X + p.Radius >= maxX)
+                if (p._pos.X + p.Radius >= maxX)
                 {
-                    maxX = p.Pos.X + p.Radius;
+                    maxX = p._pos.X + p.Radius;
                 }
-                if (p.Pos.Y + p.Radius >= maxY)
+                if (p._pos.Y + p.Radius >= maxY)
                 {
-                    maxY = p.Pos.Y + p.Radius;
+                    maxY = p._pos.Y + p.Radius;
                 }
             }
             return new BoundingBox()
@@ -178,21 +178,21 @@ public partial class MassShape : Entity
             float maxY = 0f;
             foreach (var p in _points)
             {
-                if (p.Pos.X - p.Radius <= minX)
+                if (p._pos.X - p.Radius <= minX)
                 {
-                    minX = p.Pos.X - p.Radius;
+                    minX = p._pos.X - p.Radius;
                 }
-                if (p.Pos.Y - p.Radius <= minY)
+                if (p._pos.Y - p.Radius <= minY)
                 {
-                    minY = p.Pos.Y - p.Radius;
+                    minY = p._pos.Y - p.Radius;
                 }
-                if (p.Pos.X + p.Radius >= maxX)
+                if (p._pos.X + p.Radius >= maxX)
                 {
-                    maxX = p.Pos.X + p.Radius;
+                    maxX = p._pos.X + p.Radius;
                 }
-                if (p.Pos.Y + p.Radius >= maxY)
+                if (p._pos.Y + p.Radius >= maxY)
                 {
-                    maxY = p.Pos.Y + p.Radius;
+                    maxY = p._pos.Y + p.Radius;
                 }
             }
             float margin = UnitConv.PtoM(1f);
@@ -314,7 +314,7 @@ public partial class MassShape : Entity
         }
     }
 
-    public void ApplyForce(in Vector2 force)
+    public void ApplyForce(Vector2 force)
     {
         foreach (PointMass p in _points)
         {
@@ -322,7 +322,7 @@ public partial class MassShape : Entity
         }
     }
 
-    public void ApplyForceCOM(in Vector2 force)
+    public void ApplyForceCOM(Vector2 force)
     {
         foreach (PointMass p in _points)
         {
@@ -330,12 +330,12 @@ public partial class MassShape : Entity
         }
     }
 
-    public void Move(in Vector2 translation)
+    public void Move(Vector2 translation)
     {
         foreach (PointMass p in _points)
         {
-            p.Pos += translation;
-            p.PrevPos = p.Pos;
+            p._pos += translation;
+            p._prevPos = p._pos;
         }
     }
 
@@ -345,7 +345,7 @@ public partial class MassShape : Entity
         {
             PointMass p1 = _points[i];
             PointMass p2 = _points[(i + 1) % _points.Count];
-            Vector2 P1ToP2 = p2.Pos - p1.Pos;
+            Vector2 P1ToP2 = p2._pos - p1._pos;
             float faceLength = P1ToP2.Length();
             Vector2 normal = new(P1ToP2.Y, -P1ToP2.X);
             normal /= faceLength;
@@ -361,10 +361,10 @@ public partial class MassShape : Entity
                     _pressureVis._lines = new VisLine[_points.Count];
                 }
                 VisLine line = new();
-                line._start.X = p1.Pos.X + 0.5f * P1ToP2.X;
-                line._start.Y = p1.Pos.Y + 0.5f * P1ToP2.Y;
-                line._end.X = p1.Pos.X + 0.5f * P1ToP2.X + force.X * PressureVis.VisForceMult;
-                line._end.Y = p1.Pos.Y + 0.5f * P1ToP2.Y + force.Y * PressureVis.VisForceMult;
+                line._start.X = p1._pos.X + 0.5f * P1ToP2.X;
+                line._start.Y = p1._pos.Y + 0.5f * P1ToP2.Y;
+                line._end.X = p1._pos.X + 0.5f * P1ToP2.X + force.X * PressureVis.VisForceMult;
+                line._end.Y = p1._pos.Y + 0.5f * P1ToP2.Y + force.Y * PressureVis.VisForceMult;
                 line._start = UnitConv.MtoP(line._start);
                 line._end = UnitConv.MtoP(line._end);
                 _pressureVis._lines[i] = line;
@@ -424,7 +424,7 @@ public partial class MassShape : Entity
         ImGui.Text($"Linear energy: {LinEnergy:0.##} J");
         ImGui.Text($"Rot energy: {RotEnergy:0.##} J");
         ImGui.End();
-        var centerOfMassIcon = Ctx.TextureManager.GetTexture("center_of_mass.png");
+        var centerOfMassIcon = Program.TextureManager.GetTexture("center_of_mass.png");
         Vector2 offset = new(-centerOfMassIcon.Width * 0.5f, -centerOfMassIcon.Height * 0.5f);
         DrawTextureEx(centerOfMassIcon, centroidViewPos + offset * 0.5f, 0f, 0.5f, Color.White);
     }

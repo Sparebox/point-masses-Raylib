@@ -9,8 +9,8 @@ namespace PointMasses.Collision;
 
 public class LineCollider : Entity
 {
-    public Vector2 StartPos { get; set; }
-    public Vector2 EndPos { get; set; }
+    public Vector2 _startPos;
+    public Vector2 _endPos;
     public override Vector2 CenterOfMass => Centroid;
     public override Vector2 Centroid
     {
@@ -20,7 +20,7 @@ public class LineCollider : Entity
             {
                 return _center.Value;
             }
-            _center = Raymath.Vector2Lerp(StartPos, EndPos, 0.5f);
+            _center = Raymath.Vector2Lerp(_startPos, _endPos, 0.5f);
             return _center.Value;
         }
     }
@@ -33,25 +33,25 @@ public class LineCollider : Entity
                 return _aabb.Value;
             }
             float minX, minY, maxX, maxY;
-            if (StartPos.X < EndPos.X)
+            if (_startPos.X < _endPos.X)
             {
-                minX = StartPos.X;
-                maxX = EndPos.X;
+                minX = _startPos.X;
+                maxX = _endPos.X;
             }
             else
             {
-                minX = EndPos.X;
-                maxX = StartPos.X;
+                minX = _endPos.X;
+                maxX = _startPos.X;
             }
-            if (StartPos.Y < EndPos.X)
+            if (_startPos.Y < _endPos.X)
             {
-                minY = StartPos.Y;
-                maxY = EndPos.Y;
+                minY = _startPos.Y;
+                maxY = _endPos.Y;
             }
             else
             {
-                minY = EndPos.Y;
-                maxY = StartPos.Y;
+                minY = _endPos.Y;
+                maxY = _startPos.Y;
             }
             _aabb = new BoundingBox()
             {
@@ -66,20 +66,20 @@ public class LineCollider : Entity
 
     public LineCollider(float x0, float y0, float x1, float y1, Context ctx) : base(ctx)
     {
-        StartPos = new(x0, y0);
-        EndPos = new(x1, y1);
+        _startPos = new(x0, y0);
+        _endPos = new(x1, y1);
     }
 
-    public LineCollider(in Vector2 start, in Vector2 end, Context ctx) : base(ctx)
+    public LineCollider(ref Vector2 start, ref Vector2 end, Context ctx) : base(ctx)
     {
-        StartPos = start;
-        EndPos = end;
+        _startPos = start;
+        _endPos = end;
     }
 
     public LineCollider(LineCollider c) : base(c.Ctx)
     {
-        StartPos = c.StartPos;
-        EndPos = c.EndPos;
+        _startPos = c._startPos;
+        _endPos = c._endPos;
     }
 
     public override void Update() {}
@@ -87,8 +87,8 @@ public class LineCollider : Entity
     public override void Draw()
     {
         DrawLineV(
-            UnitConv.MtoP(StartPos),
-            UnitConv.MtoP(EndPos),
+            UnitConv.MtoP(_startPos),
+            UnitConv.MtoP(_endPos),
             Color.White
         );
     }
@@ -103,7 +103,7 @@ public class LineCollider : Entity
         Vector2 parallelVel = reflectedVel - reflectedNormalVel;
         reflectedNormalVel *= ctx._globalRestitutionCoeff;
         // Correct penetration
-        p.Pos += colData.Separation * colData.Normal;
+        p._pos += colData.Separation * colData.Normal;
         // Impulse
         p.Vel = parallelVel + reflectedNormalVel; 
         // Friction
@@ -112,8 +112,8 @@ public class LineCollider : Entity
 
     public CollisionData? CheckCollision(PointMass p)
     {
-        Vector2 closestPoint = Geometry.ClosestPointOnLine(StartPos, EndPos, p.Pos);
-        Vector2 closestToPoint = p.Pos - closestPoint;
+        Vector2 closestPoint = Geometry.ClosestPointOnLine(ref _startPos, ref _endPos, ref p._pos);
+        Vector2 closestToPoint = p._pos - closestPoint;
         float distToCollider = closestToPoint.LengthSquared();
         if (distToCollider <= p.Radius * p.Radius)
         {

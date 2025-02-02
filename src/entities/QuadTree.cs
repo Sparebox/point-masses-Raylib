@@ -22,7 +22,7 @@ public class QuadTree
     private QuadTree _northWest;
     private uint _depth;
 
-    public QuadTree(in Vector2 center, in Vector2 size, uint nodeCapacity, uint maxDepth)
+    public QuadTree(Vector2 center, Vector2 size, uint nodeCapacity, uint maxDepth)
     {
         _center = center;
         _size = size;
@@ -115,7 +115,7 @@ public class QuadTree
         }
     }
 
-    public void QueryShapes(in BoundingBox area, HashSet<MassShape> found)
+    public void QueryShapes(ref BoundingBox area, HashSet<MassShape> found)
     {
         if (!CheckCollisionBoxes(_boundary, area))
         {
@@ -130,15 +130,15 @@ public class QuadTree
         }
         else
         {
-            _northEast.QueryShapes(in area, found);
-            _southEast.QueryShapes(in area, found);
-            _southWest.QueryShapes(in area, found);
-            _northWest.QueryShapes(in area, found);
+            _northEast.QueryShapes(ref area, found);
+            _southEast.QueryShapes(ref area, found);
+            _southWest.QueryShapes(ref area, found);
+            _northWest.QueryShapes(ref area, found);
         }
         return;
     }
 
-    public void QueryPoints(in BoundingBox area, HashSet<PointMass> found)
+    public void QueryPoints(ref BoundingBox area, HashSet<PointMass> found)
     {
         found ??= new();
         if (!CheckCollisionBoxes(_boundary, area))
@@ -157,10 +157,10 @@ public class QuadTree
         }
         else
         {
-            _northEast.QueryPoints(in area, found);
-            _southEast.QueryPoints(in area, found);
-            _southWest.QueryPoints(in area, found);
-            _northWest.QueryPoints(in area, found);
+            _northEast.QueryPoints(ref area, found);
+            _southEast.QueryPoints(ref area, found);
+            _southWest.QueryPoints(ref area, found);
+            _northWest.QueryPoints(ref area, found);
         }
         return;
     }

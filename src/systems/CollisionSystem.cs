@@ -30,10 +30,11 @@ namespace PointMasses.Systems
         {
             foreach (var shapeA in _ctx.MassShapes)
             {
-                var nearShapes = _ctx.GetMassShapes(shapeA.Aabb);
+                var boundingBoxA = shapeA.Aabb;
+                var nearShapes = _ctx.GetMassShapes(ref boundingBoxA);
                 foreach (var shapeB in nearShapes)
                 {
-                    if (shapeA.Equals(shapeB) || !CheckCollisionBoxes(shapeA.Aabb, shapeB.Aabb))
+                    if (shapeA.Equals(shapeB) || !CheckCollisionBoxes(boundingBoxA, shapeB.Aabb))
                     {
                         continue;
                     }
@@ -47,9 +48,9 @@ namespace PointMasses.Systems
         {
             for (int i = 0; i < shape._points.Count; i++)
             {
-                Vector2 startPos =shape. _points[i].Pos;
-                Vector2 endPos = shape._points[(i + 1) % shape._points.Count].Pos;
-                Vector2 towardsClosestPoint = Geometry.ClosestPointOnLine(startPos, endPos, otherPoint.Pos) - otherPoint.Pos;
+                Vector2 startPos =shape. _points[i]._pos;
+                Vector2 endPos = shape._points[(i + 1) % shape._points.Count]._pos;
+                Vector2 towardsClosestPoint = Geometry.ClosestPointOnLine(ref startPos, ref endPos, ref otherPoint._pos) - otherPoint._pos;
                 float distSq = towardsClosestPoint.LengthSquared();
                 if (distSq <= otherPoint.Radius * otherPoint.Radius)
                 {
@@ -115,7 +116,7 @@ namespace PointMasses.Systems
 
         private static CollisionData? CheckPointToPointCollision(PointMass pointA, PointMass pointB)
         {
-            Vector2 normal = pointB.Pos - pointA.Pos;
+            Vector2 normal = pointB._pos - pointA._pos;
             float dist = normal.LengthSquared();
             if (dist <= MathF.Pow(pointA.Radius + pointB.Radius, 2f))
             {
@@ -143,8 +144,8 @@ namespace PointMasses.Systems
             Vector2 relVel = preVelB - preVelA;
             // Correct penetration
             Vector2 offsetVector = 0.5f * colData.Separation * colData.Normal;
-            colData.PointMassA.Pos += -offsetVector;
-            colData.PointMassB.Pos += offsetVector;
+            colData.PointMassA._pos += -offsetVector;
+            colData.PointMassB._pos += offsetVector;
             // Apply impulse
             float impulseMag = -(1f + ctx._globalRestitutionCoeff) * Vector2.Dot(relVel, colData.Normal) / (colData.PointMassA.InvMass + colData.PointMassB.InvMass);
             Vector2 impulse = impulseMag * colData.Normal;
@@ -157,19 +158,19 @@ namespace PointMasses.Systems
 
         private static void HandleLineCollision(MassShape shape, PointMass pointMass, Context ctx)
         {
-            (PointMass closestA, PointMass closestB, Vector2 closestPointOnLine) = FindClosestPoints(shape, pointMass.Pos);
-            Vector2 pointToClosest = closestPointOnLine - pointMass.Pos;
+            (PointMass closestA, PointMass closestB, Vector2 closestPointOnLine) = FindClosestPoints(shape, pointMass._pos);
+            Vector2 pointToClosest = closestPointOnLine - pointMass._pos;
             float totalOffset = pointMass.Radius - pointToClosest.Length();
             if (totalOffset == 0f)
             {
                 return;
             }
-            float lineLen = Vector2.Distance(closestA.Pos, closestB.Pos);
+            float lineLen = Vector2.Distance(closestA._pos, closestB._pos);
             if (lineLen == 0f)
             {
                 return;
             }
-            float distToB = Vector2.Distance(closestPointOnLine, closestB.Pos);
+            float distToB = Vector2.Distance(closestPointOnLine, closestB._pos);
             float aOffset = distToB / lineLen * totalOffset;
             float bOffset = totalOffset - aOffset;
             var normal = Vector2.Normalize(pointToClosest);
@@ -179,9 +180,9 @@ namespace PointMasses.Systems
             Vector2 closestBpreVel = closestB.Vel;
             Vector2 relVel = preVel - avgVel;
             // Penetration correction
-            pointMass.Pos += totalOffset * -normal;
-            closestA.Pos += aOffset * normal;
-            closestB.Pos += bOffset * normal;
+            pointMass._pos += totalOffset * -normal;
+            closestA._pos += aOffset * normal;
+            closestB._pos += bOffset * normal;
             // Apply impulse
             float combinedMass = closestA.Mass + closestB.Mass;
             float impulseMag = -(1f + ctx._globalRestitutionCoeff) * Vector2.Dot(relVel, normal) / (1f / combinedMass + pointMass.InvMass);
@@ -206,7 +207,7 @@ namespace PointMasses.Systems
             {
                 PointMass lineStart = shape._points[i];
                 PointMass lineEnd = shape._points[(i + 1) % shape._points.Count];
-                Vector2 pointOnLine = Geometry.ClosestPointOnLine(lineStart.Pos, lineEnd.Pos, pos);
+                Vector2 pointOnLine = Geometry.ClosestPointOnLine(ref lineStart._pos, ref lineEnd._pos, ref pos);
                 float distSq = Vector2.DistanceSquared(pointOnLine, pos);
                 if (distSq < closestDistSq)
                 {

@@ -24,7 +24,7 @@ public class BarnesHutTree
     private BarnesHutTree _northWest;
     private uint _depth;
 
-    public BarnesHutTree(in Vector2 center, in Vector2 size)
+    public BarnesHutTree(Vector2 center, Vector2 size)
     {
         _center = center;
         _size = size;

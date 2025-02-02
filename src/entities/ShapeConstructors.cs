@@ -312,7 +312,7 @@ public partial class MassShape
                 var points = _points;
                 return points.Aggregate(
                     new Vector2(),
-                    (centroid, p) => centroid += p.Pos,
+                    (centroid, p) => centroid += p._pos,
                     centroid => centroid / points.Count
                 );
             }
@@ -336,13 +336,13 @@ public partial class MassShape
             }
         }
 
-        public readonly void SetPos(in Vector2 newPos)
+        public readonly void SetPos(ref Vector2 newPos)
         {
             Vector2 translation = newPos - Centroid;
             foreach (PointMass p in _points)
             {
-                p.Pos += translation;
-                p.PrevPos = p.Pos;
+                p._pos += translation;
+                p._prevPos = p._pos;
             }
         }
     }

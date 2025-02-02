@@ -10,15 +10,15 @@ namespace PointMasses.Entities;
 public class PointMass : Entity
 {
     public bool Pinned { get; init; }
-    public Vector2 VisForce { get; set; } // For force visualization
-    public Vector2 Pos { get; set; }
-    public Vector2 PrevPos { get; set; }
-    public Vector2 Force { get; set; }
+    public Vector2 _visForce; // For force visualization
+    public Vector2 _pos;
+    public Vector2 _prevPos;
+    public Vector2 _force;
     public Vector2 PrevForce { get; private set; }
     public Vector2 Vel
     {
-        get { return Pos - PrevPos; }
-        set { PrevPos = Pos - value; }
+        get { return _pos - _prevPos; }
+        set { _prevPos = _pos - value; }
     }
     public Vector2 Momentum => Mass * Vel;
     public float Radius { get; init; }
@@ -26,19 +26,19 @@ public class PointMass : Entity
     {
         get
         {
-            Vector3 min = new(Pos.X - Radius, Pos.Y - Radius, 0f);
-            Vector3 max = new(Pos.X + Radius, Pos.Y + Radius, 0f);
+            Vector3 min = new(_pos.X - Radius, _pos.Y - Radius, 0f);
+            Vector3 max = new(_pos.X + Radius, _pos.Y + Radius, 0f);
             return new BoundingBox(min, max);
         }
     }
-    public override Vector2 Centroid => Pos;
-    public override Vector2 CenterOfMass => Pos;
+    public override Vector2 Centroid => _pos;
+    public override Vector2 CenterOfMass => _pos;
     
     public PointMass(float x, float y, float mass, bool pinned, Context ctx, bool incrementId = true) : base(ctx, mass, incrementId: incrementId)
     {
-        Pos = new(x, y);
-        PrevPos = Pos;
-        Force = Vector2.Zero;
+        _pos = new(x, y);
+        _prevPos = _pos;
+        _force = Vector2.Zero;
         Radius = MassToRadius(mass);
         Pinned = pinned;
     }
@@ -46,9 +46,9 @@ public class PointMass : Entity
     // Copy constructor
     public PointMass(PointMass p) : base(p.Ctx, p.Mass, p.Id)
     {
-        Pos = p.Pos;
-        PrevPos = Pos;
-        Force = Vector2.Zero;;
+        _pos = p._pos;
+        _prevPos = _pos;
+        _force = Vector2.Zero;;
         Radius = p.Radius;
         Pinned = p.Pinned;
     }
@@ -64,24 +64,24 @@ public class PointMass : Entity
             ApplyForce(Mass * Ctx.Gravity);
         }
         //SolveLineCollisions();
-        Vector2 acc = Force * _invMass;
+        Vector2 acc = _force * _invMass;
         Vector2 vel = Vel; // Save the velocity before previous position is reset
-        PrevPos = Pos;
-        Pos += vel + acc * Ctx.Substep * Ctx.Substep;
-        VisForce = Force;
-        PrevForce = Force;
-        Force = Vector2.Zero;
+        _prevPos = _pos;
+        _pos += vel + acc * Ctx.Substep * Ctx.Substep;
+        _visForce = _force;
+        PrevForce = _force;
+        _force = Vector2.Zero;
     }
 
     public override void Draw()
     {
-        DrawCircleLinesV(UnitConv.MtoP(Pos), UnitConv.MtoP(Radius), Color.White);
+        DrawCircleLinesV(UnitConv.MtoP(_pos), UnitConv.MtoP(Radius), Color.White);
     }
 
-    public void ApplyForce(in Vector2 force)
+    public void ApplyForce(Vector2 force)
     {
-        Force += force;
-        VisForce += force;
+        _force += force;
+        _visForce += force;
     }
 
     public static float RadiusToMass(float radius)
@@ -94,7 +94,7 @@ public class PointMass : Entity
         return mass * Constants.RadiusPerMassRatio;
     }
 
-    public void ApplyFriction(in Vector2 normal)
+    public void ApplyFriction(Vector2 normal)
     {
         if (Vel.LengthSquared() == 0f)
         {
