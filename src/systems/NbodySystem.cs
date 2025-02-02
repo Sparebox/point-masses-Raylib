@@ -1,5 +1,6 @@
 using System.Numerics;
 using Entities;
+using PointMasses.Input;
 using PointMasses.Sim;
 using PointMasses.Utils;
 
@@ -21,7 +22,7 @@ namespace PointMasses.Systems
         public NbodySystem(Context ctx)
         {
             _ctx = ctx;
-            Context.PauseChanged += OnPauseChanged;
+            InputManager.PauseChanged += OnPauseChanged;
             _barnesHutTree = new(
                 UnitConv.PtoM(new Vector2(ctx.WinSize.X * 0.5f, ctx.WinSize.Y * 0.5f)),
                 UnitConv.PtoM(new Vector2(ctx.WinSize.X, ctx.WinSize.Y))

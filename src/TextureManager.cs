@@ -4,10 +4,11 @@ using static Raylib_cs.Raylib;
 
 namespace PointMasses.Textures;
 
-public class TextureManager
+public class TextureManager : IDisposable
 {
     private readonly IDictionary<string, Texture2D> _textures;
     private readonly string _resourcesPath;
+    private bool _disposed;
 
     public TextureManager()
     {
@@ -19,15 +20,6 @@ public class TextureManager
             _resourcesPath = Directory.GetCurrentDirectory() + "/res/";
         #endif
         _textures = new Dictionary<string, Texture2D>();
-    }
-
-    ~TextureManager()
-    {
-        foreach (var texture in _textures.Values)
-        {
-            UnloadTexture(texture);
-        }
-        AsyncConsole.WriteLine("Texture manager unloaded textures");
     }
 
     public void LoadTexture(string fileName)
@@ -44,5 +36,28 @@ public class TextureManager
             return texture;
         }
         throw new KeyNotFoundException(fileName);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        if (disposing)
+        {
+            foreach (var texture in _textures.Values)
+            {
+                UnloadTexture(texture);
+            }
+            AsyncConsole.WriteLine("Texture manager unloaded textures");
+            _disposed = true;
+        }
     }
 }

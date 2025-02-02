@@ -7,7 +7,8 @@ using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 using ImGuiNET;
 using PointMasses.Textures;
-using point_masses;
+using PointMasses;
+using PointMasses.Input;
 
 namespace PointMasses.Sim;
 
@@ -23,7 +24,7 @@ public class Program
     public static void Main() 
     {
         TextureManager = new();
-        ActiveScene = Init(0.8f, 1f);
+        ActiveScene = InitScene(0.8f, 1f);
         rlImGui.Setup(true);
         unsafe { ImGui.GetIO().NativePtr->IniFilename = null; } // Disable imgui.ini file
         while (!WindowShouldClose())
@@ -32,14 +33,15 @@ public class Program
             {
                 Update();
             }
-            ActiveScene.Ctx.HandleInput();
+            InputManager.HandleInput(ActiveScene.Ctx);
             Draw();
         }
+        TextureManager.Dispose();
         rlImGui.Shutdown();
         CloseWindow();
     }
 
-    private static Scene Init(float winSizePercentage, float renderPercentage)
+    private static Scene InitScene(float winSizePercentage, float renderPercentage)
     {
         InitWindow(0, 0, "Point-masses");
         SetTargetFPS(TargetFPS);

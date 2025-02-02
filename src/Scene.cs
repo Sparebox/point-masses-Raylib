@@ -5,7 +5,7 @@ using PointMasses.Sim;
 using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 
-namespace point_masses;
+namespace PointMasses;
 
 public class Scene
 {
@@ -84,6 +84,8 @@ public class Scene
         }
         EndMode2D();
     }
+
+
 
 }
 

@@ -6,13 +6,12 @@ using PointMasses.Utils;
 using PointMasses.Systems;
 using Raylib_cs;
 using static Raylib_cs.Raylib;
+using PointMasses.Input;
 
 namespace PointMasses.Sim;
 
 public class Context
 {
-    // Events
-    public static event EventHandler<bool> PauseChanged;
     // Properties
     public ReaderWriterLockSlim Lock { get; set; }
     public ReaderWriterLockSlim QuadTreeLock { get; init; }
@@ -88,7 +87,7 @@ public class Context
         Lock = new ReaderWriterLockSlim();
         QuadTreeLock = new ReaderWriterLockSlim();
         QuadTreePauseEvent = new ManualResetEventSlim(true);
-        PauseChanged += QuadTree.OnPauseChanged;
+        InputManager.PauseChanged += QuadTree.OnPauseChanged;
         _gravityEnabled = false;
         _drawAABBS = false;
         _drawForces = false;
@@ -281,73 +280,6 @@ public class Context
         // Systems.Add(waveSystem);
     }
 
-    public void UpdateCamera()
-    {
-        if (IsKeyDown(KeyboardKey.W))
-        {
-            _camera.Offset.Y += _cameraMoveSpeed;
-        }
-        if (IsKeyDown(KeyboardKey.S))
-        {
-            _camera.Offset.Y -= _cameraMoveSpeed;
-        }
-        if (IsKeyDown(KeyboardKey.A))
-        {
-            _camera.Offset.X += _cameraMoveSpeed;
-        }
-        if (IsKeyDown(KeyboardKey.D))
-        {
-            _camera.Offset.X -= _cameraMoveSpeed;
-        }
-    }
-
-    public void HandleInput()
-    {
-        // Keys
-        if (IsKeyPressed(KeyboardKey.G))
-        {
-            _gravityEnabled = !_gravityEnabled;
-        }
-        if (IsKeyPressed(KeyboardKey.F))
-        {
-            _drawForces = !_drawForces;
-        }
-        if (IsKeyPressed(KeyboardKey.Q))
-        {
-            _drawQuadTree = !_drawQuadTree;
-        }
-        if (IsKeyPressed(KeyboardKey.R))
-        {
-            LoadSavedState();
-        }
-        if (IsKeyPressed(KeyboardKey.Space))
-        {
-            _simPaused = !_simPaused;
-            PauseChanged?.Invoke(this, _simPaused);
-        }
-
-        // Handle system inputs
-        foreach (var system in Systems)
-        {
-            system.UpdateInput();
-        }
-        foreach (var subStepSystem in SubStepSystems)
-        {
-            subStepSystem.UpdateInput();
-        }
-
-        // Handle camera
-        UpdateCamera();
-
-        // Temporary demo keys
-        if (IsKeyPressed(KeyboardKey.C))
-        {
-            LoadClothScenario();
-        }
-        if (IsKeyPressed(KeyboardKey.B))
-        {
-            LoadBenchmark(1000, 3f, 20f, new(WinSize.X * 0.5f - 200f, 200f));
-        }
-    }
+    
 
 }
