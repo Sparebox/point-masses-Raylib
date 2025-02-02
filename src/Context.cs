@@ -253,16 +253,16 @@ public class Context
         AddMassShapes(particles);
     }
 
-    public ISystem GetSystem(Type systemType)
+    public Type GetSystem<Type>()
     {
         foreach (var system in Systems)
         {
-            if (system.GetType() == systemType)
+            if (system.GetType().Equals(typeof(Type)))
             {
-                return system;
+                return (Type) system;
             }
         }
-        throw new Exception($"System {systemType} could not be found");
+        throw new Exception($"System {typeof(Type)} could not be found");
     }
 
     private void LoadSystems()

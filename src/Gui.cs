@@ -16,7 +16,7 @@ public class Gui
 
     public static void Draw(Context ctx)
     {
-        var toolSystem = (ToolSystem) ctx.GetSystem(typeof(ToolSystem));
+        var toolSystem = ctx.GetSystem<ToolSystem>();
         toolSystem.ToolEnabled = !ImGui.IsAnyItemHovered();
         if (ImGui.BeginMainMenuBar())
         {
@@ -60,7 +60,7 @@ public class Gui
         ImGui.PushStyleColor(ImGuiCol.Text, ctx._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
         if (ImGui.Checkbox(ctx._simPaused ? "PAUSE" : "RUNNING", ref ctx._simPaused))
         {
-            ((NbodySystem) ctx.GetSystem(typeof(NbodySystem))).PauseEvent.Reset();
+            ctx.GetSystem<NbodySystem>().PauseEvent.Reset();
         }
         ImGui.PopStyleColor();
         ImGui.Text($"Masses: {ctx.MassCount}");
@@ -173,7 +173,7 @@ public class Gui
     
     private static void ShowSpawnToolOptions(Context ctx)
     {
-        var toolSystem = (ToolSystem) ctx.GetSystem(typeof(ToolSystem));
+        var toolSystem = ctx.GetSystem<ToolSystem>();
         var spawnTool = (Spawn) toolSystem.SelectedTool;
         if (ImGui.Combo("Spawn target", ref spawnTool._selectedSpawnTargetIndex, TargetsToComboString()))
         {
@@ -212,7 +212,7 @@ public class Gui
 
     private static void ShowEditorOptions(Context ctx)
     {
-        var toolSystem = (ToolSystem) ctx.GetSystem(typeof(ToolSystem));
+        var toolSystem = ctx.GetSystem<ToolSystem>();
         ImGui.Text("EDITOR OPTIONS");
         ImGui.Spacing();
         var editor = (Editor) toolSystem.SelectedTool;
@@ -252,7 +252,7 @@ public class Gui
 
     private static void ShowNbodySimOptions(Context ctx)
     {
-        var nBodySystem = (NbodySystem) ctx.GetSystem(typeof(NbodySystem));
+        var nBodySystem = ctx.GetSystem<NbodySystem>();
         ImGui.Checkbox("Running", ref nBodySystem._running);
         ImGui.Checkbox("Post-Newtonian relativistic corrections", ref nBodySystem._postNewtonianEnabled);
         ImGui.PushItemWidth(50f);

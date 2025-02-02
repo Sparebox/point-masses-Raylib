@@ -564,7 +564,7 @@ namespace PointMasses.Tools
 
         public override void Update()
         {
-            _shouldVisualize = IsMouseButtonDown(MouseButton.Left) && ((ToolSystem) _ctx.GetSystem(typeof(ToolSystem))).ToolEnabled;
+            _shouldVisualize = IsMouseButtonDown(MouseButton.Left) && _ctx.GetSystem<ToolSystem>().ToolEnabled;
             if (IsMouseButtonReleased(MouseButton.Left) || IsMouseButtonPressed(MouseButton.Left))
             {
                 _startPos = GetMousePosition();
