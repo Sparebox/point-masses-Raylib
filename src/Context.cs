@@ -1,11 +1,9 @@
 using System.Numerics;
 using PointMasses.Collision;
 using PointMasses.Entities;
-using PointMasses.Textures;
 using PointMasses.Utils;
 using PointMasses.Systems;
 using Raylib_cs;
-using static Raylib_cs.Raylib;
 using PointMasses.Input;
 
 namespace PointMasses.Sim;
@@ -15,7 +13,6 @@ public class Context
     // Properties
     public ReaderWriterLockSlim Lock { get; set; }
     public ReaderWriterLockSlim QuadTreeLock { get; init; }
-    public ManualResetEventSlim QuadTreePauseEvent { get; init; } 
     public float Substep { get; set; }
     public Vector2 Gravity { get; init; }
     public QuadTree QuadTree { get; set; }
@@ -35,6 +32,7 @@ public class Context
             return count;
         }
     }
+
     public int ConstraintCount 
     {
         get
@@ -45,6 +43,7 @@ public class Context
             return count;
         }
     }
+
     public float SystemEnergy
     {
         get
@@ -55,6 +54,7 @@ public class Context
             return energy;
         }
     }
+
     public int SavedShapeCount => _saveState.MassShapes.Count;
 
     // Fields
@@ -75,7 +75,6 @@ public class Context
     public float _cameraMoveSpeed = 1f;
     public float _accumulator;
     
-
     public Context(float timeStep, int subSteps, Vector2 gravity, Vector2 winSize)
     {
         _timestep = timeStep;
@@ -86,7 +85,6 @@ public class Context
         _camera = new Camera2D(Vector2.Zero, Vector2.Zero, 0f, 1f);
         Lock = new ReaderWriterLockSlim();
         QuadTreeLock = new ReaderWriterLockSlim();
-        QuadTreePauseEvent = new ManualResetEventSlim(true);
         InputManager.PauseChanged += QuadTree.OnPauseChanged;
         _gravityEnabled = false;
         _drawAABBS = false;

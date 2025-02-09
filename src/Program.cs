@@ -17,22 +17,22 @@ public class Program
     public static readonly int TargetFPS = GetMonitorRefreshRate(GetCurrentMonitor());
 
     public static TextureManager TextureManager { get; set; }
+    public static Vector2 WinSize { get; private set; }
 
     private static Scene ActiveScene { get; set; }
     private static RenderTexture2D RenderTexture { get; set;}
 
     public static void Main() 
     {
+        Initialize(0.8f, 1.0f);
         TextureManager = new();
-        ActiveScene = InitScene(0.8f, 1f);
+        ActiveScene = Scene.LoadDefaultScene(WinSize);
+        //ActiveScene = Scene.LoadFromFile("scenes/Default_scene.json");
         rlImGui.Setup(true);
         unsafe { ImGui.GetIO().NativePtr->IniFilename = null; } // Disable imgui.ini file
         while (!WindowShouldClose())
         {
-            if (!ActiveScene.Ctx._simPaused)
-            {
-                Update();
-            }
+            ActiveScene.Update();
             InputManager.HandleInput(ActiveScene.Ctx);
             Draw();
         }
@@ -41,7 +41,7 @@ public class Program
         CloseWindow();
     }
 
-    private static Scene InitScene(float winSizePercentage, float renderPercentage)
+    private static void Initialize(float winSizePercentage, float renderPercentage)
     {
         InitWindow(0, 0, "Point-masses");
         SetTargetFPS(TargetFPS);
@@ -57,40 +57,7 @@ public class Program
         SetWindowPosition(winPosX, winPosY);
 
         RenderTexture = LoadRenderTexture(renderWidth, renderHeight);
-        
-        float winWidthMeters = UnitConv.PtoM(winWidth);
-        float winHeightMeters = UnitConv.PtoM(winHeight);
-        Context ctx = new(timeStep: 1f / 60f, 3, gravity: new(0f, 9.81f), winSize: new(winWidth, winHeight))
-        {
-            QuadTree = new(
-                new Vector2(winWidthMeters * 0.5f, winHeightMeters * 0.5f),
-                new Vector2(winWidthMeters, winHeightMeters),
-                1,
-                6
-            )
-        };
-        ctx.LineColliders = new() {
-            new(0f, 0f, winWidthMeters, 0f, ctx),
-            new(0f, 0f, 0f, winHeightMeters, ctx),
-            new(winWidthMeters, 0f, winWidthMeters, winHeightMeters, ctx),
-            new(0f, winHeightMeters, winWidthMeters, winHeightMeters, ctx)
-        };
-        ctx.SaveCurrentState();
-        // Load textures
-        TextureManager.LoadTexture("center_of_mass.png");
-
-        // Start quad tree update thread
-        var quadTreeUpdateThread = new Thread(new ParameterizedThreadStart(QuadTree.ThreadUpdate), 0)
-        {
-            IsBackground = true
-        };
-        quadTreeUpdateThread.Start(ctx);
-        return new Scene() { Ctx = ctx };
-    }
-
-    private static void Update()
-    {
-        ActiveScene.Update();
+        WinSize = new(winWidth, winHeight);
     }
 
     private static void Draw()

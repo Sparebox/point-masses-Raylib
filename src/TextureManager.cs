@@ -20,6 +20,9 @@ public class TextureManager : IDisposable
             _resourcesPath = Directory.GetCurrentDirectory() + "/res/";
         #endif
         _textures = new Dictionary<string, Texture2D>();
+
+        // Load textures
+        LoadTexture("center_of_mass.png");
     }
 
     public void LoadTexture(string fileName)
@@ -57,7 +60,7 @@ public class TextureManager : IDisposable
                 UnloadTexture(texture);
             }
             AsyncConsole.WriteLine("Texture manager unloaded textures");
-            _disposed = true;
         }
+        _disposed = true;
     }
 }

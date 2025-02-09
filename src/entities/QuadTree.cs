@@ -10,6 +10,7 @@ public class QuadTree
 {
     public static uint MaxDepth { get; set; }
     public static uint NodeCapacity { get; set; }
+    public static ManualResetEventSlim PauseEvent { get; } = new(true);
     
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
@@ -203,22 +204,21 @@ public class QuadTree
         Context ctx = (Context) _ctx;
         for (;;)
         {
-            ctx.QuadTreePauseEvent.Wait();
+            PauseEvent.Wait();
             Thread.Sleep(Constants.QuadTreeUpdateMs);
             ctx.QuadTree.Update(ctx);
         }
     }
 
-    public static void OnPauseChanged(object sender, bool paused)
+    public static void OnPauseChanged(object _, bool paused)
     {
-        Context ctx = (Context) sender;
         if (paused)
         {
-            ctx.QuadTreePauseEvent.Reset();
+            PauseEvent.Reset();
         }
         else
         {
-            ctx.QuadTreePauseEvent.Set();
+            PauseEvent.Set();
         }
     }
 }

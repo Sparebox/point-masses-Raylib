@@ -88,11 +88,11 @@ public class Gui
         {
             if (ctx._collisionsEnabled && !ctx._simPaused)
             {
-                ctx.QuadTreePauseEvent.Set();
+                QuadTree.PauseEvent.Set();
             }
             else
             {
-                ctx.QuadTreePauseEvent.Reset();
+                QuadTree.PauseEvent.Reset();
             }
         }
         ImGui.PushItemWidth(50f);
