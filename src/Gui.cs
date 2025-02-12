@@ -7,14 +7,16 @@ using PointMasses.Sim;
 using PointMasses.Tools;
 using static Raylib_cs.Raylib;
 using static PointMasses.Tools.Spawn;
+using Raylib_cs;
 
 namespace PointMasses.UI;
 
 public class Gui
 {
     private static bool ShowSystemEnergy;
+    private static bool ShowConfirmDialog;
 
-    public static void Draw(Context ctx)
+    public static void Draw(Context ctx, ref bool inMenu)
     {
         var toolSystem = ctx.GetSystem<ToolSystem>();
         toolSystem.ToolEnabled = !ImGui.IsAnyItemHovered();
@@ -33,7 +35,7 @@ public class Gui
             ImGui.PopStyleColor();
             if (ImGui.BeginMenu("Simulation info"))
             {
-                ShowSimulationInfo(ctx, toolSystem);
+                ShowSimulationInfo(ctx);
                 ImGui.EndMenu();
             }
             if (ImGui.BeginMenu("Tools"))
@@ -51,11 +53,37 @@ public class Gui
                 ShowNbodySimOptions(ctx);
                 ImGui.EndMenu();
             }
+            if (ImGui.Button("Main menu"))
+            {
+                ShowConfirmDialog =  true;
+                ImGui.OpenPopup("Return to main menu");
+            }
+            if (ImGui.BeginPopupModal("Return to main menu",  ref ShowConfirmDialog, ImGuiWindowFlags.AlwaysAutoResize))
+            {
+                ImGui.Text("Are you sure you want to return to main menu?");
+                ImGui.Spacing();
+
+                if (ImGui.Button("Yes"))
+                {
+                    ShowConfirmDialog = false;
+                    inMenu = true;
+                    ImGui.CloseCurrentPopup();
+                }
+
+                ImGui.SameLine();
+
+                if (ImGui.Button("No"))
+                {
+                    ShowConfirmDialog = false;
+                    ImGui.CloseCurrentPopup();
+                }
+                ImGui.EndPopup();
+            }
             ImGui.EndMainMenuBar();
         }
     }
 
-    private static void ShowSimulationInfo(Context ctx, ToolSystem toolSystem)
+    private static void ShowSimulationInfo(Context ctx)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, ctx._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
         if (ImGui.Checkbox(ctx._simPaused ? "PAUSE" : "RUNNING", ref ctx._simPaused))
@@ -274,5 +302,30 @@ public class Gui
         {
             ctx._camera.Offset = Vector2.Zero;
         }
+    }
+
+    public static void DrawMainMenu(ref bool _inMenu, ref bool _shouldExit, ref Scene activeScene)
+    {
+        var winFlags = 
+            ImGuiWindowFlags.NoCollapse |
+            ImGuiWindowFlags.NoScrollbar |
+            ImGuiWindowFlags.NoResize |
+            ImGuiWindowFlags.NoMove;
+        ImGui.Begin("Main menu", winFlags);
+        Vector2 winSize = new(200f, 400f);
+        ImGui.SetWindowSize(winSize);
+        ImGui.SetWindowPos(new(Program.WinSize.X * 0.5f - winSize.X * 0.5f, Program.WinSize.Y * 0.5f - winSize.Y * 0.5f));
+
+        if (ImGui.Button("Load default scene"))
+        {
+            _inMenu = false;
+            activeScene = Scene.LoadDefaultScene(Program.WinSize);
+        }
+        if (ImGui.Button("Exit"))
+        {
+            _shouldExit = true;
+        }
+
+        ImGui.End();
     }
 }

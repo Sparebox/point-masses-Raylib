@@ -15,25 +15,29 @@ namespace PointMasses.Sim;
 public class Program 
 {   
     public static readonly int TargetFPS = GetMonitorRefreshRate(GetCurrentMonitor());
-
+    
     public static TextureManager TextureManager { get; set; }
     public static Vector2 WinSize { get; private set; }
 
-    private static Scene ActiveScene { get; set; }
+    private static bool _inMenu = true;
+    private static bool _shouldExit;
+    private static Scene _activeScene;
     private static RenderTexture2D RenderTexture { get; set;}
 
     public static void Main() 
     {
         Initialize(0.8f, 1.0f);
         TextureManager = new();
-        ActiveScene = Scene.LoadDefaultScene(WinSize);
         //ActiveScene = Scene.LoadFromFile("scenes/Default_scene.json");
         rlImGui.Setup(true);
         unsafe { ImGui.GetIO().NativePtr->IniFilename = null; } // Disable imgui.ini file
-        while (!WindowShouldClose())
+        while (!_shouldExit && !WindowShouldClose())
         {
-            ActiveScene.Update();
-            InputManager.HandleInput(ActiveScene.Ctx);
+            if (!_inMenu)
+            {
+                _activeScene.Update();
+                InputManager.HandleInput(_activeScene.Ctx);
+            }
             Draw();
         }
         TextureManager.Dispose();
@@ -64,22 +68,30 @@ public class Program
     {
         BeginDrawing(); // raylib
         rlImGui.Begin(); // GUI
+        ClearBackground(Color.Black);
 
+        if (_inMenu) // Selecting a scene
+        {
+            Gui.DrawMainMenu(ref _inMenu, ref _shouldExit, ref _activeScene);
+            rlImGui.End();
+            EndDrawing();
+            return;
+        }
         BeginTextureMode(RenderTexture);
         ClearBackground(Color.Black);
-        ActiveScene.Draw();
+        _activeScene.Draw();
         EndTextureMode();
 
         DrawTexturePro(
             RenderTexture.Texture,
             new (0f, 0f, RenderTexture.Texture.Width, -RenderTexture.Texture.Height),
-            new (0f, 0f, ActiveScene.Ctx.WinSize.X, ActiveScene.Ctx.WinSize.Y),
+            new (0f, 0f, _activeScene.Ctx.WinSize.X, _activeScene.Ctx.WinSize.Y),
             Vector2.Zero,
             0f,
             Color.White
         );
-        Gui.Draw(ActiveScene.Ctx); // GUI
-
+        Gui.Draw(_activeScene.Ctx, ref _inMenu); // GUI
+       
         rlImGui.End();
         EndDrawing(); // raylib
     }
