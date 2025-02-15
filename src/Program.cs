@@ -22,7 +22,7 @@ public class Program
 
     public static void Main() 
     {
-        Initialize(0.8f, 1.0f);
+        Initialize(0.8f);
         TextureManager = new();
         //ActiveScene = Scene.LoadFromFile("scenes/Default_scene.json");
         rlImGui.Setup(true);
@@ -38,17 +38,15 @@ public class Program
         }
         TextureManager.Dispose();
         rlImGui.Shutdown();
+        UnloadRenderTexture(RenderTexture);
         CloseWindow();
     }
 
-    private static void Initialize(float winSizePercentage, float renderPercentage)
+    private static void Initialize(float winSizePercentage)
     {
         InitWindow(0, 0, "Point-masses");
         SetTargetFPS(TargetFPS);
         SetWinSizePercentage(winSizePercentage);
-        int renderWidth = (int) (renderPercentage * GetScreenWidth());
-        int renderHeight = (int) (renderPercentage * GetScreenHeight());
-        RenderTexture = LoadRenderTexture(renderWidth, renderHeight);
     }
 
     private static void Draw()
@@ -77,7 +75,7 @@ public class Program
             0f,
             Color.White
         );
-        Gui.Draw(_activeScene.Ctx, ref _inMenu); // GUI
+        Gui.Draw(_activeScene, ref _inMenu); // GUI
        
         rlImGui.End();
         EndDrawing(); // raylib
@@ -85,8 +83,10 @@ public class Program
 
     public static void SetWinSizePercentage(float winSizePercentage)
     {
+        UnloadRenderTexture(RenderTexture);
         int winWidth = (int) (winSizePercentage * GetMonitorWidth(GetCurrentMonitor()));
         int winHeight = (int) (winSizePercentage * GetMonitorHeight(GetCurrentMonitor()));
+        RenderTexture = LoadRenderTexture(winWidth, winHeight);
         SetWindowSize(winWidth, winHeight);
         int winPosX = GetMonitorWidth(GetCurrentMonitor()) / 2 - winWidth / 2;
         int winPosY = GetMonitorHeight(GetCurrentMonitor()) / 2 - winHeight / 2;

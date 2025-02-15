@@ -7,6 +7,7 @@ using PointMasses.Sim;
 using PointMasses.Tools;
 using static Raylib_cs.Raylib;
 using static PointMasses.Tools.Spawn;
+using Raylib_cs;
 
 namespace PointMasses.UI;
 
@@ -14,15 +15,22 @@ public class Gui
 {
     private struct State
     {
-       public bool _showSystemEnergy;
-       public bool _showConfirmDialog;
-       public float _winSizePercentage;
+        public bool _showSystemEnergy;
+        public bool _showConfirmDialog;
+        public float _winSizePercentage;
+        public string _sceneNameInputstr;
+
+        public State()
+        {    
+            _sceneNameInputstr = string.Empty;
+        }
     }
 
-    private static State _state;
+    private static State _state = new();
 
-    public static void Draw(Context ctx, ref bool inMenu)
+    public static void Draw(Scene activeScene, ref bool inMenu)
     {
+        var ctx = activeScene.Ctx;
         var toolSystem = ctx.GetSystem<ToolSystem>();
         toolSystem.ToolEnabled = !ImGui.IsAnyItemHovered();
         if (ImGui.BeginMainMenuBar())
@@ -40,7 +48,7 @@ public class Gui
             ImGui.PopStyleColor();
             if (ImGui.BeginMenu("Simulation info"))
             {
-                ShowSimulationInfo(ctx);
+                ShowSimulationInfo(activeScene);
                 ImGui.EndMenu();
             }
             if (ImGui.BeginMenu("Tools"))
@@ -88,14 +96,16 @@ public class Gui
         }
     }
 
-    private static void ShowSimulationInfo(Context ctx)
+    private static void ShowSimulationInfo(Scene activeScene)
     {
+        var ctx = activeScene.Ctx;
         ImGui.PushStyleColor(ImGuiCol.Text, ctx._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
         if (ImGui.Checkbox(ctx._simPaused ? "PAUSE" : "RUNNING", ref ctx._simPaused))
         {
             ctx.GetSystem<NbodySystem>().PauseEvent.Reset();
         }
         ImGui.PopStyleColor();
+        ImGui.Text($"Active scene: {activeScene.Name}");
         ImGui.Text($"Masses: {ctx.MassCount}");
         ImGui.Text($"Constraints: {ctx.ConstraintCount}");
         ImGui.Text($"Shapes: {ctx.MassShapes.Count}");
@@ -311,13 +321,17 @@ public class Gui
 
     public static void DrawMainMenu(ref bool _inMenu, ref bool _shouldExit, ref Scene activeScene)
     {
+        const string title = "Point Masses";
+        const int titleSize = 40;
+        int width = MeasureText(title, titleSize);
+        DrawText(title, (int) (GetScreenWidth() * 0.5f - width * 0.5), (int) (0.10f * GetScreenHeight()), titleSize, Color.White);
         var winFlags = 
             ImGuiWindowFlags.NoCollapse |
             ImGuiWindowFlags.NoScrollbar |
             ImGuiWindowFlags.NoResize |
             ImGuiWindowFlags.NoMove;
         ImGui.Begin("Main menu", winFlags);
-        Vector2 winSize = new(200f, 400f);
+        Vector2 winSize = new(200f, 300f);
         ImGui.SetWindowSize(winSize);
         ImGui.SetWindowPos(new(GetScreenWidth() * 0.5f - winSize.X * 0.5f, GetScreenHeight() * 0.5f - winSize.Y * 0.5f));
 
@@ -325,6 +339,15 @@ public class Gui
         {
             _inMenu = false;
             activeScene = Scene.LoadDefaultScene(new(GetScreenWidth(), GetScreenHeight()));
+        }
+        if (ImGui.Button("Load scene"))
+        {
+            ImGui.OpenPopup("Load scene");
+        }
+        if (ImGui.BeginPopup("Load scene"))
+        {
+            ShowLoadScene(ref _inMenu, ref activeScene);
+            ImGui.EndPopup();
         }
         if (ImGui.Button("Settings"))
         {
@@ -355,9 +378,9 @@ public class Gui
     private static void ShowMainSettings()
     {
         ImGui.SetNextItemWidth(50f);
-        if (ImGui.InputFloat("Window size percentage", ref _state._winSizePercentage))
+        if (ImGui.InputFloat("Window size %", ref _state._winSizePercentage))
         {
-            _state._winSizePercentage = MathF.Min(1.0f, MathF.Max(0.0f, _state._winSizePercentage));
+            _state._winSizePercentage = MathF.Min(100.0f, MathF.Max(0.0f, _state._winSizePercentage));
         }
         ImGui.Text($"Window width: {GetScreenWidth()}");
         ImGui.Text($"Window height: {GetScreenHeight()}");
@@ -365,7 +388,17 @@ public class Gui
         ImGui.Spacing();
         if (ImGui.Button("Apply"))
         {
-            Program.SetWinSizePercentage(_state._winSizePercentage);
+            Program.SetWinSizePercentage(_state._winSizePercentage / 100f);
+        }
+    }
+
+    private static void ShowLoadScene(ref bool _inMenu, ref Scene activeScene)
+    {
+        ImGui.InputText("Scene name", ref _state._sceneNameInputstr, 128);
+        if (ImGui.Button("Load"))
+        {
+            activeScene = Scene.LoadFromFile("scenes/" + _state._sceneNameInputstr + ".json");
+            _inMenu = false;
         }
     }
 }
