@@ -7,14 +7,19 @@ using PointMasses.Sim;
 using PointMasses.Tools;
 using static Raylib_cs.Raylib;
 using static PointMasses.Tools.Spawn;
-using Raylib_cs;
 
 namespace PointMasses.UI;
 
 public class Gui
 {
-    private static bool ShowSystemEnergy;
-    private static bool ShowConfirmDialog;
+    private struct State
+    {
+       public bool _showSystemEnergy;
+       public bool _showConfirmDialog;
+       public float _winSizePercentage;
+    }
+
+    private static State _state;
 
     public static void Draw(Context ctx, ref bool inMenu)
     {
@@ -55,17 +60,17 @@ public class Gui
             }
             if (ImGui.Button("Main menu"))
             {
-                ShowConfirmDialog =  true;
+                _state._showConfirmDialog =  true;
                 ImGui.OpenPopup("Return to main menu");
             }
-            if (ImGui.BeginPopupModal("Return to main menu",  ref ShowConfirmDialog, ImGuiWindowFlags.AlwaysAutoResize))
+            if (ImGui.BeginPopupModal("Return to main menu",  ref _state._showConfirmDialog, ImGuiWindowFlags.AlwaysAutoResize))
             {
                 ImGui.Text("Are you sure you want to return to main menu?");
                 ImGui.Spacing();
 
                 if (ImGui.Button("Yes"))
                 {
-                    ShowConfirmDialog = false;
+                    _state._showConfirmDialog = false;
                     inMenu = true;
                     ImGui.CloseCurrentPopup();
                 }
@@ -74,7 +79,7 @@ public class Gui
 
                 if (ImGui.Button("No"))
                 {
-                    ShowConfirmDialog = false;
+                    _state._showConfirmDialog = false;
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.EndPopup();
@@ -97,16 +102,16 @@ public class Gui
         ImGui.Text($"Substeps: {ctx._substeps}");
         ImGui.Text($"Step: { ctx._timestep * 1e3f:0.0000} ms");
         ImGui.Text($"Substep: {ctx.Substep * 1e3f:0.0000} ms");
-        if (ShowSystemEnergy)
+        if (_state._showSystemEnergy)
         {
             ImGui.Text($"System energy: {ctx.SystemEnergy / 1e3f:0.###} kJ");
             if (ImGui.Button("Hide system energy"))
             {
-                ShowSystemEnergy = false;
+                _state._showSystemEnergy = false;
             }
         } else if (ImGui.Button("Show system energy"))
         {
-            ShowSystemEnergy = true;
+            _state._showSystemEnergy = true;
         }
         ImGui.Checkbox("Gravity", ref ctx._gravityEnabled);
         ImGui.Checkbox("Draw forces", ref ctx._drawForces);
@@ -314,18 +319,53 @@ public class Gui
         ImGui.Begin("Main menu", winFlags);
         Vector2 winSize = new(200f, 400f);
         ImGui.SetWindowSize(winSize);
-        ImGui.SetWindowPos(new(Program.WinSize.X * 0.5f - winSize.X * 0.5f, Program.WinSize.Y * 0.5f - winSize.Y * 0.5f));
+        ImGui.SetWindowPos(new(GetScreenWidth() * 0.5f - winSize.X * 0.5f, GetScreenHeight() * 0.5f - winSize.Y * 0.5f));
 
         if (ImGui.Button("Load default scene"))
         {
             _inMenu = false;
-            activeScene = Scene.LoadDefaultScene(Program.WinSize);
+            activeScene = Scene.LoadDefaultScene(new(GetScreenWidth(), GetScreenHeight()));
+        }
+        if (ImGui.Button("Settings"))
+        {
+            ImGui.OpenPopup("Settings");
+        }
+        if (ImGui.BeginPopup("Settings"))
+        {
+            ShowMainSettings();
+            ImGui.EndPopup();
         }
         if (ImGui.Button("Exit"))
         {
             _shouldExit = true;
         }
-
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
+        if (ImGui.CollapsingHeader("Shortcuts"))
+        {
+            ImGui.BulletText("Esc - exit application");
+            ImGui.BulletText("G - toggle gravity");
+            ImGui.BulletText("F - show forces");
+            ImGui.BulletText("R - load save state");
+        }
         ImGui.End();
+    }
+
+    private static void ShowMainSettings()
+    {
+        ImGui.SetNextItemWidth(50f);
+        if (ImGui.InputFloat("Window size percentage", ref _state._winSizePercentage))
+        {
+            _state._winSizePercentage = MathF.Min(1.0f, MathF.Max(0.0f, _state._winSizePercentage));
+        }
+        ImGui.Text($"Window width: {GetScreenWidth()}");
+        ImGui.Text($"Window height: {GetScreenHeight()}");
+        ImGui.Separator();
+        ImGui.Spacing();
+        if (ImGui.Button("Apply"))
+        {
+            Program.SetWinSizePercentage(_state._winSizePercentage);
+        }
     }
 }

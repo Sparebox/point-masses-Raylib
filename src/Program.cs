@@ -1,13 +1,10 @@
 ﻿using System.Numerics;
-using PointMasses.Entities;
 using Raylib_cs;
 using rlImGui_cs;
 using PointMasses.UI;
-using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 using ImGuiNET;
 using PointMasses.Textures;
-using PointMasses;
 using PointMasses.Input;
 
 namespace PointMasses.Sim;
@@ -17,7 +14,6 @@ public class Program
     public static readonly int TargetFPS = GetMonitorRefreshRate(GetCurrentMonitor());
     
     public static TextureManager TextureManager { get; set; }
-    public static Vector2 WinSize { get; private set; }
 
     private static bool _inMenu = true;
     private static bool _shouldExit;
@@ -49,19 +45,10 @@ public class Program
     {
         InitWindow(0, 0, "Point-masses");
         SetTargetFPS(TargetFPS);
-
-        int winWidth = (int) (winSizePercentage * GetMonitorWidth(GetCurrentMonitor()));
-        int winHeight = (int) (winSizePercentage * GetMonitorHeight(GetCurrentMonitor()));
-        int renderWidth = (int) (renderPercentage * winWidth);
-        int renderHeight = (int) (renderPercentage * winHeight);
-        SetWindowSize(winWidth, winHeight);
-        
-        int winPosX = GetMonitorWidth(GetCurrentMonitor()) / 2 - winWidth / 2;
-        int winPosY = GetMonitorHeight(GetCurrentMonitor()) / 2 - winHeight / 2;
-        SetWindowPosition(winPosX, winPosY);
-
+        SetWinSizePercentage(winSizePercentage);
+        int renderWidth = (int) (renderPercentage * GetScreenWidth());
+        int renderHeight = (int) (renderPercentage * GetScreenHeight());
         RenderTexture = LoadRenderTexture(renderWidth, renderHeight);
-        WinSize = new(winWidth, winHeight);
     }
 
     private static void Draw()
@@ -94,5 +81,15 @@ public class Program
        
         rlImGui.End();
         EndDrawing(); // raylib
+    }
+
+    public static void SetWinSizePercentage(float winSizePercentage)
+    {
+        int winWidth = (int) (winSizePercentage * GetMonitorWidth(GetCurrentMonitor()));
+        int winHeight = (int) (winSizePercentage * GetMonitorHeight(GetCurrentMonitor()));
+        SetWindowSize(winWidth, winHeight);
+        int winPosX = GetMonitorWidth(GetCurrentMonitor()) / 2 - winWidth / 2;
+        int winPosY = GetMonitorHeight(GetCurrentMonitor()) / 2 - winHeight / 2;
+        SetWindowPosition(winPosX, winPosY);
     }
 }
