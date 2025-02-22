@@ -24,7 +24,6 @@ public class Program
     {
         Initialize(0.8f);
         TextureManager = new();
-        //ActiveScene = Scene.LoadFromFile("scenes/Default_scene.json");
         rlImGui.Setup(true);
         unsafe { ImGui.GetIO().NativePtr->IniFilename = null; } // Disable imgui.ini file
         while (!_shouldExit && !WindowShouldClose())

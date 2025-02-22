@@ -4,6 +4,7 @@ using Raylib_cs;
 using PointMasses.Sim;
 using PointMasses.Utils;
 using static Raylib_cs.Raylib;
+using Newtonsoft.Json;
 
 namespace PointMasses.Physics;
 
@@ -13,6 +14,7 @@ public class DistanceConstraint : Constraint
     public float Stiffness { get; init; }
     private readonly Context _ctx;
 
+    [JsonConstructor]
     public DistanceConstraint(in PointMass a, in PointMass b, float stiffness, Context ctx, float lengthMult = 1f, bool incrementId = true)
     {
         PointA = a;

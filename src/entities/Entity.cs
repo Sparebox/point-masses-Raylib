@@ -1,9 +1,11 @@
 ﻿using System.Numerics;
 using Raylib_cs;
 using PointMasses.Sim;
+using Newtonsoft.Json;
 
 namespace PointMasses.Entities;
 
+[JsonObject(MemberSerialization.OptIn)]
 public abstract class Entity
 {
     public virtual float Mass
@@ -16,14 +18,17 @@ public abstract class Entity
         }
     }
     public float InvMass => _invMass;
+    [JsonProperty]
     public uint Id { get; init; }
     public abstract BoundingBox Aabb { get; }
     public abstract Vector2 Centroid { get; }
     public abstract Vector2 CenterOfMass { get; }
 
     private static uint _idCounter;
-    protected Context Ctx { get; init; }
+    protected Context Ctx { get; set; }
+    [JsonProperty]
     protected float? _mass;
+    [JsonProperty]
     protected float _invMass;
 
     public Entity(Context ctx, float mass, uint? id = null, bool incrementId = true)
@@ -54,6 +59,11 @@ public abstract class Entity
     }
 
     public Entity() {}
+
+    public void SetContext(Context ctx)
+    {
+        Ctx = ctx;
+    }
 
     public static void ResetIdCounter()
     {

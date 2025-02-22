@@ -4,12 +4,16 @@ using PointMasses.Entities;
 using PointMasses.Sim;
 using PointMasses.Utils;
 using static Raylib_cs.Raylib;
+using Newtonsoft.Json;
 
 namespace PointMasses.Collision;
 
+[JsonObject(MemberSerialization.OptIn)]
 public class LineCollider : Entity
 {
+    [JsonProperty]
     public Vector2 _startPos;
+    [JsonProperty]
     public Vector2 _endPos;
     public override Vector2 CenterOfMass => Centroid;
     public override Vector2 Centroid
@@ -61,6 +65,7 @@ public class LineCollider : Entity
             return _aabb.Value;
         }
     }
+
     private BoundingBox? _aabb;
     private Vector2? _center;
 
@@ -70,6 +75,7 @@ public class LineCollider : Entity
         _endPos = new(x1, y1);
     }
 
+    [JsonConstructor]
     public LineCollider(ref Vector2 start, ref Vector2 end, Context ctx) : base(ctx)
     {
         _startPos = start;

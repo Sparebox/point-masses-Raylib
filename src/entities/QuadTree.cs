@@ -10,7 +10,9 @@ public class QuadTree
 {
     public static uint MaxDepth { get; set; }
     public static uint NodeCapacity { get; set; }
-    public static ManualResetEventSlim PauseEvent { get; } = new(true);
+    public static ManualResetEventSlim ResumeEvent { get; } = new(true);
+    public static ManualResetEventSlim ThreadResetEvent { get; } = new(true);
+    public static Thread UpdateThread { get; set; }
     
     private readonly BoundingBox _boundary;
     private readonly Vector2 _center;
@@ -35,7 +37,7 @@ public class QuadTree
         MaxDepth = maxDepth;
     }
 
-    public void Update(Context ctx)
+    private void Update(Context ctx)
     {
         ctx.QuadTreeLock.EnterWriteLock();
         ctx.Lock.EnterReadLock();
@@ -199,26 +201,43 @@ public class QuadTree
         }
     }
 
-    public static void ThreadUpdate(object _ctx)
+    public static void StartUpdateThread(Context ctx)
+    {   
+        if (UpdateThread is not null && UpdateThread.IsAlive)
+        {
+            ThreadResetEvent.Reset(); // Kill update thread
+            ThreadResetEvent.Wait();// Wait for termination finished signal from thread
+        }
+        UpdateThread = new Thread(new ParameterizedThreadStart(ThreadUpdate), 0)
+        {
+            IsBackground = true,
+            Name = "Quad tree thread"
+        };
+        UpdateThread.Start(ctx);
+        AsyncConsole.WriteLine("Quad tree thread terminated");
+    }
+
+    private static void ThreadUpdate(object _ctx)
     {
         Context ctx = (Context) _ctx;
-        for (;;)
+        while (ThreadResetEvent.IsSet)
         {
-            PauseEvent.Wait();
+            ResumeEvent.Wait();
             Thread.Sleep(Constants.QuadTreeUpdateMs);
             ctx.QuadTree.Update(ctx);
         }
+        ThreadResetEvent.Set();
     }
 
     public static void OnPauseChanged(object _, bool paused)
     {
         if (paused)
         {
-            PauseEvent.Reset();
+            ResumeEvent.Reset();
         }
         else
         {
-            PauseEvent.Set();
+            ResumeEvent.Set();
         }
     }
 }

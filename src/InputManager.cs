@@ -60,22 +60,21 @@ public class InputManager
 
     private static void UpdateCamera(Context ctx)
     {
-        Camera2D camera = ctx._camera;
         if (IsKeyDown(KeyboardKey.W))
         {
-            camera.Offset.Y += ctx._cameraMoveSpeed;
+            ctx._camera.Offset.Y += ctx._cameraMoveSpeed;
         }
         if (IsKeyDown(KeyboardKey.S))
         {
-            camera.Offset.Y -= ctx._cameraMoveSpeed;
+            ctx._camera.Offset.Y -= ctx._cameraMoveSpeed;
         }
         if (IsKeyDown(KeyboardKey.A))
         {
-            camera.Offset.X += ctx._cameraMoveSpeed;
+            ctx._camera.Offset.X += ctx._cameraMoveSpeed;
         }
         if (IsKeyDown(KeyboardKey.D))
         {
-            camera.Offset.X -= ctx._cameraMoveSpeed;
+            ctx._camera.Offset.X -= ctx._cameraMoveSpeed;
         }
     }
 }

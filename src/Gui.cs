@@ -8,6 +8,7 @@ using PointMasses.Tools;
 using static Raylib_cs.Raylib;
 using static PointMasses.Tools.Spawn;
 using Raylib_cs;
+using System.Text;
 
 namespace PointMasses.UI;
 
@@ -27,6 +28,7 @@ public class Gui
     }
 
     private static State _state = new();
+    private readonly static StringBuilder _sb = new();
 
     public static void Draw(Scene activeScene, ref bool inMenu)
     {
@@ -46,6 +48,11 @@ public class Gui
             }
             ImGui.Text($"FPS: {fps}");
             ImGui.PopStyleColor();
+            if (ImGui.BeginMenu("File"))
+            {
+                ShowFileMenu(ref inMenu, ref activeScene);
+                ImGui.EndMenu();
+            }
             if (ImGui.BeginMenu("Simulation info"))
             {
                 ShowSimulationInfo(activeScene);
@@ -66,33 +73,50 @@ public class Gui
                 ShowNbodySimOptions(ctx);
                 ImGui.EndMenu();
             }
-            if (ImGui.Button("Main menu"))
-            {
-                _state._showConfirmDialog =  true;
-                ImGui.OpenPopup("Return to main menu");
-            }
-            if (ImGui.BeginPopupModal("Return to main menu",  ref _state._showConfirmDialog, ImGuiWindowFlags.AlwaysAutoResize))
-            {
-                ImGui.Text("Are you sure you want to return to main menu?");
-                ImGui.Spacing();
-
-                if (ImGui.Button("Yes"))
-                {
-                    _state._showConfirmDialog = false;
-                    inMenu = true;
-                    ImGui.CloseCurrentPopup();
-                }
-
-                ImGui.SameLine();
-
-                if (ImGui.Button("No"))
-                {
-                    _state._showConfirmDialog = false;
-                    ImGui.CloseCurrentPopup();
-                }
-                ImGui.EndPopup();
-            }
             ImGui.EndMainMenuBar();
+        }
+    }
+
+    private static void ShowFileMenu(ref bool inMenu, ref Scene activeScene)
+    {
+        if (ImGui.Button("Save scene"))
+        {
+            activeScene.SaveToFile();
+        }
+        if (ImGui.Button("Load scene"))
+        {
+            ImGui.OpenPopup("Load scene");
+        }
+        if (ImGui.BeginPopup("Load scene"))
+        {
+            ShowLoadScene(ref inMenu, ref activeScene);
+            ImGui.EndPopup();
+        }
+        if (ImGui.Button("Main menu"))
+        {
+            _state._showConfirmDialog =  true;
+            ImGui.OpenPopup("Return to main menu");
+        }
+        if (ImGui.BeginPopupModal("Return to main menu",  ref _state._showConfirmDialog, ImGuiWindowFlags.AlwaysAutoResize))
+        {
+            ImGui.Text("Are you sure you want to return to main menu?");
+            ImGui.Spacing();
+
+            if (ImGui.Button("Yes"))
+            {
+                _state._showConfirmDialog = false;
+                inMenu = true;
+                ImGui.CloseCurrentPopup();
+            }
+
+            ImGui.SameLine();
+
+            if (ImGui.Button("No"))
+            {
+                _state._showConfirmDialog = false;
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndPopup();
         }
     }
 
@@ -131,11 +155,11 @@ public class Gui
         {
             if (ctx._collisionsEnabled && !ctx._simPaused)
             {
-                QuadTree.PauseEvent.Set();
+                QuadTree.ResumeEvent.Set();
             }
             else
             {
-                QuadTree.PauseEvent.Reset();
+                QuadTree.ResumeEvent.Reset();
             }
         }
         ImGui.PushItemWidth(50f);
@@ -365,7 +389,7 @@ public class Gui
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.Spacing();
-        if (ImGui.CollapsingHeader("Shortcuts"))
+        if (ImGui.CollapsingHeader("Keyboard shortcuts"))
         {
             ImGui.BulletText("Esc - exit application");
             ImGui.BulletText("G - toggle gravity");
@@ -397,7 +421,9 @@ public class Gui
         ImGui.InputText("Scene name", ref _state._sceneNameInputstr, 128);
         if (ImGui.Button("Load"))
         {
-            activeScene = Scene.LoadFromFile("scenes/" + _state._sceneNameInputstr + ".json");
+            _sb.Clear();
+            _sb.Append("scenes/").Append(_state._sceneNameInputstr).Append(".json");
+            activeScene = Scene.LoadFromFile(_sb.ToString());
             _inMenu = false;
         }
     }

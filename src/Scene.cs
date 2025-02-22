@@ -1,12 +1,7 @@
-#pragma warning disable CA1507 // Use nameof to express symbol names
-
 using System.Numerics;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 using PointMasses.Entities;
 using PointMasses.Sim;
-using PointMasses.Textures;
 using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 
@@ -113,13 +108,8 @@ public class Scene
             new(0f, winSizeMeters.Y, winSizeMeters.X, winSizeMeters.Y, ctx)
         };
         ctx.SaveCurrentState();
-        // Start quad tree update thread
-        var quadTreeUpdateThread = new Thread(new ParameterizedThreadStart(QuadTree.ThreadUpdate), 0)
-        {
-            IsBackground = true
-        };
-        quadTreeUpdateThread.Start(ctx);
-        return new Scene() { Ctx = ctx, Name = "Default_scene" };
+        QuadTree.StartUpdateThread(ctx);
+        return new Scene() { Ctx = ctx, Name = "default_scene" };
     }
 
     public static Scene LoadFromFile(string filepath)
@@ -127,45 +117,25 @@ public class Scene
         AsyncConsole.WriteLine("Loading scene from file");
         try
         {
-            var options = new JsonSerializerOptions(JsonSerializerDefaults.General)
-            {
-                IncludeFields = true,
-            };
             string json = File.ReadAllText(filepath);
-            var rootNode = JsonNode.Parse(json);
-            var substep = rootNode["Ctx"]["Substep"].Deserialize<float>();
-            var substeps = rootNode["Ctx"]["_substeps"].Deserialize<int>();
-            var gravity = new Vector2(rootNode["Ctx"]["Gravity"]["X"].Deserialize<float>(), rootNode["Ctx"]["Gravity"]["Y"].Deserialize<float>());
-            var winSize = new Vector2(rootNode["Ctx"]["WinSize"]["X"].Deserialize<float>(), rootNode["Ctx"]["WinSize"]["Y"].Deserialize<float>());
-            var massShapes = rootNode["Ctx"]["MassShapes"].AsArray();
-            foreach (var shape in massShapes)
+            var scene = JsonConvert.DeserializeObject<Scene>(json);
+            var winSize = scene.Ctx.WinSize;
+            scene.Ctx.QuadTree = new(
+                new Vector2(winSize.X * 0.5f, winSize.Y * 0.5f),
+                new Vector2(winSize.X, winSize.Y),
+                1,
+                6
+            );
+            foreach (var shape in scene.Ctx.MassShapes)
             {
-                var castShape = shape.Deserialize<MassShape>(options);
+                shape.SetContext(scene.Ctx);
+                foreach (var pointMass in shape._points)
+                {
+                    pointMass.SetContext(scene.Ctx);
+                }
             }
-            var winSizeMeters = UnitConv.PtoM(winSize);
-            var ctx = new Context(substep, substeps, gravity, winSize)
-            {
-                QuadTree = new(
-                    new(winSizeMeters.X * 0.5f, winSizeMeters.Y * 0.5f),
-                    new(winSizeMeters.X, winSizeMeters.Y),
-                    1,
-                    6
-                ),
-                QuadTreeLock = new ReaderWriterLockSlim(),
-                Lock = new ReaderWriterLockSlim()
-            };
-            ctx.SaveCurrentState();
-            var scene = new Scene()
-            {
-                Ctx = ctx,
-                Name = rootNode["Name"].Deserialize<string>()
-            };
-            // Start quad tree update thread
-            var quadTreeUpdateThread = new Thread(new ParameterizedThreadStart(QuadTree.ThreadUpdate), 0)
-            {
-                IsBackground = true
-            };
-            quadTreeUpdateThread.Start(ctx);
+            scene.Ctx.SaveCurrentState();
+            QuadTree.StartUpdateThread(scene.Ctx);
             return scene;
         }
         catch (Exception e)
@@ -175,17 +145,12 @@ public class Scene
         }
     }
 
-    public void SaveToFile(string filepath)
+    public void SaveToFile(string filepath = "scenes" )
     {
         try
         {
-            var options = new JsonSerializerOptions(JsonSerializerDefaults.General)
-            {
-                WriteIndented = true,
-                IncludeFields = true,
-                PropertyNameCaseInsensitive = true,
-            };
-            File.WriteAllText($"{filepath}\\{Name}.json", JsonSerializer.Serialize(this, options));
+            string json = JsonConvert.SerializeObject(this);
+            File.WriteAllTextAsync($"{filepath}\\{Name}.json", json);
             AsyncConsole.WriteLine($"Saved scene to {filepath}");
         }
         catch (Exception e)

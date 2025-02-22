@@ -1,17 +1,21 @@
 using System.Numerics;
 using Raylib_cs;
-using PointMasses.Collision;
 using PointMasses.Sim;
 using PointMasses.Utils;
 using static Raylib_cs.Raylib;
+using Newtonsoft.Json;
 
 namespace PointMasses.Entities;
 
+[JsonObject(MemberSerialization.OptIn)]
 public class PointMass : Entity
 {
+    [JsonProperty]
     public bool Pinned { get; init; }
     public Vector2 _visForce; // For force visualization
+    [JsonProperty]
     public Vector2 _pos;
+    [JsonProperty]
     public Vector2 _prevPos;
     public Vector2 _force;
     public Vector2 PrevForce { get; private set; }
@@ -21,6 +25,7 @@ public class PointMass : Entity
         set { _prevPos = _pos - value; }
     }
     public Vector2 Momentum => Mass * Vel;
+    [JsonProperty]
     public float Radius { get; init; }
     public override BoundingBox Aabb 
     {
@@ -34,6 +39,7 @@ public class PointMass : Entity
     public override Vector2 Centroid => _pos;
     public override Vector2 CenterOfMass => _pos;
     
+    [JsonConstructor]
     public PointMass(float x, float y, float mass, bool pinned, Context ctx, bool incrementId = true) : base(ctx, mass, incrementId: incrementId)
     {
         _pos = new(x, y);

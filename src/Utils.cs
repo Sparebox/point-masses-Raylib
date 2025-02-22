@@ -186,6 +186,7 @@ namespace PointMasses.Utils
                 }
             );
             thread.IsBackground = true;
+            thread.Name = "Async console thread";
             thread.Start();
         }
 

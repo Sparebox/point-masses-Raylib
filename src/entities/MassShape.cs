@@ -5,9 +5,11 @@ using PointMasses.Physics;
 using PointMasses.Sim;
 using PointMasses.Utils;
 using static Raylib_cs.Raylib;
+using Newtonsoft.Json;
 
 namespace PointMasses.Entities;
 
+[JsonObject(MemberSerialization.OptIn)]
 public partial class MassShape : Entity
 {
     public Vector2 TotalVisForce
@@ -204,14 +206,20 @@ public partial class MassShape : Entity
         }
     }
     
-    public List<Constraint> _constraints;
+    [JsonProperty]
+    public List<DistanceConstraint> _constraints;
+    [JsonProperty]
     public List<PointMass> _points;
     public bool _toBeDeleted;
+    [JsonProperty]
     public float _gasAmount;
+    [JsonProperty]
     public bool _inflated;
     public bool _showInfo;
+    [JsonProperty]
     private Vector2 _lastCenterOfMass;
     private PressureVis _pressureVis;
+    [JsonProperty]
     private float _lastAngle;
 
     public MassShape(Context ctx, bool inflated = false) : base(ctx)
@@ -220,6 +228,15 @@ public partial class MassShape : Entity
         _toBeDeleted = false;
         _points = new();
         _constraints = new();
+    }
+
+    [JsonConstructor]
+    public MassShape(Context ctx, List<PointMass> points, List<DistanceConstraint> constraints, bool inflated = false) :base(ctx)
+    {
+        _inflated = inflated;
+        _toBeDeleted = false;
+        _points = points;
+        _constraints = constraints;
     }
 
     // Copy constructor
@@ -236,7 +253,7 @@ public partial class MassShape : Entity
         }
         foreach (var c in shape._constraints)
         {
-            Constraint copyConstraint = new DistanceConstraint((DistanceConstraint) c);
+            var copyConstraint = new DistanceConstraint(c);
             copyConstraint.PointA = _points.Where(p => p.Equals(copyConstraint.PointA)).First();
             copyConstraint.PointB = _points.Where(p => p.Equals(copyConstraint.PointB)).First();
             _constraints.Add(copyConstraint);

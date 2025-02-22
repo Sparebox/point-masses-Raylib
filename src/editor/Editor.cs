@@ -117,7 +117,7 @@ public class Editor : Tool
         // Constraints
         for (int i = 0; i < (_connectLoop ? loop._points.Count : loop._points.Count - 1); i++)
         {
-            Constraint c = new DistanceConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count], _stiffness, _ctx);
+            var c = new DistanceConstraint(loop._points[i], loop._points[(i + 1) % loop._points.Count], _stiffness, _ctx);
             loop._constraints.Add(c);
         }
         _ctx.AddMassShape(loop);
@@ -138,7 +138,7 @@ public class Editor : Tool
         {
             PointMass a = shape._points.Find(p => p._pos == _grid.GridPoints[pair.Item1]._pos);
             PointMass b = shape._points.Find(p => p._pos == _grid.GridPoints[pair.Item2]._pos);
-            Constraint c = new DistanceConstraint(a, b, _stiffness, _ctx);
+            var c = new DistanceConstraint(a, b, _stiffness, _ctx);
             shape._constraints.Add(c);
         }
         _ctx.AddMassShape(shape);

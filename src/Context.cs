@@ -5,23 +5,31 @@ using PointMasses.Utils;
 using PointMasses.Systems;
 using Raylib_cs;
 using PointMasses.Input;
+using Newtonsoft.Json;
 
 namespace PointMasses.Sim;
 
+[JsonObject(MemberSerialization.OptIn)]
 public class Context
 {
     // Properties
     public ReaderWriterLockSlim Lock { get; set; }
     public ReaderWriterLockSlim QuadTreeLock { get; init; }
+    public CancellationTokenSource Cts { get; init; }
+    [JsonProperty]
     public float Substep { get; set; }
+    [JsonProperty]
     public Vector2 Gravity { get; init; }
     public QuadTree QuadTree { get; set; }
+    [JsonProperty]
     public List<LineCollider> LineColliders { get; set; }
+    [JsonProperty]
     public List<MassShape> MassShapes { get; init; }
     public List<ISystem> Systems { get; init; }
     public List<ISystem> SubStepSystems { get; init; }
+    [JsonProperty]
     public Vector2 WinSize { get; set; }
-    
+
     public int MassCount 
     {
         get 
@@ -59,7 +67,9 @@ public class Context
 
     // Fields
     private SaveState _saveState;
+    [JsonProperty]
     public int _substeps;
+    [JsonProperty]
     public float _timestep;
     public bool _gravityEnabled;
     public bool _collisionsEnabled;
@@ -68,10 +78,14 @@ public class Context
     public bool _drawQuadTree;
     public bool _drawBodyInfo;
     public bool _simPaused;
+    [JsonProperty]
     public float _globalRestitutionCoeff = Constants.GlobalRestitutionCoeffDefault;
+    [JsonProperty]
     public float _globalKineticFrictionCoeff = Constants.GlobalKineticFrictionCoeffDefault;
+    [JsonProperty]
     public float _globalStaticFrictionCoeff = Constants.GlobalStaticFrictionCoeffDefault;
     public Camera2D _camera;
+    [JsonProperty]
     public float _cameraMoveSpeed = 1f;
     public float _accumulator;
     
@@ -85,6 +99,7 @@ public class Context
         _camera = new Camera2D(Vector2.Zero, Vector2.Zero, 0f, 1f);
         Lock = new ReaderWriterLockSlim();
         QuadTreeLock = new ReaderWriterLockSlim();
+        Cts = new();
         InputManager.PauseChanged += QuadTree.OnPauseChanged;
         _gravityEnabled = false;
         _drawAABBS = false;
