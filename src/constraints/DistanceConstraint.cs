@@ -8,24 +8,34 @@ using Newtonsoft.Json;
 
 namespace PointMasses.Physics;
 
+[JsonObject(MemberSerialization.OptOut)]
 public class DistanceConstraint : Constraint 
-{
+{   
     public float Length { get; init; }
     public float Stiffness { get; init; }
-    private readonly Context _ctx;
+    [JsonIgnore]
+    public Context Ctx { get; set; }
 
-    [JsonConstructor]
     public DistanceConstraint(in PointMass a, in PointMass b, float stiffness, Context ctx, float lengthMult = 1f, bool incrementId = true)
     {
         PointA = a;
         PointB = b;
         Length = lengthMult * Vector2.Distance(PointA._pos, PointB._pos);
         Stiffness = stiffness;
-        _ctx = ctx;
+        Ctx = ctx;
         if (incrementId)
         {
             Id = _idCounter++;
         }
+    }
+
+    [JsonConstructor]
+    public DistanceConstraint(PointMass PointA, PointMass PointB, float Length, float Stiffness)
+    {
+        this.PointA = PointA;
+        this.PointB = PointB;
+        this.Length = Length;
+        this.Stiffness = Stiffness;
     }
 
     // Copy constructor
@@ -35,7 +45,7 @@ public class DistanceConstraint : Constraint
         PointB = c.PointB;
         Length = c.Length;
         Stiffness = c.Stiffness;
-        _ctx = c._ctx;
+        Ctx = c.Ctx;
         Id = _idCounter++;
     }
 
@@ -51,7 +61,7 @@ public class DistanceConstraint : Constraint
         Vector2 correctionVector = AtoB / length * error;
         Vector2 correctionA;
         Vector2 correctionB;
-        float stiffnessCoeff = 1f - MathF.Pow(1f - Stiffness, 1f / _ctx._substeps);
+        float stiffnessCoeff = 1f - MathF.Pow(1f - Stiffness, 1f / Ctx._substeps);
         if (!PointA.Pinned)
         {
             correctionA = -PointA.InvMass / (PointA.InvMass + PointB.InvMass) * correctionVector;

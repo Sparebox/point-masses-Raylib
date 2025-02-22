@@ -133,6 +133,12 @@ public class Scene
                 {
                     pointMass.SetContext(scene.Ctx);
                 }
+                foreach (var constraint in shape._constraints)
+                {
+                    constraint.PointA = shape._points.Where(p => p.Id == constraint.PointA.Id).Single();
+                    constraint.PointB = shape._points.Where(p => p.Id == constraint.PointB.Id).Single();
+                    constraint.Ctx = scene.Ctx;
+                }
             }
             scene.Ctx.SaveCurrentState();
             QuadTree.StartUpdateThread(scene.Ctx);
