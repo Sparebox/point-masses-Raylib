@@ -201,12 +201,11 @@ public class QuadTree
         }
     }
 
-    public static void StartUpdateThread(Context ctx)
+    public static bool StartUpdateThread(Context ctx)
     {   
         if (UpdateThread is not null && UpdateThread.IsAlive)
         {
-            ThreadResetEvent.Reset(); // Kill update thread
-            ThreadResetEvent.Wait();// Wait for termination finished signal from thread
+            return false;
         }
         UpdateThread = new Thread(new ParameterizedThreadStart(ThreadUpdate), 0)
         {
@@ -214,7 +213,24 @@ public class QuadTree
             Name = "Quad tree thread"
         };
         UpdateThread.Start(ctx);
-        AsyncConsole.WriteLine("Quad tree thread terminated");
+        AsyncConsole.WriteLine("Started quad three update thread");
+        return true;
+    }
+
+    public static bool ShutdownUpdateThread()
+    {
+        if (UpdateThread is null)
+        {
+            return false;
+        }
+        if (!UpdateThread.IsAlive)
+        {
+            return false;
+        }
+        ResumeEvent.Set();
+        ThreadResetEvent.Reset(); // Kill update thread
+        ThreadResetEvent.Wait();// Wait for termination finished signal from thread
+        return true;
     }
 
     private static void ThreadUpdate(object _ctx)
@@ -227,6 +243,7 @@ public class QuadTree
             ctx.QuadTree.Update(ctx);
         }
         ThreadResetEvent.Set();
+        AsyncConsole.WriteLine("Quad tree thread terminated");
     }
 
     public static void OnPauseChanged(object _, bool paused)

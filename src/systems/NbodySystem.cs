@@ -8,7 +8,7 @@ namespace PointMasses.Systems
 {
     public class NbodySystem : ISystem
     {
-        public ManualResetEventSlim PauseEvent { get; init; }
+        public ManualResetEventSlim ResumeEvent { get; init; }
         public ManualResetEventSlim ThreadResetEvent { get; init; }
         public float _gravConstant = 0.01f;
         public float _minDist = 0f;
@@ -28,17 +28,32 @@ namespace PointMasses.Systems
                 UnitConv.PtoM(new Vector2(ctx.WinSize.X * 0.5f, ctx.WinSize.Y * 0.5f)),
                 UnitConv.PtoM(new Vector2(ctx.WinSize.X, ctx.WinSize.Y))
             );
-            PauseEvent = new ManualResetEventSlim(false);
+            ResumeEvent = new ManualResetEventSlim(true);
             ThreadResetEvent = new ManualResetEventSlim(true);
             StartUpdateThread();
         }
 
-        private void StartUpdateThread()
+        public bool ShutdownUpdateThread()
+        {
+            if (_updateThread is null)
+            {
+                return false;
+            }
+            if (!_updateThread.IsAlive)
+            {
+                return false;
+            }
+            ResumeEvent.Set();
+            ThreadResetEvent.Reset(); // Kill update thread
+            ThreadResetEvent.Wait();// Wait for termination finished signal from thread
+            return true;
+        }
+
+        public bool StartUpdateThread()
         {
             if (_updateThread is not null && _updateThread.IsAlive)
             {
-                ThreadResetEvent.Reset(); // Kill update thread
-                ThreadResetEvent.Wait();// Wait for termination finished signal from thread
+                return false;
             }
             _updateThread = new Thread(new ThreadStart(ThreadUpdate), 0)
             {
@@ -46,13 +61,15 @@ namespace PointMasses.Systems
                 Name = "N-body system thread"
             };
             _updateThread.Start();
+            AsyncConsole.WriteLine("Started n-body system thread");
+            return true;
         }
 
         private void ThreadUpdate()
         {
             while (ThreadResetEvent.IsSet)
             {
-                PauseEvent.Wait(Timeout.Infinite);
+                ResumeEvent.Wait(Timeout.Infinite);
                 Thread.Sleep(_updateIntervalMs);
                 _barnesHutTree.Update(_ctx);
             }
@@ -72,11 +89,11 @@ namespace PointMasses.Systems
         {
             if (_running)
             {
-                PauseEvent.Set();
+                ResumeEvent.Set();
             }
             else
             {
-                PauseEvent.Reset();
+                ResumeEvent.Reset();
             }
         }
 

@@ -15,7 +15,6 @@ public class Context
     // Properties
     public ReaderWriterLockSlim Lock { get; set; }
     public ReaderWriterLockSlim QuadTreeLock { get; init; }
-    public CancellationTokenSource Cts { get; init; }
     [JsonProperty]
     public float Substep { get; set; }
     [JsonProperty]
@@ -66,7 +65,7 @@ public class Context
     public int SavedShapeCount => _saveState.MassShapes.Count;
 
     // Fields
-    private SaveState _saveState;
+    private Snapshot _saveState;
     [JsonProperty]
     public int _substeps;
     [JsonProperty]
@@ -99,7 +98,6 @@ public class Context
         _camera = new Camera2D(Vector2.Zero, Vector2.Zero, 0f, 1f);
         Lock = new ReaderWriterLockSlim();
         QuadTreeLock = new ReaderWriterLockSlim();
-        Cts = new();
         InputManager.PauseChanged += QuadTree.OnPauseChanged;
         _gravityEnabled = false;
         _drawAABBS = false;
@@ -151,7 +149,7 @@ public class Context
         AsyncConsole.WriteLine("Saved state");
     }
 
-    public void LoadSavedState()
+    public void LoadSnapshot()
     {
         Lock.EnterWriteLock();
         _simPaused = true;
@@ -220,12 +218,12 @@ public class Context
         return found;
     }
     
-    private struct SaveState
+    private struct Snapshot
     {
-        public HashSet<LineCollider> LineColliders { get; set; }
-        public HashSet<MassShape> MassShapes { get; set; }
+        public List<LineCollider> LineColliders { get; set; }
+        public List<MassShape> MassShapes { get; set; }
 
-        public SaveState()
+        public Snapshot()
         {
             LineColliders = new();
             MassShapes = new();

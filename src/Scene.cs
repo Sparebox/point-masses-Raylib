@@ -2,6 +2,7 @@ using System.Numerics;
 using Newtonsoft.Json;
 using PointMasses.Entities;
 using PointMasses.Sim;
+using PointMasses.Systems;
 using PointMasses.Utils;
 using static Raylib_cs.Raylib;
 
@@ -107,8 +108,6 @@ public class Scene
             new(winSizeMeters.X, 0f, winSizeMeters.X, winSizeMeters.Y, ctx),
             new(0f, winSizeMeters.Y, winSizeMeters.X, winSizeMeters.Y, ctx)
         };
-        ctx.SaveCurrentState();
-        QuadTree.StartUpdateThread(ctx);
         return new Scene() { Ctx = ctx, Name = "default_scene" };
     }
 
@@ -140,8 +139,7 @@ public class Scene
                     constraint.Ctx = scene.Ctx;
                 }
             }
-            scene.Ctx.SaveCurrentState();
-            QuadTree.StartUpdateThread(scene.Ctx);
+            
             return scene;
         }
         catch (Exception e)
@@ -165,5 +163,17 @@ public class Scene
         }
     }
 
+    public void Init()
+    {
+        Ctx.SaveCurrentState();
+        QuadTree.StartUpdateThread(Ctx);
+        Ctx.GetSystem<NbodySystem>().StartUpdateThread();
+    }
+
+    public void Destroy()
+    {
+        QuadTree.ShutdownUpdateThread();
+        Ctx.GetSystem<NbodySystem>().ShutdownUpdateThread();
+    }
 }
 

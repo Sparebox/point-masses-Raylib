@@ -35,6 +35,7 @@ public class Program
             }
             Draw();
         }
+        _activeScene?.Destroy();
         TextureManager.Dispose();
         rlImGui.Shutdown();
         UnloadRenderTexture(RenderTexture);

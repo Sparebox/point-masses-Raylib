@@ -20,10 +20,12 @@ public class Gui
         public bool _showConfirmDialog;
         public float _winSizePercentage;
         public string _sceneNameInputstr;
+        public List<string> _savedScenes;
 
         public State()
         {    
             _sceneNameInputstr = string.Empty;
+            _savedScenes = new(GetSceneFileNames());
         }
     }
 
@@ -82,6 +84,8 @@ public class Gui
         if (ImGui.Button("Save scene"))
         {
             activeScene.SaveToFile();
+            _state._savedScenes.Clear();
+            _state._savedScenes.AddRange(GetSceneFileNames());
         }
         if (ImGui.Button("Load scene"))
         {
@@ -106,6 +110,7 @@ public class Gui
             {
                 _state._showConfirmDialog = false;
                 inMenu = true;
+                activeScene.Destroy();
                 ImGui.CloseCurrentPopup();
             }
 
@@ -126,7 +131,7 @@ public class Gui
         ImGui.PushStyleColor(ImGuiCol.Text, ctx._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
         if (ImGui.Checkbox(ctx._simPaused ? "PAUSE" : "RUNNING", ref ctx._simPaused))
         {
-            ctx.GetSystem<NbodySystem>().PauseEvent.Reset();
+            ctx.GetSystem<NbodySystem>().ResumeEvent.Reset();
         }
         ImGui.PopStyleColor();
         ImGui.Text($"Active scene: {activeScene.Name}");
@@ -184,9 +189,9 @@ public class Gui
         }
         if (ctx.SavedShapeCount > 0)
         {
-            if (ImGui.Button($"Load saved state ({ctx.SavedShapeCount} shapes saved)"))
+            if (ImGui.Button($"Load snapshot ({ctx.SavedShapeCount} shapes saved)"))
             {
-                ctx.LoadSavedState();
+                ctx.LoadSnapshot();
             }
         }
         if (ImGui.Button("Timestep settings"))
@@ -361,8 +366,9 @@ public class Gui
 
         if (ImGui.Button("Load default scene"))
         {
-            _inMenu = false;
             activeScene = Scene.LoadDefaultScene(new(GetScreenWidth(), GetScreenHeight()));
+            activeScene.Init();
+            _inMenu = false;
         }
         if (ImGui.Button("Load scene"))
         {
@@ -418,13 +424,26 @@ public class Gui
 
     private static void ShowLoadScene(ref bool _inMenu, ref Scene activeScene)
     {
-        ImGui.InputText("Scene name", ref _state._sceneNameInputstr, 128);
-        if (ImGui.Button("Load"))
+        foreach( var scenePath in _state._savedScenes)
         {
-            _sb.Clear();
-            _sb.Append("scenes/").Append(_state._sceneNameInputstr).Append(".json");
-            activeScene = Scene.LoadFromFile(_sb.ToString());
-            _inMenu = false;
+            if (ImGui.Button($"Load scene: {scenePath}"))
+            {
+                _sb.Clear();
+                _sb.Append("scenes/").Append(scenePath);
+                activeScene = Scene.LoadFromFile(_sb.ToString());
+                activeScene.Init();
+                _inMenu = false;
+            }
         }
+    }
+
+    private static string[] GetSceneFileNames()
+    {
+        var scenePaths = Directory.GetFiles("scenes", "*.json", SearchOption.TopDirectoryOnly);
+        for (int i = 0; i < scenePaths.Length; i++)
+        {
+            scenePaths[i] = scenePaths[i].Split('\\').Last();
+        }
+        return scenePaths;
     }
 }

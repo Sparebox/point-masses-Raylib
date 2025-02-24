@@ -26,7 +26,7 @@ public class InputManager
         }
         if (IsKeyPressed(KeyboardKey.R))
         {
-            ctx.LoadSavedState();
+            ctx.LoadSnapshot();
         }
         if (IsKeyPressed(KeyboardKey.Space))
         {
