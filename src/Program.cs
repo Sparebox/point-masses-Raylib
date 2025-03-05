@@ -26,6 +26,8 @@ public class Program
         TextureManager = new();
         rlImGui.Setup(true);
         unsafe { ImGui.GetIO().NativePtr->IniFilename = null; } // Disable imgui.ini file
+        ImGui.GetStyle().Colors[(int)ImGuiCol.PopupBg] = new (0.1f, 0.1f, 0.1f, 1f); // Set popup bg color to opaque black
+
         while (!_shouldExit && !WindowShouldClose())
         {
             if (!_inMenu)

@@ -9,6 +9,8 @@ using static Raylib_cs.Raylib;
 using static PointMasses.Tools.Spawn;
 using Raylib_cs;
 using System.Text;
+using PointMasses.Input;
+using PointMasses.Utils;
 
 namespace PointMasses.UI;
 
@@ -18,6 +20,13 @@ public class Gui
     {
         public bool _showSystemEnergy;
         public bool _showConfirmDialog;
+        public bool _showSavePopup;
+        public bool _showScenesPopup;
+        public bool _showMenuSettingsPopup;
+        public bool _useWinPercentage;
+        public bool _preserveAspectRatio;
+        public int _winWidth;
+        public int _winHeight;
         public float _winSizePercentage;
         public string _sceneNameInputstr;
         public List<string> _savedScenes;
@@ -83,9 +92,30 @@ public class Gui
     {
         if (ImGui.Button("Save scene"))
         {
-            activeScene.SaveToFile();
-            _state._savedScenes.Clear();
-            _state._savedScenes.AddRange(GetSceneFileNames());
+            _state._showSavePopup = true;
+            _state._sceneNameInputstr = activeScene.Name;
+            InputManager.KeysEnabled = false;
+            ImGui.OpenPopup("Save scene");
+        }
+        if (ImGui.BeginPopupModal("Save scene", ref _state._showSavePopup, ImGuiWindowFlags.AlwaysAutoResize))
+        {
+            ImGui.InputText("Scene name", ref _state._sceneNameInputstr, 100);
+            ImGui.Spacing();
+            if (ImGui.Button("Save"))
+            {
+                activeScene.Name = _state._sceneNameInputstr;
+                activeScene.SaveToFile();
+                _state._savedScenes.Clear();
+                _state._savedScenes.AddRange(GetSceneFileNames());
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("Cancel"))
+            {
+                InputManager.KeysEnabled = true;
+                ImGui.CloseCurrentPopup();
+            }   
+            ImGui.EndPopup();
         }
         if (ImGui.Button("Load scene"))
         {
@@ -93,32 +123,30 @@ public class Gui
         }
         if (ImGui.BeginPopup("Load scene"))
         {
-            ShowLoadScene(ref inMenu, ref activeScene);
+            ShowScenesMenu(ref inMenu, ref activeScene);
             ImGui.EndPopup();
         }
         if (ImGui.Button("Main menu"))
         {
-            _state._showConfirmDialog =  true;
+            _state._showConfirmDialog = true;
+            activeScene.Ctx._simPaused = true;
             ImGui.OpenPopup("Return to main menu");
         }
-        if (ImGui.BeginPopupModal("Return to main menu",  ref _state._showConfirmDialog, ImGuiWindowFlags.AlwaysAutoResize))
+        if (ImGui.BeginPopupModal("Return to main menu", ref _state._showConfirmDialog, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize))
         {
             ImGui.Text("Are you sure you want to return to main menu?");
             ImGui.Spacing();
 
             if (ImGui.Button("Yes"))
             {
-                _state._showConfirmDialog = false;
                 inMenu = true;
                 activeScene.Destroy();
                 ImGui.CloseCurrentPopup();
             }
-
             ImGui.SameLine();
-
             if (ImGui.Button("No"))
             {
-                _state._showConfirmDialog = false;
+                activeScene.Ctx._simPaused = false;
                 ImGui.CloseCurrentPopup();
             }
             ImGui.EndPopup();
@@ -183,7 +211,7 @@ public class Gui
             }
             ctx.Lock.ExitWriteLock();
         }
-        if (ImGui.Button("Save current state"))
+        if (ImGui.Button("Save snapshot"))
         {
             ctx.SaveCurrentState();
         }
@@ -364,27 +392,31 @@ public class Gui
         ImGui.SetWindowSize(winSize);
         ImGui.SetWindowPos(new(GetScreenWidth() * 0.5f - winSize.X * 0.5f, GetScreenHeight() * 0.5f - winSize.Y * 0.5f));
 
-        if (ImGui.Button("Load default scene"))
+        if (ImGui.Button("New scene"))
         {
-            activeScene = Scene.LoadDefaultScene(new(GetScreenWidth(), GetScreenHeight()));
+            activeScene = Scene.LoadEmptyScene(new(GetScreenWidth(), GetScreenHeight()));
             activeScene.Init();
             _inMenu = false;
         }
-        if (ImGui.Button("Load scene"))
+        if (ImGui.Button("Scenes"))
         {
-            ImGui.OpenPopup("Load scene");
+            _state._showScenesPopup = true;
+            ImGui.OpenPopup("Scenes");
         }
-        if (ImGui.BeginPopup("Load scene"))
+        if (ImGui.BeginPopupModal("Scenes", ref _state._showScenesPopup, ImGuiWindowFlags.AlwaysAutoResize))
         {
-            ShowLoadScene(ref _inMenu, ref activeScene);
+            ShowScenesMenu(ref _inMenu, ref activeScene);
             ImGui.EndPopup();
         }
         if (ImGui.Button("Settings"))
         {
+            _state._showMenuSettingsPopup = true;
             ImGui.OpenPopup("Settings");
         }
-        if (ImGui.BeginPopup("Settings"))
+        if (ImGui.BeginPopupModal("Settings", ref _state._showMenuSettingsPopup, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoMove))
         {
+            var popUpSize = ImGui.GetWindowSize();
+            ImGui.SetWindowPos(new(GetScreenWidth() * 0.5f - popUpSize.X * 0.5f, GetScreenHeight() * 0.5f));
             ShowMainSettings();
             ImGui.EndPopup();
         }
@@ -393,47 +425,142 @@ public class Gui
             _shouldExit = true;
         }
         ImGui.Spacing();
-        ImGui.Separator();
+        ImGui.SeparatorText("SHORTCUTS");
         ImGui.Spacing();
-        if (ImGui.CollapsingHeader("Keyboard shortcuts"))
-        {
-            ImGui.BulletText("Esc - exit application");
-            ImGui.BulletText("G - toggle gravity");
-            ImGui.BulletText("F - show forces");
-            ImGui.BulletText("R - load save state");
-        }
+        ImGui.BulletText("Esc - exit application");
+        ImGui.BulletText("G - toggle gravity");
+        ImGui.BulletText("F - show forces");
+        ImGui.BulletText("R - load save state");
+        
         ImGui.End();
     }
 
     private static void ShowMainSettings()
     {
+        var currentAspectRatio = GetScreenWidth() / (float) GetScreenHeight();
+        ImGui.SeparatorText("Window settings");
         ImGui.SetNextItemWidth(50f);
-        if (ImGui.InputFloat("Window size %", ref _state._winSizePercentage))
+
+        ImGui.Checkbox("Use screen size percentage", ref _state._useWinPercentage);
+        
+        if (!_state._useWinPercentage)
         {
-            _state._winSizePercentage = MathF.Min(100.0f, MathF.Max(0.0f, _state._winSizePercentage));
+            ImGui.BeginDisabled();
         }
-        ImGui.Text($"Window width: {GetScreenWidth()}");
-        ImGui.Text($"Window height: {GetScreenHeight()}");
+        if (ImGui.InputFloat("Window size % of screen size", ref _state._winSizePercentage, 10, 30, "%.1f"))    
+        {
+            _state._winSizePercentage = MathF.Min(100.0f, MathF.Max(Constants.MinWindowSizePercentage, _state._winSizePercentage));
+        }
+        if (!_state._useWinPercentage)
+        {
+            ImGui.EndDisabled();
+        }
+        if (_state._useWinPercentage)
+        {
+            ImGui.BeginDisabled();
+        }
+        ImGui.Spacing();
+        ImGui.SetNextItemWidth(100f);
+        if (ImGui.InputInt("Window width [px]", ref _state._winWidth, 100, 500))
+        {
+            _state._winWidth = Math.Max(Constants.MinWindowWidth, _state._winWidth);
+            if (_state._preserveAspectRatio)
+            {
+                _state._winHeight = Math.Max(Constants.MinWindowHeight, (int) (_state._winWidth / currentAspectRatio));
+            }
+        }
+        ImGui.SetNextItemWidth(100f);
+        if (ImGui.InputInt("Window height [px]", ref _state._winHeight, 100, 500))
+        {
+            _state._winHeight = Math.Max(Constants.MinWindowHeight, _state._winHeight);
+            if (_state._preserveAspectRatio)
+            {
+                _state._winWidth = Math.Max(Constants.MinWindowWidth, (int) (_state._winWidth * currentAspectRatio));
+            }
+        }
+        if (ImGui.Checkbox("Preserve aspect ratio", ref _state._preserveAspectRatio))
+        {
+            if (_state._preserveAspectRatio)
+            {
+                _state._winHeight = Math.Max(Constants.MinWindowHeight, (int) (_state._winWidth / currentAspectRatio));
+            }
+        }
+        
+        if (_state._useWinPercentage)
+        {
+            ImGui.EndDisabled();
+        }
+
         ImGui.Separator();
         ImGui.Spacing();
         if (ImGui.Button("Apply"))
+        {   
+            if (_state._useWinPercentage && _state._winSizePercentage >= Constants.MinWindowSizePercentage)
+            {
+                Program.SetWinSizePercentage(_state._winSizePercentage / 100f);
+            }
+            if (!_state._useWinPercentage)
+            {
+                SetWindowSize(_state._winWidth, _state._winHeight);
+            }
+        }
+        ImGui.SameLine();
+        if (ImGui.Button("Close"))
         {
-            Program.SetWinSizePercentage(_state._winSizePercentage / 100f);
+            ImGui.CloseCurrentPopup();
         }
     }
 
-    private static void ShowLoadScene(ref bool _inMenu, ref Scene activeScene)
+    private static void ShowScenesMenu(ref bool _inMenu, ref Scene activeScene)
     {
-        foreach( var scenePath in _state._savedScenes)
+        for (int i = 0; i < _state._savedScenes.Count; i++)
         {
-            if (ImGui.Button($"Load scene: {scenePath}"))
+            var fullSceneName = _state._savedScenes[i].AsSpan();
+            var sceneName = fullSceneName[..fullSceneName.IndexOf('.')];
+            ImGui.SeparatorText($"Scene: {sceneName}");
+            if (ImGui.Button("Load"))
             {
                 _sb.Clear();
-                _sb.Append("scenes/").Append(scenePath);
+                _sb.Append("scenes/").Append(fullSceneName);
+                activeScene?.Destroy();
                 activeScene = Scene.LoadFromFile(_sb.ToString());
                 activeScene.Init();
                 _inMenu = false;
             }
+            ImGui.SameLine();
+            if (ImGui.Button("Delete"))
+            {
+                //_state._showConfirmDialog = true;
+                ImGui.OpenPopup($"Delete scene: {sceneName}");
+            }
+            if (ImGui.BeginPopupModal($"Delete scene: {sceneName}"))
+            {
+                ImGui.Text("Are you sure you want to delete this scene?");
+                if (ImGui.Button("Yes"))
+                {
+                    File.Delete($"scenes/{fullSceneName}");
+                    AsyncConsole.WriteLine($"Deleted scene: {fullSceneName}");
+                    _state._savedScenes.Remove(fullSceneName.ToString());
+                    ImGui.CloseCurrentPopup();
+                }
+                ImGui.SameLine();
+                if (ImGui.Button("No"))
+                {
+                    ImGui.CloseCurrentPopup();
+                }
+                ImGui.EndPopup();
+            }
+        }
+        if (_state._savedScenes.Count == 0)
+        {
+            ImGui.Text("No saved scenes");
+        }
+        ImGui.Separator();
+        ImGui.Spacing();
+        ImGui.Spacing();
+        if (ImGui.Button("Cancel"))
+        {
+            ImGui.CloseCurrentPopup();
         }
     }
 

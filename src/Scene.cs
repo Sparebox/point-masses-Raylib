@@ -90,7 +90,7 @@ public class Scene
         EndMode2D();
     }
 
-    public static Scene LoadDefaultScene(Vector2 winSize)
+    public static Scene LoadEmptyScene(Vector2 winSize)
     {
         var winSizeMeters = UnitConv.PtoM(winSize);
         Context ctx = new(timeStep: 1f / 60f, 3, gravity: new(0f, 9.81f), winSize)
@@ -108,7 +108,7 @@ public class Scene
             new(winSizeMeters.X, 0f, winSizeMeters.X, winSizeMeters.Y, ctx),
             new(0f, winSizeMeters.Y, winSizeMeters.X, winSizeMeters.Y, ctx)
         };
-        return new Scene() { Ctx = ctx, Name = "default_scene" };
+        return new Scene() { Ctx = ctx, Name = "Default scene" };
     }
 
     public static Scene LoadFromFile(string filepath)
@@ -154,12 +154,25 @@ public class Scene
         try
         {
             string json = JsonConvert.SerializeObject(this);
-            File.WriteAllTextAsync($"{filepath}\\{Name}.json", json);
-            AsyncConsole.WriteLine($"Saved scene to {filepath}");
+            File.WriteAllText($"{filepath}\\{Name}.json", json);
+            AsyncConsole.WriteLine($"Saved scene as {Name}.json");
         }
         catch (Exception e)
         {
             AsyncConsole.WriteLine($"Could not save scene: {e.Message}");
+        }
+    }
+
+    public void DeleteFile()
+    {
+        try
+        {
+            File.Delete($"scenes\\{Name}.json");
+            AsyncConsole.WriteLine($"Deleted scene {Name}");
+        }
+        catch (Exception e)
+        {
+            AsyncConsole.WriteLine($"Could not delete scene: {e.Message}");
         }
     }
 
