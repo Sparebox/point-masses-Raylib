@@ -8,11 +8,11 @@ namespace PointMasses.Input;
 public class InputManager
 {
     public static event EventHandler<bool> PauseChanged;
-    public static bool KeysEnabled { get; set; } = true;
+    public static bool InputEnabled { get; set; } = true;
 
     public static void HandleInput(Context ctx)
     {
-        if (!KeysEnabled)
+        if (!InputEnabled)
         {
             return;
         }

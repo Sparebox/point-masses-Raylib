@@ -94,7 +94,7 @@ public class Gui
         {
             _state._showSavePopup = true;
             _state._sceneNameInputstr = activeScene.Name;
-            InputManager.KeysEnabled = false;
+            InputManager.InputEnabled = false;
             ImGui.OpenPopup("Save scene");
         }
         if (ImGui.BeginPopupModal("Save scene", ref _state._showSavePopup, ImGuiWindowFlags.AlwaysAutoResize))
@@ -112,7 +112,7 @@ public class Gui
             ImGui.SameLine();
             if (ImGui.Button("Cancel"))
             {
-                InputManager.KeysEnabled = true;
+                InputManager.InputEnabled = true;
                 ImGui.CloseCurrentPopup();
             }   
             ImGui.EndPopup();
@@ -430,7 +430,7 @@ public class Gui
         ImGui.BulletText("Esc - exit application");
         ImGui.BulletText("G - toggle gravity");
         ImGui.BulletText("F - show forces");
-        ImGui.BulletText("R - load save state");
+        ImGui.BulletText("R - load snapshot");
         
         ImGui.End();
     }
@@ -513,12 +513,13 @@ public class Gui
 
     private static void ShowScenesMenu(ref bool _inMenu, ref Scene activeScene)
     {
+        ImGui.BeginChild("SceneList", new (Constants.MinWindowWidth * 0.6f, Constants.MinWindowHeight * 0.6f));
         for (int i = 0; i < _state._savedScenes.Count; i++)
         {
             var fullSceneName = _state._savedScenes[i].AsSpan();
             var sceneName = fullSceneName[..fullSceneName.IndexOf('.')];
             ImGui.SeparatorText($"Scene: {sceneName}");
-            if (ImGui.Button("Load"))
+            if (ImGui.Button($"Load ##{i}"))
             {
                 _sb.Clear();
                 _sb.Append("scenes/").Append(fullSceneName);
@@ -528,15 +529,14 @@ public class Gui
                 _inMenu = false;
             }
             ImGui.SameLine();
-            if (ImGui.Button("Delete"))
+            if (ImGui.Button($"Delete ##{i}"))
             {
-                //_state._showConfirmDialog = true;
                 ImGui.OpenPopup($"Delete scene: {sceneName}");
             }
             if (ImGui.BeginPopupModal($"Delete scene: {sceneName}"))
             {
                 ImGui.Text("Are you sure you want to delete this scene?");
-                if (ImGui.Button("Yes"))
+                if (ImGui.Button($"Yes ##{i}"))
                 {
                     File.Delete($"scenes/{fullSceneName}");
                     AsyncConsole.WriteLine($"Deleted scene: {fullSceneName}");
@@ -544,7 +544,7 @@ public class Gui
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();
-                if (ImGui.Button("No"))
+                if (ImGui.Button($"No ##{i}"))
                 {
                     ImGui.CloseCurrentPopup();
                 }
@@ -555,10 +555,11 @@ public class Gui
         {
             ImGui.Text("No saved scenes");
         }
+        ImGui.EndChild();
         ImGui.Separator();
         ImGui.Spacing();
         ImGui.Spacing();
-        if (ImGui.Button("Cancel"))
+        if (ImGui.Button("Close"))
         {
             ImGui.CloseCurrentPopup();
         }

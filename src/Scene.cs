@@ -1,6 +1,7 @@
 using System.Numerics;
 using Newtonsoft.Json;
 using PointMasses.Entities;
+using PointMasses.Input;
 using PointMasses.Sim;
 using PointMasses.Systems;
 using PointMasses.Utils;
@@ -181,12 +182,14 @@ public class Scene
         Ctx.SaveCurrentState();
         QuadTree.StartUpdateThread(Ctx);
         Ctx.GetSystem<NbodySystem>().StartUpdateThread();
+        InputManager.InputEnabled = true;
     }
 
     public void Destroy()
     {
         QuadTree.ShutdownUpdateThread();
         Ctx.GetSystem<NbodySystem>().ShutdownUpdateThread();
+        InputManager.InputEnabled = false;
     }
 }
 
