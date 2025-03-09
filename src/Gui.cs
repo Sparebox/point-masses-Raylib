@@ -41,7 +41,7 @@ public class Gui
     private static State _state = new();
     private readonly static StringBuilder _sb = new();
 
-    public static void Draw(Scene activeScene, ref bool inMenu)
+    public static void Draw(ref Scene activeScene, ref bool inMenu)
     {
         var ctx = activeScene.Ctx;
         var toolSystem = ctx.GetSystem<ToolSystem>();
@@ -538,9 +538,16 @@ public class Gui
                 ImGui.Text("Are you sure you want to delete this scene?");
                 if (ImGui.Button($"Yes ##{i}"))
                 {
-                    File.Delete($"scenes/{fullSceneName}");
-                    AsyncConsole.WriteLine($"Deleted scene: {fullSceneName}");
-                    _state._savedScenes.Remove(fullSceneName.ToString());
+                    try 
+                    {
+                        File.Delete($"scenes/{fullSceneName}");
+                        AsyncConsole.WriteLine($"Deleted scene: {fullSceneName}");
+                        _state._savedScenes.Remove(fullSceneName.ToString());
+                    }
+                    catch (Exception e)
+                    {
+                        AsyncConsole.WriteLine($"Could not delete scene: {e.Message}");
+                    }
                     ImGui.CloseCurrentPopup();
                 }
                 ImGui.SameLine();

@@ -77,7 +77,7 @@ public class Program
             0f,
             Color.White
         );
-        Gui.Draw(_activeScene, ref _inMenu); // GUI
+        Gui.Draw(ref _activeScene, ref _inMenu); // GUI
        
         rlImGui.End();
         EndDrawing(); // raylib
