@@ -1,3 +1,4 @@
+using PointMasses.Sim;
 using PointMasses.Utils;
 using Raylib_cs;
 using static Raylib_cs.Raylib;
@@ -21,12 +22,19 @@ public class TextureManager : IDisposable
         #endif
         _textures = new Dictionary<string, Texture2D>();
 
+        Directory.CreateDirectory(_resourcesPath);   
+
         // Load textures
         LoadTexture("center_of_mass.png");
     }
 
     public void LoadTexture(string fileName)
     {
+        if (!File.Exists(_resourcesPath + fileName))
+        {
+            AsyncLogger.Fatal($"Failed to load texture from {_resourcesPath + fileName}");
+            Program.Shutdown();
+        }
         Image loadedImage = LoadImage(_resourcesPath + fileName);
         _textures.Add(fileName, LoadTextureFromImage(loadedImage));
         UnloadImage(loadedImage);

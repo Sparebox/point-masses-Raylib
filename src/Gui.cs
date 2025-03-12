@@ -377,7 +377,7 @@ public class Gui
         }
     }
 
-    public static void DrawMainMenu(ref bool _inMenu, ref bool _shouldExit, ref Scene activeScene)
+    public static void DrawMainMenu(ref bool _inMenu, ref Scene activeScene)
     {
         const string title = "Point Masses";
         const int titleSize = 40;
@@ -423,7 +423,7 @@ public class Gui
         }
         if (ImGui.Button("Exit"))
         {
-            _shouldExit = true;
+            Program.Shutdown();
         }
         ImGui.Spacing();
         ImGui.SeparatorText("SHORTCUTS");

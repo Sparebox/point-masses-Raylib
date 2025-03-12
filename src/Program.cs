@@ -6,6 +6,7 @@ using static Raylib_cs.Raylib;
 using ImGuiNET;
 using PointMasses.Textures;
 using PointMasses.Input;
+using PointMasses.Utils;
 
 namespace PointMasses.Sim;
 
@@ -23,11 +24,6 @@ public class Program
     public static void Main() 
     {
         Initialize(0.8f);
-        TextureManager = new();
-        rlImGui.Setup(true);
-        unsafe { ImGui.GetIO().NativePtr->IniFilename = null; } // Disable imgui.ini file
-        ImGui.GetStyle().Colors[(int)ImGuiCol.PopupBg] = new (0.1f, 0.1f, 0.1f, 1f); // Set popup bg color to opaque black
-
         while (!_shouldExit && !WindowShouldClose())
         {
             if (!_inMenu)
@@ -37,10 +33,7 @@ public class Program
             }
             Draw();
         }
-        _activeScene?.Destroy();
-        TextureManager.Dispose();
-        rlImGui.Shutdown();
-        UnloadRenderTexture(RenderTexture);
+        CleanUp();
         CloseWindow();
     }
 
@@ -54,6 +47,23 @@ public class Program
         #else
             SetTraceLogLevel(TraceLogLevel.Info);
         #endif
+        if (!Directory.Exists("scenes"))
+        {
+            AsyncLogger.Warn("No scenes directory found, creating one");
+            Directory.CreateDirectory("scenes");
+        }
+        TextureManager = new();
+        rlImGui.Setup(true);
+        unsafe { ImGui.GetIO().NativePtr->IniFilename = null; } // Disable imgui.ini file
+        ImGui.GetStyle().Colors[(int)ImGuiCol.PopupBg] = new (0.1f, 0.1f, 0.1f, 1f); // Set popup bg color to opaque black
+    }
+
+    private static void CleanUp()
+    {
+        _activeScene?.Destroy();
+        TextureManager.Dispose();
+        rlImGui.Shutdown();
+        UnloadRenderTexture(RenderTexture);
     }
 
     private static void Draw()
@@ -64,7 +74,7 @@ public class Program
 
         if (_inMenu) // Selecting a scene
         {
-            Gui.DrawMainMenu(ref _inMenu, ref _shouldExit, ref _activeScene);
+            Gui.DrawMainMenu(ref _inMenu, ref _activeScene);
             rlImGui.End();
             EndDrawing();
             return;
@@ -109,4 +119,6 @@ public class Program
         int winPosY = GetMonitorHeight(GetCurrentMonitor()) / 2 - winHeight / 2;
         SetWindowPosition(winPosX, winPosY);
     }
+
+    public static void Shutdown() => _shouldExit = true;
 }
