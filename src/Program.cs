@@ -87,7 +87,7 @@ public class Program
         DrawTexturePro(
             RenderTexture.Texture,
             new (0f, 0f, RenderTexture.Texture.Width, -RenderTexture.Texture.Height),
-            new (0f, 0f, _activeScene.Ctx.WinSize.X, _activeScene.Ctx.WinSize.Y),
+            new (0f, 0f, GetScreenWidth(), GetScreenHeight()),
             Vector2.Zero,
             0f,
             Color.White
