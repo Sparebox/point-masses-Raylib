@@ -48,7 +48,7 @@ public class Program
     {
         InitWindow(0, 0, "Point-masses");
         SetTargetFPS(TargetFPS);
-        SetWinSizePercentage(winSizePercentage);
+        SetWinSize(winSizePercentage, null, null);
     }
 
     private static void Draw()
@@ -83,11 +83,21 @@ public class Program
         EndDrawing(); // raylib
     }
 
-    public static void SetWinSizePercentage(float winSizePercentage)
+    public static void SetWinSize(float? winSizePercentage, int? width, int? height)
     {
         UnloadRenderTexture(RenderTexture);
-        int winWidth = (int) (winSizePercentage * GetMonitorWidth(GetCurrentMonitor()));
-        int winHeight = (int) (winSizePercentage * GetMonitorHeight(GetCurrentMonitor()));
+        int winWidth;
+        int winHeight;
+        if (winSizePercentage.HasValue)
+        {
+            winWidth = (int) (winSizePercentage.Value * GetMonitorWidth(GetCurrentMonitor()));
+            winHeight = (int) (winSizePercentage.Value * GetMonitorHeight(GetCurrentMonitor()));
+        }
+        else
+        {
+            winWidth = width.Value;
+            winHeight = height.Value;
+        }
         RenderTexture = LoadRenderTexture(winWidth, winHeight);
         SetWindowSize(winWidth, winHeight);
         int winPosX = GetMonitorWidth(GetCurrentMonitor()) / 2 - winWidth / 2;

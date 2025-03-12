@@ -130,6 +130,7 @@ public class Gui
         {
             _state._showConfirmDialog = true;
             activeScene.Ctx._simPaused = true;
+            ImGui.SetNextWindowPos(new(GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f));
             ImGui.OpenPopup("Return to main menu");
         }
         if (ImGui.BeginPopupModal("Return to main menu", ref _state._showConfirmDialog, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize))
@@ -437,7 +438,7 @@ public class Gui
 
     private static void ShowMainSettings()
     {
-        var currentAspectRatio = GetScreenWidth() / (float) GetScreenHeight();
+        var currentAspectRatio = GetMonitorWidth(GetCurrentMonitor()) / (float) GetMonitorHeight(GetCurrentMonitor());
         ImGui.SeparatorText("Window settings");
         ImGui.SetNextItemWidth(50f);
 
@@ -455,7 +456,7 @@ public class Gui
         {
             ImGui.EndDisabled();
         }
-        if (_state._useWinPercentage)
+        else
         {
             ImGui.BeginDisabled();
         }
@@ -475,7 +476,7 @@ public class Gui
             _state._winHeight = Math.Max(Constants.MinWindowHeight, _state._winHeight);
             if (_state._preserveAspectRatio)
             {
-                _state._winWidth = Math.Max(Constants.MinWindowWidth, (int) (_state._winWidth * currentAspectRatio));
+                _state._winWidth = Math.Max(Constants.MinWindowWidth, (int) (_state._winHeight * currentAspectRatio));
             }
         }
         if (ImGui.Checkbox("Preserve aspect ratio", ref _state._preserveAspectRatio))
@@ -497,11 +498,11 @@ public class Gui
         {   
             if (_state._useWinPercentage && _state._winSizePercentage >= Constants.MinWindowSizePercentage)
             {
-                Program.SetWinSizePercentage(_state._winSizePercentage / 100f);
+                Program.SetWinSize(_state._winSizePercentage / 100f, null, null);
             }
             if (!_state._useWinPercentage)
             {
-                SetWindowSize(_state._winWidth, _state._winHeight);
+                Program.SetWinSize(null, _state._winWidth, _state._winHeight);
             }
         }
         ImGui.SameLine();
