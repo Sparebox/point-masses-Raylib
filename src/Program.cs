@@ -49,6 +49,11 @@ public class Program
         InitWindow(0, 0, "Point-masses");
         SetTargetFPS(TargetFPS);
         SetWinSize(winSizePercentage, null, null);
+        #if DEBUG
+            SetTraceLogLevel(TraceLogLevel.Debug);
+        #else
+            SetTraceLogLevel(TraceLogLevel.Info);
+        #endif
     }
 
     private static void Draw()

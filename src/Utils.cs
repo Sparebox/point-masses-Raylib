@@ -153,7 +153,7 @@ namespace PointMasses.Utils
                 (milliseconds, entry) => milliseconds + entry.Milliseconds,
                 (milliseconds) => milliseconds / HistoryLength
             );
-            AsyncConsole.WriteLine($"{avgMilliSeconds} avg ms");
+            AsyncLogger.Debug($"{avgMilliSeconds} avg ms");
         }
 
         public static void StartMeasure([CallerLineNumber] int lineNum = 0)
@@ -165,7 +165,7 @@ namespace PointMasses.Utils
         public static void EndMeasure([CallerLineNumber] int lineNum = 0, [CallerMemberName] string caller = "")
         {
             _stopwatch.Stop();
-            AsyncConsole.WriteLine($"{GetTime(): 0} - Measure from line {caller}:{_lineStart} to line {caller}:{lineNum} took {_stopwatch.ElapsedMilliseconds} ms");
+            AsyncLogger.Debug($"{GetTime(): 0} - Measure from line {caller}:{_lineStart} to line {caller}:{lineNum} took {_stopwatch.ElapsedMilliseconds} ms");
         }
 
         private static TimeSpan Update()
@@ -177,27 +177,51 @@ namespace PointMasses.Utils
         }
     }
 
-    public static class AsyncConsole
+    public static class AsyncLogger
     {
-        private static readonly BlockingCollection<string> _printQueue;
+        private static readonly BlockingCollection<(TraceLogLevel, string)> _logQueue;
 
-        static AsyncConsole()
+        static AsyncLogger()
         {
-            _printQueue = new();
+            _logQueue = new();
             var thread = new Thread(
                 () => 
                 {
-                    for (;;) Console.WriteLine(_printQueue.Take());
+                    for (;;)
+                    {
+                        var (level, line) = _logQueue.Take();
+                        TraceLog(level, line);
+                    }
                 }
             );
             thread.IsBackground = true;
-            thread.Name = "Async console thread";
+            thread.Name = "Async logging thread";
             thread.Start();
         }
 
-        public static void WriteLine(string line)
+        public static void Info(string line)
         {
-            _printQueue.Add(line);
+            _logQueue.Add((TraceLogLevel.Info, line));
+        }
+
+        public static void Debug(string line)
+        {
+            _logQueue.Add((TraceLogLevel.Debug, line));
+        }
+
+        public static void Warn(string line)
+        {
+            _logQueue.Add((TraceLogLevel.Warning, line));
+        }
+
+        public static void Error(string line)
+        {
+            _logQueue.Add((TraceLogLevel.Error, line));
+        }
+
+        public static void Fatal(string line)
+        {
+            _logQueue.Add((TraceLogLevel.Fatal, line));
         }
     }
 }

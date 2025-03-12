@@ -542,12 +542,12 @@ public class Gui
                     try 
                     {
                         File.Delete($"scenes/{fullSceneName}");
-                        AsyncConsole.WriteLine($"Deleted scene: {fullSceneName}");
+                        AsyncLogger.Info($"Deleted scene: {fullSceneName}");
                         _state._savedScenes.Remove(fullSceneName.ToString());
                     }
                     catch (Exception e)
                     {
-                        AsyncConsole.WriteLine($"Could not delete scene: {e.Message}");
+                        AsyncLogger.Error($"Could not delete scene: {e.Message}");
                     }
                     ImGui.CloseCurrentPopup();
                 }

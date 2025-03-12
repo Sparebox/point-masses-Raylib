@@ -61,7 +61,7 @@ namespace PointMasses.Systems
                 Name = "N-body system thread"
             };
             _updateThread.Start();
-            AsyncConsole.WriteLine("Started n-body system thread");
+            AsyncLogger.Info("Started n-body system thread");
             return true;
         }
 
@@ -74,7 +74,7 @@ namespace PointMasses.Systems
                 _barnesHutTree.Update(_ctx);
             }
             ThreadResetEvent.Set();
-            AsyncConsole.WriteLine("N-body system thread terminated");
+            AsyncLogger.Info("N-body system thread terminated");
         }
 
         private void OnPauseChanged(object sender, bool paused)

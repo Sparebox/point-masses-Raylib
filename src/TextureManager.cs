@@ -13,10 +13,10 @@ public class TextureManager : IDisposable
     public TextureManager()
     {
         #if DEBUG
-            AsyncConsole.WriteLine("Point-masses is running in DEBUG mode");
+            AsyncLogger.Info("Point-masses is running in DEBUG mode");
             _resourcesPath = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName + "/res/";
         #else
-            AsyncConsole.WriteLine("Point-masses is running in RELEASE mode");
+            AsyncLogger.Info("Point-masses is running in RELEASE mode");
             _resourcesPath = Directory.GetCurrentDirectory() + "/res/";
         #endif
         _textures = new Dictionary<string, Texture2D>();
@@ -59,7 +59,7 @@ public class TextureManager : IDisposable
             {
                 UnloadTexture(texture);
             }
-            AsyncConsole.WriteLine("Texture manager unloaded textures");
+            AsyncLogger.Info("Texture manager unloaded textures");
         }
         _disposed = true;
     }

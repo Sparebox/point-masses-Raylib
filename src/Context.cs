@@ -146,7 +146,7 @@ public class Context
             _saveState.MassShapes.Add(new MassShape(s));
         }
         Lock.ExitWriteLock();
-        AsyncConsole.WriteLine("Saved state");
+        AsyncLogger.Info("Saved state");
     }
 
     public void LoadSnapshot()
@@ -162,7 +162,7 @@ public class Context
         }
         Lock.ExitWriteLock();
         AddMassShapes(_saveState.MassShapes);
-        AsyncConsole.WriteLine("Loaded state");
+        AsyncLogger.Info("Loaded state");
     }
 
     public MassShape GetMassShape(uint id)

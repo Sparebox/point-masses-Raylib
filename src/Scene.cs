@@ -29,7 +29,7 @@ public class Scene
         }
         if (GetFPS() < Constants.PauseThresholdFPS) // Pause if running too slow
         {
-            AsyncConsole.WriteLine("Running too slow. Pausing sim");
+            AsyncLogger.Warn("Running too slow. Pausing sim");
             Ctx._simPaused = true;
         }
         Ctx._accumulator += GetFrameTime();
@@ -114,7 +114,7 @@ public class Scene
 
     public static Scene LoadFromFile(string filepath)
     {
-        AsyncConsole.WriteLine("Loading scene from file");
+        AsyncLogger.Info("Loading scene from file");
         try
         {
             string json = File.ReadAllText(filepath);
@@ -145,7 +145,7 @@ public class Scene
         }
         catch (Exception e)
         {
-            AsyncConsole.WriteLine($"Could not load scene: {e.Message}");
+            AsyncLogger.Fatal($"Could not load scene: {e.Message}");
             return null;
         }
     }
@@ -156,11 +156,11 @@ public class Scene
         {
             string json = JsonConvert.SerializeObject(this);
             File.WriteAllText($"{filepath}\\{Name}.json", json);
-            AsyncConsole.WriteLine($"Saved scene as {Name}.json");
+            AsyncLogger.Info($"Saved scene as {Name}.json");
         }
         catch (Exception e)
         {
-            AsyncConsole.WriteLine($"Could not save scene: {e.Message}");
+            AsyncLogger.Error($"Could not save scene: {e.Message}");
         }
     }
 
@@ -169,11 +169,11 @@ public class Scene
         try
         {
             File.Delete($"scenes\\{Name}.json");
-            AsyncConsole.WriteLine($"Deleted scene {Name}");
+            AsyncLogger.Info($"Deleted scene {Name}");
         }
         catch (Exception e)
         {
-            AsyncConsole.WriteLine($"Could not delete scene: {e.Message}");
+            AsyncLogger.Error($"Could not delete scene: {e.Message}");
         }
     }
 

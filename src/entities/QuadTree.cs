@@ -213,7 +213,7 @@ public class QuadTree
             Name = "Quad tree thread"
         };
         UpdateThread.Start(ctx);
-        AsyncConsole.WriteLine("Started quad three update thread");
+        AsyncLogger.Info("Started quad three update thread");
         return true;
     }
 
@@ -243,7 +243,7 @@ public class QuadTree
             ctx.QuadTree.Update(ctx);
         }
         ThreadResetEvent.Set();
-        AsyncConsole.WriteLine("Quad tree thread terminated");
+        AsyncLogger.Info("Quad tree thread terminated");
     }
 
     public static void OnPauseChanged(object _, bool paused)
