@@ -1,4 +1,4 @@
-using System;
+using System.Numerics;
 using PointMasses.Sim;
 using Raylib_cs;
 using static Raylib_cs.Raylib;
@@ -52,15 +52,22 @@ public class InputManager
         // Handle camera
         UpdateCamera(ctx);
 
-        // Temporary demo keys
+        // Demo keys
         if (IsKeyPressed(KeyboardKey.C))
         {
             ctx.LoadClothScenario();
         }
         if (IsKeyPressed(KeyboardKey.B))
         {
-            ctx.LoadBenchmark(1000, 3f, 20f, new(ctx.WinSize.X * 0.5f - 200f, 200f));
+            ctx.LoadBenchmark(1000, 3f, 30f, new(ctx.WinSize.X * 0.5f - 200f, 200f));
+            ctx.GetSystem<Systems.NbodySystem>()._running = true;
+            ctx.SetTimestep(null, 10);
         }
+    }
+
+    public static Vector2 GetMousePos()
+    {
+        return Program.RenderSizePercentage * GetMousePosition();
     }
 
     private static void UpdateCamera(Context ctx)

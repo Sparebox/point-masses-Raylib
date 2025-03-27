@@ -70,6 +70,7 @@ public class Context
     public int _substeps;
     [JsonProperty]
     public float _timestep;
+    [JsonProperty]
     public bool _gravityEnabled;
     public bool _collisionsEnabled;
     public bool _drawForces;
@@ -88,11 +89,9 @@ public class Context
     public float _cameraMoveSpeed = 1f;
     public float _accumulator;
     
-    public Context(float timeStep, int subSteps, Vector2 gravity, Vector2 winSize)
+    public Context(float timestep, int substeps, Vector2 gravity, Vector2 winSize)
     {
-        _timestep = timeStep;
-        _substeps = subSteps;
-        Substep = timeStep / subSteps;
+        SetTimestep(timestep, substeps);
         Gravity = gravity;
         WinSize = winSize;
         _camera = new Camera2D(Vector2.Zero, Vector2.Zero, 0f, 1f);
@@ -111,8 +110,15 @@ public class Context
         LoadSystems();
     }
 
-    public void UpdateSubstep()
+    public void SetTimestep(float? timestep, int? substeps)
     {
+        if (timestep.HasValue) {
+            _timestep = timestep.Value;
+        }
+        if (substeps.HasValue)
+        {
+            _substeps = substeps.Value;
+        }
         Substep = _timestep / _substeps;
     }
 

@@ -107,6 +107,7 @@ public class Gui
                 activeScene.SaveToFile();
                 _state._savedScenes.Clear();
                 _state._savedScenes.AddRange(GetSceneFileNames());
+                InputManager.InputEnabled = true;
                 ImGui.CloseCurrentPopup();
             }
             ImGui.SameLine();
