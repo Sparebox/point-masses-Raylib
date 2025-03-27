@@ -16,6 +16,9 @@ namespace PointMasses.UI;
 
 public class Gui
 {
+    private const float MainMenuWidth = 300f;
+    private const float MainMenuHeight = 350f;
+
     private struct State
     {
         public bool _showSystemEnergy;
@@ -82,6 +85,11 @@ public class Gui
             if (ImGui.BeginMenu("N-Body Sim"))
             {
                 ShowNbodySimOptions(ctx);
+                ImGui.EndMenu();
+            }
+            if (ImGui.BeginMenu("Shortcuts"))
+            {
+                ShowShortcuts();
                 ImGui.EndMenu();
             }
             ImGui.EndMainMenuBar();
@@ -397,17 +405,21 @@ public class Gui
             ImGuiWindowFlags.NoResize |
             ImGuiWindowFlags.NoMove;
         ImGui.Begin("Main menu", winFlags);
-        Vector2 winSize = new(200f, 300f);
+        Vector2 winSize = new(MainMenuWidth, MainMenuHeight);
         ImGui.SetWindowSize(winSize);
         ImGui.SetWindowPos(new(GetScreenWidth() * 0.5f - winSize.X * 0.5f, GetScreenHeight() * 0.5f - winSize.Y * 0.5f));
-
-        if (ImGui.Button("New scene"))
+        Vector2 buttonSize = new(100, 30);
+        Vector2 buttonPos = new((winSize.X - buttonSize.X) * 0.5f, buttonSize.Y);
+        ImGui.SetCursorPos(buttonPos);
+        if (ImGui.Button("New scene", buttonSize))
         {
             activeScene = Scene.LoadEmptyScene(new(GetScreenWidth(), GetScreenHeight()));
             activeScene.Init();
             _inMenu = false;
         }
-        if (ImGui.Button("Scenes"))
+        buttonPos.Y += 35;
+        ImGui.SetCursorPos(buttonPos);
+        if (ImGui.Button("Scenes", buttonSize))
         {
             _state._showScenesPopup = true;
             ImGui.OpenPopup("Scenes");
@@ -417,7 +429,9 @@ public class Gui
             ShowScenesMenu(ref _inMenu, ref activeScene);
             ImGui.EndPopup();
         }
-        if (ImGui.Button("Settings"))
+        buttonPos.Y += 35;
+        ImGui.SetCursorPos(buttonPos);
+        if (ImGui.Button("Settings", buttonSize))
         {
             _state._showMenuSettingsPopup = true;
             _state._winWidth = GetScreenWidth();
@@ -432,19 +446,28 @@ public class Gui
             ShowMainMenuSettings();
             ImGui.EndPopup();
         }
-        if (ImGui.Button("Exit"))
+        buttonPos.Y += 35;
+        ImGui.SetCursorPos(buttonPos);
+        if (ImGui.Button("Exit", buttonSize))
         {
             Program.Shutdown();
         }
         ImGui.Spacing();
+        ShowShortcuts();
+        ImGui.End();
+    }
+
+    private static void ShowShortcuts()
+    {
         ImGui.SeparatorText("SHORTCUTS");
         ImGui.Spacing();
         ImGui.BulletText("Esc - exit application");
+        ImGui.BulletText("Space - pause simulation");
+        ImGui.BulletText("B - load n-body benchmark");
+        ImGui.BulletText("C - load cloth scenario");
         ImGui.BulletText("G - toggle gravity");
         ImGui.BulletText("F - show forces");
         ImGui.BulletText("R - load snapshot");
-        
-        ImGui.End();
     }
 
     private static void ShowMainMenuSettings()
