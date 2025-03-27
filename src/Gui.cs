@@ -157,11 +157,18 @@ public class Gui
     private static void ShowSimulationInfo(Scene activeScene)
     {
         var ctx = activeScene.Ctx;
-        ImGui.PushStyleColor(ImGuiCol.Text, ctx._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
-        if (ImGui.Checkbox(ctx._simPaused ? "PAUSE" : "RUNNING", ref ctx._simPaused))
-        {
-            ctx.GetSystem<NbodySystem>().ResumeEvent.Reset();
+        ImGui.PushStyleColor(ImGuiCol.Text, ctx._simPaused ? new Vector4(0f, 255f, 0f, 255f) : new Vector4(255f, 0f, 0f, 255f));
+        if (ImGui.Button(ctx._simPaused ? "START" : "STOP")) {
+            ctx._simPaused = !ctx._simPaused;
+            if (ctx._simPaused)
+            {
+                ctx.GetSystem<NbodySystem>()._running = false;
+            }
         }
+        ImGui.PopStyleColor();
+        ImGui.PushStyleColor(ImGuiCol.Text, ctx._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f));
+        ImGui.SameLine();
+        ImGui.Text($"Sim {(ctx._simPaused ? "paused" : "running")}");
         ImGui.PopStyleColor();
         ImGui.Text($"Active scene: {activeScene.Name}");
         ImGui.Text($"Masses: {ctx.MassCount}");
@@ -235,7 +242,7 @@ public class Gui
             ImGui.InputInt("Substep count", ref ctx._substeps);
             if (ImGui.Button("Close"))
             {
-                ctx.UpdateSubstep();
+                ctx.SetTimestep(null, null);
                 ImGui.CloseCurrentPopup();
             }
             ImGui.EndPopup();
@@ -412,13 +419,16 @@ public class Gui
         if (ImGui.Button("Settings"))
         {
             _state._showMenuSettingsPopup = true;
+            _state._winWidth = GetScreenWidth();
+            _state._winHeight = GetScreenHeight();
+            _state._winSizePercentage = _state._winWidth / (float) GetMonitorWidth(GetCurrentMonitor()) * 100f;
             ImGui.OpenPopup("Settings");
         }
         if (ImGui.BeginPopupModal("Settings", ref _state._showMenuSettingsPopup, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoMove))
         {
             var popUpSize = ImGui.GetWindowSize();
             ImGui.SetWindowPos(new(GetScreenWidth() * 0.5f - popUpSize.X * 0.5f, GetScreenHeight() * 0.5f));
-            ShowMainSettings();
+            ShowMainMenuSettings();
             ImGui.EndPopup();
         }
         if (ImGui.Button("Exit"))
@@ -436,7 +446,7 @@ public class Gui
         ImGui.End();
     }
 
-    private static void ShowMainSettings()
+    private static void ShowMainMenuSettings()
     {
         var currentAspectRatio = GetMonitorWidth(GetCurrentMonitor()) / (float) GetMonitorHeight(GetCurrentMonitor());
         ImGui.SeparatorText("Window settings");
@@ -448,6 +458,7 @@ public class Gui
         {
             ImGui.BeginDisabled();
         }
+        ImGui.SetNextItemWidth(100f);
         if (ImGui.InputFloat("Window size % of screen size", ref _state._winSizePercentage, 10, 30, "%.1f"))    
         {
             _state._winSizePercentage = MathF.Min(100.0f, MathF.Max(Constants.MinWindowSizePercentage, _state._winSizePercentage));
@@ -498,11 +509,11 @@ public class Gui
         {   
             if (_state._useWinPercentage && _state._winSizePercentage >= Constants.MinWindowSizePercentage)
             {
-                Program.SetWinSize(_state._winSizePercentage / 100f, null, null);
+                Program.SetWinSize(null, _state._winSizePercentage / 100f, null, null);
             }
             if (!_state._useWinPercentage)
             {
-                Program.SetWinSize(null, _state._winWidth, _state._winHeight);
+                Program.SetWinSize(null, null, _state._winWidth, _state._winHeight);
             }
         }
         ImGui.SameLine();
