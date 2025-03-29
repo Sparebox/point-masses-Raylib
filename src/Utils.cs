@@ -81,12 +81,12 @@ namespace PointMasses.Utils
         public const int BarnesHutMaxDepth = 10;
         public const float DefaultSpringDamping = 5e4f;
         // Pull tool
-        public const float DefaultPullForceCoeff = 1e6f;
+        public const float PullForceCoeff = 1e3f;
         // Wind tool
         public const int MaxWindForce = 100;
         public const int MinWindForce = 10;
         // Rotate tool
-        public const float RotateTorque = 1e6f;
+        public const float TorqueCoeff = 1e6f;
         // Gravitywell tool
         public const float DefaultGravityWellConstant = 0.1f;
         public const float DefaultGravityWellMinDist = 0.01f;

@@ -382,7 +382,7 @@ namespace PointMasses.Tools
 
     public class PullCom : Tool
     {
-        public float _forceCoeff = Constants.DefaultPullForceCoeff;
+        public float _force = 1f;
         private bool _shouldVisualize = false;
         private Vector2 _centerOfMass;
 
@@ -407,7 +407,7 @@ namespace PointMasses.Tools
                 return;
             }
             _centerOfMass = closest.CenterOfMass;
-            Vector2 force = _ctx._timestep * _forceCoeff * (mousePos - _centerOfMass);
+            Vector2 force = _ctx._timestep * Constants.PullForceCoeff * _force * (mousePos - _centerOfMass);
             closest.ApplyForceCOM(force);
             _shouldVisualize = true;
         }
@@ -426,7 +426,7 @@ namespace PointMasses.Tools
 
     public class Pull : Tool
     {
-        public float _forceCoeff = Constants.DefaultPullForceCoeff;
+        public float _force = 1f;
         private readonly List<Vector2> _positions;
         private bool _shouldVisualize;
 
@@ -456,7 +456,7 @@ namespace PointMasses.Tools
                 {
                     continue;
                 }
-                Vector2 force = _ctx._timestep * _forceCoeff * (mousePos - p._pos);
+                Vector2 force = _ctx._timestep * Constants.PullForceCoeff * _force * (mousePos - p._pos);
                 p.ApplyForce(force);
                 _positions.Add(p._pos);
             }
@@ -511,6 +511,8 @@ namespace PointMasses.Tools
 
     public class Rotate : Tool
     {
+        public float _torque = 1f;
+
         public Rotate(Context ctx) => _ctx = ctx;   
 
         public override void Update()
@@ -537,7 +539,8 @@ namespace PointMasses.Tools
                     continue;
                 }
                 Vector2 normal = new(comToPoint.Y / radius, -comToPoint.X / radius);
-                p.ApplyForce((IsMouseButtonDown(MouseButton.Right) ? -1f : 1f) * _ctx._timestep * Constants.RotateTorque * normal);
+                Vector2 force = (IsMouseButtonDown(MouseButton.Right) ? -1f : 1f) * Constants.TorqueCoeff * _torque * normal;
+                p.ApplyForce(_ctx._timestep * force);
             }
         }
 
@@ -677,7 +680,8 @@ namespace PointMasses.Tools
             {
                 return;
             }
-            var mousePos = UnitConv.PtoM(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
+            var mousePos = GetScreenToWorld2D(InputManager.GetMousePos(), _ctx._camera);
+            mousePos = UnitConv.PtoM(mousePos);
             BoundingBox area = new(new(mousePos.X, mousePos.Y, 0f), new(mousePos.X, mousePos.Y, 0f));
             var shapes = _ctx.GetMassShapes(ref area);
             if (shapes.Any())

@@ -61,7 +61,17 @@ public class Gui
             }
             ImGui.Text($"FPS: {fps}");
             ImGui.PopStyleColor();
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0f, 0f));
+            ImGui.Text("Sim is");
+            ImGui.PushStyleColor(
+                ImGuiCol.Text,
+                ctx._simPaused ? new Vector4(255f, 0f, 0f, 255f) : new Vector4(0f, 255f, 0f, 255f)
+            );
+            ImGui.Text(ctx._simPaused ? " paused" : " running");
+            ImGui.PopStyleVar();
+            ImGui.PopStyleColor();
             ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(255f, 255f, 0f, 255f));
+            ImGui.Spacing();
             ImGui.Text($"Selected tool: {toolSystem.SelectedTool.GetType().ToString().Split('.').LastOrDefault()}");
             ImGui.PopStyleColor();
             ImGui.Spacing();
@@ -292,8 +302,19 @@ public class Gui
                 ImGui.InputFloat("Gravitational constant", ref ((GravityWell) toolSystem.SelectedTool)._gravConstant);
                 ImGui.InputFloat("Minimum distance", ref ((GravityWell) toolSystem.SelectedTool)._minDist);
                 break;
-            default :
-                throw new Exception("Unknown tool type selected");
+            case Ruler :
+                ImGui.Text("Measure distances in meters by dragging the mouse");
+                break;
+            case Stop :
+                ImGui.Text("Set selected point mass velocity to zero");
+                break;
+            case Rotate :
+                ImGui.Text("Rotate selected point mass around the cursor");
+                ImGui.InputFloat("Torque", ref ((Rotate) toolSystem.SelectedTool)._torque);
+                break;
+            case ShowInfo :
+                ImGui.Text("Toggle shape info on click");
+                break;
         }
     }
     
