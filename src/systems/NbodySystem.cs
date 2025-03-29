@@ -28,18 +28,13 @@ namespace PointMasses.Systems
                 UnitConv.PtoM(new Vector2(ctx.WinSize.X * 0.5f, ctx.WinSize.Y * 0.5f)),
                 UnitConv.PtoM(new Vector2(ctx.WinSize.X, ctx.WinSize.Y))
             );
-            ResumeEvent = new ManualResetEventSlim(true);
+            ResumeEvent = new ManualResetEventSlim(false);
             ThreadResetEvent = new ManualResetEventSlim(true);
-            StartUpdateThread();
         }
 
         public bool ShutdownUpdateThread()
         {
-            if (_updateThread is null)
-            {
-                return false;
-            }
-            if (!_updateThread.IsAlive)
+            if (_updateThread is null || !_updateThread.IsAlive)
             {
                 return false;
             }
@@ -71,13 +66,13 @@ namespace PointMasses.Systems
             {
                 ResumeEvent.Wait(Timeout.Infinite);
                 Thread.Sleep(_updateIntervalMs);
-                _barnesHutTree.Update(_ctx);
+                                _barnesHutTree.Update(_ctx);
             }
             ThreadResetEvent.Set();
             AsyncLogger.Info("N-body system thread terminated");
         }
 
-        private void OnPauseChanged(object sender, bool paused)
+        private void OnPauseChanged(object _, bool paused)
         {
             if (_running && paused)
             {

@@ -94,7 +94,7 @@ public class Scene
     public static Scene LoadEmptyScene(Vector2 winSize)
     {
         var winSizeMeters = UnitConv.PtoM(winSize);
-        Context ctx = new(timeStep: 1f / 60f, 3, gravity: new(0f, 9.81f), winSize)
+        Context ctx = new(timestep: 1f / 60f, 3, gravity: new(0f, 9.81f), winSize)
         {
             QuadTree = new(
                 new Vector2(winSizeMeters.X * 0.5f, winSizeMeters.Y * 0.5f),
@@ -114,7 +114,7 @@ public class Scene
 
     public static Scene LoadFromFile(string filepath)
     {
-        AsyncLogger.Info("Loading scene from file");
+        AsyncLogger.Info($"Loading scene from file path: {filepath}");
         try
         {
             string json = File.ReadAllText(filepath);
@@ -155,7 +155,7 @@ public class Scene
         try
         {
             string json = JsonConvert.SerializeObject(this);
-            File.WriteAllText($"{filepath}\\{Name}.json", json);
+            File.WriteAllText(Path.Combine(filepath, $"{Name}.json"), json);
             AsyncLogger.Info($"Saved scene as {Name}.json");
         }
         catch (Exception e)
@@ -168,7 +168,7 @@ public class Scene
     {
         try
         {
-            File.Delete($"scenes\\{Name}.json");
+            File.Delete(Path.Combine("scenes", $"{Name}.json"));
             AsyncLogger.Info($"Deleted scene {Name}");
         }
         catch (Exception e)

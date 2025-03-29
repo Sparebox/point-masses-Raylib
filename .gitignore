@@ -2,3 +2,4 @@
 /obj
 *.ini
 /dist
+/scenes

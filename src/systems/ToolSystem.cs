@@ -9,6 +9,7 @@ using PointMasses.Tools;
 using PointMasses.Utils;
 using static PointMasses.Entities.MassShape;
 using static Raylib_cs.Raylib;
+using PointMasses.Input;
 
 namespace PointMasses.Systems
 {
@@ -221,8 +222,8 @@ namespace PointMasses.Tools
     public class Spawn : Tool
     {
         public const float DefaultStiffness = 1f;
-        public const float DefaultGasAmt = 300f;
-        private const float DefaultMass = 30f;
+        public const float DefaultGasAmt = 1e3f;
+        private const float DefaultMass = 100f;
         private const int DefaultRes = 15;
 
         public SpawnTarget _currentTarget;
@@ -393,7 +394,7 @@ namespace PointMasses.Tools
             {
                 return;
             }
-            Vector2 mousePos = UnitConv.PtoM(GetScreenToWorld2D(GetMousePosition(), _ctx._camera));
+            Vector2 mousePos = UnitConv.PtoM(GetScreenToWorld2D(InputManager.GetMousePos(), _ctx._camera));
             BoundingBox area = new(new(mousePos.X - Radius, mousePos.Y - Radius, 0f), new(mousePos.X + Radius, mousePos.Y + Radius, 0f));
             var shapes = _ctx.GetMassShapes(ref area);
             if (!shapes.Any())
@@ -413,7 +414,7 @@ namespace PointMasses.Tools
 
         public override void Draw()
         {
-            Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), _ctx._camera);
+            Vector2 mousePos = GetScreenToWorld2D(InputManager.GetMousePos(), _ctx._camera);
             DrawCircleLinesV(mousePos, UnitConv.MtoP(Radius), Color.Yellow);
             if (_shouldVisualize)
             {
@@ -536,7 +537,7 @@ namespace PointMasses.Tools
                     continue;
                 }
                 Vector2 normal = new(comToPoint.Y / radius, -comToPoint.X / radius);
-                p.ApplyForce((IsMouseButtonDown(MouseButton.Right) ? -1f : 1f) * _ctx._timestep * Constants.Torque * normal);
+                p.ApplyForce((IsMouseButtonDown(MouseButton.Right) ? -1f : 1f) * _ctx._timestep * Constants.RotateTorque * normal);
             }
         }
 

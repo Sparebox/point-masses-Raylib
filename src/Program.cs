@@ -15,11 +15,12 @@ public class Program
     public static readonly int TargetFPS = GetMonitorRefreshRate(GetCurrentMonitor());
     
     public static TextureManager TextureManager { get; set; }
+    public static float RenderSizePercentage { get; set; }
 
     private static bool _inMenu = true;
     private static bool _shouldExit;
     private static Scene _activeScene;
-    private static RenderTexture2D RenderTexture { get; set;}
+    private static RenderTexture2D _renderTexture;
 
     public static void Main() 
     {
@@ -41,10 +42,12 @@ public class Program
     {
         InitWindow(0, 0, "Point-masses");
         SetTargetFPS(TargetFPS);
-        SetWinSize(winSizePercentage, null, null);
+        SetWinSize(null, winSizePercentage, null, null);
         #if DEBUG
+            AsyncLogger.Info("Point-masses is running in DEBUG mode");
             SetTraceLogLevel(TraceLogLevel.Debug);
         #else
+            AsyncLogger.Info("Point-masses is running in RELEASE mode");
             SetTraceLogLevel(TraceLogLevel.Info);
         #endif
         if (!Directory.Exists("scenes"))
@@ -63,7 +66,7 @@ public class Program
         _activeScene?.Destroy();
         TextureManager.Dispose();
         rlImGui.Shutdown();
-        UnloadRenderTexture(RenderTexture);
+        UnloadRenderTexture(_renderTexture);
     }
 
     private static void Draw()
@@ -79,14 +82,14 @@ public class Program
             EndDrawing();
             return;
         }
-        BeginTextureMode(RenderTexture);
+        BeginTextureMode(_renderTexture);
         ClearBackground(Color.Black);
         _activeScene.Draw();
         EndTextureMode();
 
         DrawTexturePro(
-            RenderTexture.Texture,
-            new (0f, 0f, RenderTexture.Texture.Width, -RenderTexture.Texture.Height),
+            _renderTexture.Texture,
+            new (0f, 0f, _renderTexture.Texture.Width, -_renderTexture.Texture.Height),
             new (0f, 0f, GetScreenWidth(), GetScreenHeight()),
             Vector2.Zero,
             0f,
@@ -98,9 +101,9 @@ public class Program
         EndDrawing(); // raylib
     }
 
-    public static void SetWinSize(float? winSizePercentage, int? width, int? height)
+    public static void SetWinSize(float? renderSizePercentage, float? winSizePercentage, int? width, int? height)
     {
-        UnloadRenderTexture(RenderTexture);
+        UnloadRenderTexture(_renderTexture);
         int winWidth;
         int winHeight;
         if (winSizePercentage.HasValue)
@@ -113,7 +116,16 @@ public class Program
             winWidth = width.Value;
             winHeight = height.Value;
         }
-        RenderTexture = LoadRenderTexture(winWidth, winHeight);
+        if (renderSizePercentage.HasValue)
+        {
+            RenderSizePercentage = renderSizePercentage.Value;
+            _renderTexture = LoadRenderTexture((int) (renderSizePercentage.Value * winWidth), (int) (renderSizePercentage.Value * winHeight));
+        }
+        else
+        {
+            RenderSizePercentage = 1f;
+            _renderTexture = LoadRenderTexture(winWidth, winHeight);
+        }
         SetWindowSize(winWidth, winHeight);
         int winPosX = GetMonitorWidth(GetCurrentMonitor()) / 2 - winWidth / 2;
         int winPosY = GetMonitorHeight(GetCurrentMonitor()) / 2 - winHeight / 2;

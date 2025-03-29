@@ -13,17 +13,9 @@ public class TextureManager : IDisposable
 
     public TextureManager()
     {
-        #if DEBUG
-            AsyncLogger.Info("Point-masses is running in DEBUG mode");
-            _resourcesPath = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName + "/res/";
-        #else
-            AsyncLogger.Info("Point-masses is running in RELEASE mode");
-            _resourcesPath = Directory.GetCurrentDirectory() + "/res/";
-        #endif
+        _resourcesPath = Directory.GetCurrentDirectory() + "/res/";
         _textures = new Dictionary<string, Texture2D>();
-
         Directory.CreateDirectory(_resourcesPath);   
-
         // Load textures
         LoadTexture("center_of_mass.png");
     }

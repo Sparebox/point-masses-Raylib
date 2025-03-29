@@ -213,7 +213,7 @@ public class QuadTree
             Name = "Quad tree thread"
         };
         UpdateThread.Start(ctx);
-        AsyncLogger.Info("Started quad three update thread");
+        AsyncLogger.Info("Started quad tree update thread");
         return true;
     }
 

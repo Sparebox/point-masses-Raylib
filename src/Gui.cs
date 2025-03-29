@@ -42,7 +42,6 @@ public class Gui
     }
 
     private static State _state = new();
-    private readonly static StringBuilder _sb = new();
 
     public static void Draw(ref Scene activeScene, ref bool inMenu)
     {
@@ -557,10 +556,8 @@ public class Gui
             ImGui.SeparatorText($"Scene: {sceneName}");
             if (ImGui.Button($"Load ##{i}"))
             {
-                _sb.Clear();
-                _sb.Append("scenes/").Append(fullSceneName);
                 activeScene?.Destroy();
-                activeScene = Scene.LoadFromFile(_sb.ToString());
+                activeScene = Scene.LoadFromFile(Path.Combine("scenes", fullSceneName.ToString()));
                 activeScene.Init();
                 _inMenu = false;
             }
@@ -576,7 +573,7 @@ public class Gui
                 {
                     try 
                     {
-                        File.Delete($"scenes/{fullSceneName}");
+                        File.Delete(Path.Combine("scenes", fullSceneName.ToString()));
                         AsyncLogger.Info($"Deleted scene: {fullSceneName}");
                         _state._savedScenes.Remove(fullSceneName.ToString());
                     }
@@ -613,7 +610,7 @@ public class Gui
         var scenePaths = Directory.GetFiles("scenes", "*.json", SearchOption.TopDirectoryOnly);
         for (int i = 0; i < scenePaths.Length; i++)
         {
-            scenePaths[i] = scenePaths[i].Split('\\').Last();
+            scenePaths[i] = Path.GetFileName(scenePaths[i]);
         }
         return scenePaths;
     }
