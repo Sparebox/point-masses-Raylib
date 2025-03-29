@@ -61,6 +61,10 @@ public class Gui
             }
             ImGui.Text($"FPS: {fps}");
             ImGui.PopStyleColor();
+            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(255f, 255f, 0f, 255f));
+            ImGui.Text($"Selected tool: {toolSystem.SelectedTool.GetType().ToString().Split('.').LastOrDefault()}");
+            ImGui.PopStyleColor();
+            ImGui.Spacing();
             if (ImGui.BeginMenu("File"))
             {
                 ShowFileMenu(ref inMenu, ref activeScene);
@@ -275,15 +279,21 @@ public class Gui
                 ShowEditorOptions(ctx);
                 break;
             case Pull :
-                ImGui.InputFloat("Force coefficient", ref ((Pull) toolSystem.SelectedTool)._forceCoeff);
+                ImGui.Text("Pulls multiple point masses towards the cursor");
+                ImGui.Spacing();
+                ImGui.InputFloat("Force", ref ((Pull) toolSystem.SelectedTool)._force);
                 break;
             case PullCom :
-                ImGui.InputFloat("Force coefficient", ref ((PullCom) toolSystem.SelectedTool)._forceCoeff);
+                ImGui.Text("Pulls the center of mass of one shape towards the cursor");
+                ImGui.Spacing();
+                ImGui.InputFloat("Force", ref ((PullCom) toolSystem.SelectedTool)._force);
                 break;
             case GravityWell :
                 ImGui.InputFloat("Gravitational constant", ref ((GravityWell) toolSystem.SelectedTool)._gravConstant);
                 ImGui.InputFloat("Minimum distance", ref ((GravityWell) toolSystem.SelectedTool)._minDist);
                 break;
+            default :
+                throw new Exception("Unknown tool type selected");
         }
     }
     
@@ -452,7 +462,9 @@ public class Gui
             Program.Shutdown();
         }
         ImGui.Spacing();
+        ImGui.BeginChild("Shortcuts");
         ShowShortcuts();
+        ImGui.EndChild();
         ImGui.End();
     }
 
@@ -461,12 +473,18 @@ public class Gui
         ImGui.SeparatorText("SHORTCUTS");
         ImGui.Spacing();
         ImGui.BulletText("Esc - exit application");
-        ImGui.BulletText("Space - pause simulation");
+        ImGui.BulletText("Space - start/pause simulation");
         ImGui.BulletText("B - load n-body benchmark");
         ImGui.BulletText("C - load cloth scenario");
         ImGui.BulletText("G - toggle gravity");
         ImGui.BulletText("F - show forces");
         ImGui.BulletText("R - load snapshot");
+        ImGui.SeparatorText("CAMERA CONTROLS");
+        ImGui.Spacing();
+        ImGui.BulletText("W - up");
+        ImGui.BulletText("A - left");
+        ImGui.BulletText("S - down");
+        ImGui.BulletText("D - right");
     }
 
     private static void ShowMainMenuSettings()
