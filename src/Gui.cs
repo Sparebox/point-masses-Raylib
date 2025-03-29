@@ -226,11 +226,15 @@ public class Gui
             }
         }
         ImGui.PushItemWidth(50f);
-        ImGui.InputFloat("Global restitution coeff", ref ctx._globalRestitutionCoeff);
+        if (ImGui.InputFloat("Global restitution coeff", ref ctx._globalRestitutionCoeff))
+        {
+            ctx._globalRestitutionCoeff = Raymath.Clamp(ctx._globalRestitutionCoeff, 0f, 1f);
+        }
         ImGui.InputFloat("Global kinetic friction coeff", ref ctx._globalKineticFrictionCoeff);
         ImGui.InputFloat("Global static friction coeff", ref ctx._globalStaticFrictionCoeff);
         ImGui.Spacing();
         ImGui.Separator();
+        ImGui.Spacing();
         if (ImGui.Button("Delete all shapes"))
         {
             ctx.Lock.EnterWriteLock();
@@ -412,7 +416,7 @@ public class Gui
 
     private static void ShowCameraSettings(Context ctx)
     {
-        ImGui.Text("Camera settings");
+        ImGui.SeparatorText("Camera settings");
         ImGui.Text($"Current offset: ({ctx._camera.Offset.X:0}, {ctx._camera.Offset.Y:0})");
         ImGui.PushItemWidth(50f);
         ImGui.InputFloat("Move speed", ref ctx._cameraMoveSpeed);
