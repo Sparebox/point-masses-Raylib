@@ -8,7 +8,6 @@ using PointMasses.Tools;
 using static Raylib_cs.Raylib;
 using static PointMasses.Tools.Spawn;
 using Raylib_cs;
-using System.Text;
 using PointMasses.Input;
 using PointMasses.Utils;
 
