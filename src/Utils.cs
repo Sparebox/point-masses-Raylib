@@ -62,7 +62,6 @@ namespace PointMasses.Utils
         // Window
         public const int MinWindowWidth = 500;
         public const int MinWindowHeight = 500;
-        public const float MinWindowSizePercentage = 30f;
 
         public const float SpeedOfLight = 299_792_458f;
         public const float SpeedOfLightSq = SpeedOfLight * SpeedOfLight;

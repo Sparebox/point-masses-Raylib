@@ -19,6 +19,12 @@ public class Gui
     private const float MainMenuWidth = 300f;
     private const float MainMenuHeight = 350f;
 
+    private static float MinSizePercentage => 
+    100f * MathF.Max(
+        (float) Constants.MinWindowWidth / GetMonitorWidth(GetCurrentMonitor()),
+        (float) Constants.MinWindowHeight / GetMonitorHeight(GetCurrentMonitor())
+    );
+
     private struct State
     {
         public bool _showSystemEnergy;
@@ -303,21 +309,33 @@ public class Gui
                 ImGui.InputFloat("Force", ref ((PullCom) toolSystem.SelectedTool)._force);
                 break;
             case GravityWell :
+                ImGui.Text("Attracts point masses towards a point in space");
+                ImGui.BulletText("Left click to set the position of the gravity well");
+                ImGui.BulletText("Right click to remove the gravity well");
+                ImGui.Separator();
                 ImGui.InputFloat("Gravitational constant", ref ((GravityWell) toolSystem.SelectedTool)._gravConstant);
                 ImGui.InputFloat("Minimum distance", ref ((GravityWell) toolSystem.SelectedTool)._minDist);
                 break;
             case Ruler :
-                ImGui.Text("Measure distances in meters by dragging the mouse");
+                ImGui.Text("Measure distances in meters by holding down and dragging the mouse");
                 break;
             case Stop :
-                ImGui.Text("Set selected point mass velocity to zero");
+                ImGui.Text("Set selected the velocity of the selected shape to zero");
                 break;
             case Rotate :
-                ImGui.Text("Rotate selected point mass around the cursor");
+                ImGui.Text("Rotate selected shape around its center of mass");
+                ImGui.BulletText("Left click to rotate counter-clockwise");
+                ImGui.BulletText("Right click to rotate clockwise");
                 ImGui.InputFloat("Torque", ref ((Rotate) toolSystem.SelectedTool)._torque);
                 break;
             case ShowInfo :
-                ImGui.Text("Toggle shape info on click");
+                ImGui.Text("Toggle shape info by clicking on one");
+                break;
+            case Wind :
+                ImGui.Text("Apply wind force to all shapes");
+                break;
+            case Delete :
+                ImGui.Text("Delete selected point masses");
                 break;
         }
     }
@@ -527,7 +545,7 @@ public class Gui
         ImGui.SetNextItemWidth(100f);
         if (ImGui.InputFloat("Window size % of screen size", ref _state._winSizePercentage, 10, 30, "%.1f"))    
         {
-            _state._winSizePercentage = MathF.Min(100.0f, MathF.Max(Constants.MinWindowSizePercentage, _state._winSizePercentage));
+            _state._winSizePercentage = MathF.Min(100.0f, MathF.Max(MinSizePercentage, _state._winSizePercentage));
         }
         if (!_state._useWinPercentage)
         {
@@ -573,7 +591,7 @@ public class Gui
         ImGui.Spacing();
         if (ImGui.Button("Apply"))
         {   
-            if (_state._useWinPercentage && _state._winSizePercentage >= Constants.MinWindowSizePercentage)
+            if (_state._useWinPercentage && _state._winSizePercentage >= MinSizePercentage)
             {
                 Program.SetWinSize(null, _state._winSizePercentage / 100f, null, null);
             }
@@ -581,6 +599,8 @@ public class Gui
             {
                 Program.SetWinSize(null, null, _state._winWidth, _state._winHeight);
             }
+            _state._winWidth = GetScreenWidth();
+            _state._winHeight = GetScreenHeight();
         }
         ImGui.SameLine();
         if (ImGui.Button("Close"))
